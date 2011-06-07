@@ -28,7 +28,7 @@ UT.heartBeat = function() {
                             status_output = '<h4 style="background-color="yellow" align="center">Status</h4><ul><li>Browsers</li><font size="-1"><ul>';
                             Y.each(current_status.browsers, 
                                 function(value, key, object) {
-                                    status_output += '<li>' + key + '</li>';
+                                    status_output += '<li>' + value.name + '</li>';
                                     status_output += '<ul><li>heart beat&nbsp;' + value.heart_beat + '</li>';
                                     status_output += '<li>get test&nbsp;' + value.get_test + '</li></ul>';
                                 }

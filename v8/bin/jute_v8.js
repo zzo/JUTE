@@ -47,22 +47,21 @@ if (DO_COVERAGE) {
 
 if (!TEST_ROOT) {
     console.log('You must define JUTE_TEST_ROOT in the environment - this points the root directory of your JS tests - any test files your specify are relative to this.');
-    console.log('It MUST END WITH A "/"!');
     process.exit(1);
+} else {
+    TEST_ROOT += '/';
 }
 
 if (!OUTPUT_DIR) {
     console.log('You must define JUTE_OUTPUT_ROOT in the environment - this points to a directory where your output will be.');
-    console.log('It MUST END WITH A "/"!');
     process.exit(1);
+} else {
+    OUTPUT_DIR += '/';
 }
 
 if (!process.argv[2]) {
     console.log('You must specify a test to run!  This file is relative to JUTE_TEST_ROOT.');
     process.exit(1);
-}
-
-if (DO_COVERAGE) {
 }
 
 fs.readFile(TEST_FILE, 'utf8', function (err, data) {
@@ -258,12 +257,6 @@ function doit(data, d, w) {
             var src = tag.getAttribute('src') || tag.getAttribute('href'), host, server,
                 path, request, data = '', ssrc, full_path_file, coverage;
 
-            /*
-            if (src.indexOf('jute.js') >= 0) {
-                src = './jute_mini.js';
-            }
-            */
-
             if (src) {
                 if (src.match(/^http:/)) {
                     host    = url.parse(src);
@@ -279,7 +272,6 @@ function doit(data, d, w) {
                             data += chunk;
                         });
                         response.on('end', function() {
-                            //Y.log('GOT: ' + src);
                             if (response.statusCode > 299) {
                                 DEBUG("ERROR FETCHING: " + path);
                             } else {

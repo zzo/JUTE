@@ -37,11 +37,13 @@ Install JUTE V8
 Set 2 Environment Variables
 ---------------------------
 
+<pre>
 % export JUTE_OUTPUT_ROOT=/directory/where/you/want/output/to/go/
-
 % export JUTE_TEST_ROOT=/directory/root/where/your/tests/live/
+</pre>
 
-All test files you run are relative to this directory.
+All output is put in the JUTE_OUTPUT_ROOT directory.
+All test files you run are relative to the JUTE_TEST_ROOT directory.
 
 Require JUTE module in your TEST Javascript
 --------------------------------------------

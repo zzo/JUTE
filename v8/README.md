@@ -11,16 +11,16 @@ Javascript Unit Testing Environment (JUTE) for NodeJS/V8
 Abstract
 =========
 
-JUTE allows unobtrusive [JavaScript](JavaScript.html) YUI3 unit testing, code coverage, and yslow. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture Mode, and V8.
+JUTE allows unobtrusive JavaScript YUI3 unit testing, code coverage, and yslow. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture Mode, and V8.
 
 Requirements
 
 
-3.1.1+ of YUI3
+[YUI3 Test Framework](http://developer.yahoo.com/yui/3/test/) 3.1.1+ of [YUI3](http://developer.yahoo.com/yui/3) to WRITE your tests.  Note the JavaScript code you are testing does NOT need to be written using YUI3 (or YUI at all for that matter).
 ---------------
 
 
-[NodeJS](http://nodejs.org) .4
+[NodeJS](http://nodejs.org) .4+
 -------------------------------------
 
 
@@ -35,9 +35,9 @@ Install JUTE V8
 Set 2 Environment Variables
 ---------------------------
 
-1. % export JUTE_OUTPUT_ROOT=/directory/where/you/want/output/to/go/
+% export JUTE_OUTPUT_ROOT=/directory/where/you/want/output/to/go/
 
-2. % export JUTE_TEST_ROOT=/directory/root/where/your/tests/live/
+% export JUTE_TEST_ROOT=/directory/root/where/your/tests/live/
 
 All test files you run are relative to this directory.
 
@@ -45,7 +45,7 @@ Require JUTE module in your TEST Javascript
 --------------------------------------------
 
 <pre>
-YUI().use('test', 'gallery-jute', ..., function(Y) {
+YUI().use('gallery-jute', ..., function(Y) {
     // YUI3 Test Code...
 });
 </pre>
@@ -53,7 +53,9 @@ YUI().use('test', 'gallery-jute', ..., function(Y) {
 Run a test
 ----------
 
+<pre>
 % jute_v8 testFile.html
+</pre>
 
 Where 'testFile.html' is relative to JUTE_TEST_ROOT
 
@@ -65,7 +67,9 @@ JUTE output directory
 
 JUTE writes unit test results and optionally coverage information into an output directory. You set the directory name by:
 
+<pre>
 % export JUTE_OUTPUT_DIR=/directory/where/you/want/output/to/go/
+</pre>
 
 JUTE test directory
 --------------------
@@ -100,9 +104,9 @@ JUTE output all goes into the JUTE_OUTPUT_ROOT as specified above.  Within that 
 Test Results
 -------------
 
-For each test an XML file will be created.  The name of the XML file is v8-test.xml.
+For each test a JUnit-formatted XML file will be created.  The name of the XML file is v8-test.xml.
 
-The format of this file is JUnit XML style test output recognizable by most tools including Hudson.
+The format of this file is JUnit XML style test output recognizable by most (all?) tools including Hudson.
 
 This looks like:
 
@@ -144,12 +148,12 @@ To utilize JUTE you need only to make small additions to your current HTML file 
 
 ### HTML requirements
 
-You must include YUI3 3.1.1+
+You must use YUI3 3.1.1+ for your tests
 
 Here is a standard test HTML file - we will examine all the important bits below.
 
 <pre>
-  1 &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 [Transitional//EN](Transitional//EN.html)">
+  1 &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
   2 &lt;html lang="en">
   3 
   4 &lt;head>
@@ -195,7 +199,7 @@ Line 25 - the test Javascript file is loaded.  We'll look at that next.
 
 ### Javascript Requirements
 
-Your Javascript test file must 'use' the 'gallery-jute' module.
+Your Javascript test file must 'use' the 'gallery-jute' module.  This will also pull in the YUI3 'test' module.
 
 Below is the corresponding test file to the above HTML file - I'll point out the interesting lines below:
 
@@ -258,10 +262,10 @@ Below is the corresponding test file to the above HTML file - I'll point out the
  56         Y.one("#moveLink").simulate("click");
  57     }
  58 }));
- 59 
+ 59
  60 Y.Test.Runner.add(suite);
  61 Y.Test.Runner.go();
- 62                                                                                                                                                                                                       
+ 62
  63 });
 </pre>
 
@@ -316,9 +320,17 @@ You should use relative paths in your HTML test files pointing to project files 
 
 #### V8 Makefile rule
 
+Here is a a handy Makefile rule to run all of your tests in one shot:
+
 <pre>
 submit_v8_tests:
-    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/jute_v8.js {} $(DO_COVERAGE} \\; 
+    cd $(JUTE_TEST_ROOT) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/jute_v8.js {} $(DO_COVERAGE} \\; 
+</pre>
+
+To run all with code coverage do:
+
+<pre>
+% make submit_v8_tests DO_COVERAGE=1 JUTE_TEST_ROOT=$JUTE_TEST_ROOT
 </pre>
 
 Viewing Test Results
@@ -349,10 +361,10 @@ make_total_lcov:
   $(LCOV_GENHTML) -o $(OUTPUT_DIR)/lcov-report $(TOTAL_LCOV_FILE)
 </pre>
 
-Now to aggregate your coverage output for Hudson or other just:  
+Now to run and aggregate all your coverage output for Hudson or other just:
 
 <pre>
-% make make_total_lcov
+% make submit_v8_tests make_total_lcov DO_COVERAGE=1
 </pre>
 
-And JUTE_OUTPUT_ROOT/lcov-report/index.html will have the rolled-up code coverage information.
+Point your browser to JUTE_OUTPUT_ROOT/lcov-report/index.html and you'll have the rolled-up code coverage information.

@@ -14,15 +14,17 @@ Abstract
 JUTE allows unobtrusive JavaScript YUI3 unit testing, code coverage, and yslow. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture Mode, and V8.
 
 Requirements
-
+============
 
 [YUI3 Test Framework](http://developer.yahoo.com/yui/3/test/) 3.1.1+ of [YUI3](http://developer.yahoo.com/yui/3) to WRITE your tests.  Note the JavaScript code you are testing does NOT need to be written using YUI3 (or YUI at all for that matter).
 ---------------
 
-
 [NodeJS](http://nodejs.org) .4+
 -------------------------------------
 
+[Java](http://java.com)
+-------------------------------------
+IF you want code coverage
 
 Super Quick Start
 ==================

@@ -27,19 +27,6 @@ Requirements
 Super Quick Start
 ==================
 
-
-Variable Setup
----------------
-
-JUTE assumes a symlink named '/home/y/share/htdocs/jutebase' to your real DOCUMENT_ROOT. For [Mail/Neo](Mail/Neo.html) that symlink points back into our home directories but that doesn't have to be the case. However whichever user JUTE runs as (which you specify, I'll show you how in a moment) needs to be able to write files in a sub-directory under your DOCUMENT_ROOT - by default in directory named %BLUE%<u>'</u>%ENDCOLOR%output'. Note all of this can be changed via yinst variables but the simplest case is:
-
-* symlink /home/y/share/htdocs/jutebase to your DOCUMENT_ROOT (can/should? be somewhere in your home directory where you've checked out your subversion tree)
-
-* All of your test files live in DOCUMENT_ROOT/test
-
-* All of JUTE's output will go into DOCUMENT_ROOT/output
-
-
 Install JUTE V8
 ---------------
 
@@ -57,11 +44,11 @@ All test files you run are relative to this directory.
 Require JUTE module in your TEST Javascript
 --------------------------------------------
 
-<verbatim>
+<pre>
 YUI().use('test', 'gallery-jute', ..., function(Y) {
     // YUI3 Test Code...
 });
-</verbatim>
+</pre>
 
 Run a test
 ----------
@@ -85,18 +72,18 @@ JUTE test directory
 
 JUTE pulls test files relative to JUTE_TEST_ROOT.  You set the directory name by:
 
-<verbatim>
+<pre>
 % export JUTE_TEST_ROOT=<SOMETHING_ELSE>
-</verbatim>
+</pre>
 
 Command Line
 -------------
 
 The 'jute_v8' command line requires 1 mandatory argument - the test file name - and one optional argument - generate code coverage or not
 
-<verbatim>
+<pre>
 % jute_v8 <test_file_name> [ 1 ]
-</verbatim>
+</pre>
 
 If a '1' (or any true value) is provided after the test name then code coverage information for this test run is generated.
 
@@ -119,7 +106,7 @@ The format of this file is JUnit XML style test output recognizable by most tool
 
 This looks like:
 
-<verbatim>
+<pre>
    <?xml version="1.0" encoding="UTF-8"?>
    <testsuites>
        <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
@@ -134,7 +121,7 @@ This looks like:
            <testcase name="testAddAppenderToLogger" time="0.001"></testcase>
        </testsuite>
    </testsuites>
-</verbatim>
+</pre>
 
 
 Coverage Output
@@ -161,7 +148,7 @@ You must include YUI3 3.1.1+
 
 Here is a standard test HTML file - we will examine all the important bits below.
 
-<verbatim>
+<pre>
   1 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 [Transitional//EN](Transitional//EN.html)">
   2 <html lang="en">
   3 
@@ -189,7 +176,7 @@ Here is a standard test HTML file - we will examine all the important bits below
  25     <script src="testToolbar.js"></script>
  26 </body>
  27 </html>   
-</verbatim>
+</pre>
 
 Line 8 - the class on the body tag tell YUI3 which skin we want to use.
 
@@ -212,7 +199,7 @@ Your Javascript test file must 'use' the 'gallery-jute' module.
 
 Below is the corresponding test file to the above HTML file - I'll point out the interesting lines below:
 
-<verbatim>
+<pre>
   1 YUI({
   2     logInclude: { [TestRunner](TestRunner.html): true }
   3 }).use('io-base', 'node-event-simulate', 'common-ui-toolbar-base', 'gallery-jute', 'minty_module_toolbar_inbox', function(Y) {
@@ -276,7 +263,7 @@ Below is the corresponding test file to the above HTML file - I'll point out the
  61 Y.Test.Runner.go();
  62                                                                                                                                                                                                       
  63 });
-</verbatim>
+</pre>
 
 Line 2 - Tell the logger to output [TestRunner](TestRunner.html) output
 
@@ -300,9 +287,9 @@ Installation
 
 Even if you already have the 'jute' package installed you still need to:
 
-<verbatim>
+<pre>
 % npm install jute_v8
-</verbatim>
+</pre>
 
 Caveats
 -------
@@ -315,9 +302,9 @@ Debugging
 
 If you set the JUTE_DEBUG environment variable:
 
-<verbatim>
+<pre>
 % export JUTE_DEBUG=1
-</verbatim>
+</pre>
 
 You'll see even more gory debug output.
 
@@ -329,10 +316,10 @@ You should use relative paths in your HTML test files pointing to project files 
 
 #### V8 Makefile rule
 
-<verbatim>
+<pre>
 submit_v8_tests:
     cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/jute_v8.js {} $(DO_COVERAGE} \\; 
-</verbatim>
+</pre>
 
 Viewing Test Results
 ---------------------
@@ -348,7 +335,7 @@ Running individual tests will generate a directory hierarchy rooted at JUTE_OUTP
 
 This can be accomplished by a simple Makefile rule:
 
-<verbatim>
+<pre>
 LCOV_GENHTML = /home/y/bin/genhtml # from 'lcov' if not already installed on your system
 TOTAL_LCOV_FILE = $(OUTPUT_DIR)/lcov.info
 OUTPUT_DIR = JUTE_OUTPUT_ROOT
@@ -360,6 +347,6 @@ make_total_lcov:
   @ls ${OUTPUT_DIR}
   /bin/rm -rf $(OUTPUT_DIR)/lcov-report
   $(LCOV_GENHTML) -o $(OUTPUT_DIR)/lcov-report $(TOTAL_LCOV_FILE)
-</verbatim>
+</pre>
 
 Now to aggregate your coverage output for Hudson or other just:  % make make_total_lcov

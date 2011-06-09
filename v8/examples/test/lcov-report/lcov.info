@@ -1,0 +1,29 @@
+TN:
+SF:/home/trostler/JUTE/v8/examples/thingToTest.js
+FN:1,(anonymous 1)
+FN:8,addLoo
+FN:10,by10
+FN:2,Foo
+FN:9,incr
+
+FNDA:1,(anonymous 1)
+FNDA:1,addLoo
+FNDA:1,by10
+FNDA:7,Foo
+FNDA:1,incr
+
+FNF:5
+FNH:5
+DA:1,1
+DA:2,1
+DA:3,7
+DA:4,7
+DA:7,1
+DA:8,1
+DA:9,1
+DA:10,1
+DA:13,1
+
+LF:9
+LH:9
+end_of_record

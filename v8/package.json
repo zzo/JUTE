@@ -1,6 +1,7 @@
 {
   "name": "jute_v8",
   "version": "1.0.0",
+  "main":"jute_v8",
   "description": "Run unit tests thru V8",
   "keywords": ["unit", "test"],
   "repository": "git://github.com/zzo/JUTE.git",
@@ -9,7 +10,7 @@
   "dependencies": {
     "yui3": ">= 0.5.33"
   },
-  "modules": { "xml_node":"./xml_node.js" },
-  "bin":  { "jute_v8" : "./jute_v8.js" },
+  "directories": { "lib": "./lib", "bin": "./bin" },
+  "modules": { "xml_node":"./xml_node.js", "jute_mini":"./jute_mini.js" },
   "engines": { "node": ">= 0.4.1 < 0.5.0" }
 }

@@ -73,7 +73,7 @@ JUTE test directory
 JUTE pulls test files relative to JUTE_TEST_ROOT.  You set the directory name by:
 
 <pre>
-% export JUTE_TEST_ROOT=<SOMETHING_ELSE>
+% export JUTE_TEST_ROOT=&lt;SOMETHING_ELSE>
 </pre>
 
 Command Line
@@ -82,7 +82,7 @@ Command Line
 The 'jute_v8' command line requires 1 mandatory argument - the test file name - and one optional argument - generate code coverage or not
 
 <pre>
-% jute_v8 <test_file_name> [ 1 ]
+% jute_v8 &lt;test_file_name> [ 1 ]
 </pre>
 
 If a '1' (or any true value) is provided after the test name then code coverage information for this test run is generated.
@@ -107,20 +107,20 @@ The format of this file is JUnit XML style test output recognizable by most tool
 This looks like:
 
 <pre>
-   <?xml version="1.0" encoding="UTF-8"?>
-   <testsuites>
-       <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
-           <testcase name="testLoggerNotInitialized" time="0.001"></testcase>
-           <testcase name="testInitRocketStats" time="0.001"></testcase>
-           <testcase name="testLoggerInititialized" time="0"> </testcase>
-       </testsuite>
-       <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.logger" tests="4" failures="0" time="0.025">
-           <testcase name="testGetTheInitializedLoggerObject" time="0"> </testcase>
-           <testcase name="testLoggerHasCorrectLogLevels" time="0.001"> </testcase>                                                                                                                      
-           <testcase name="testLoggerHasRightNumberOfAppenders" time="0.001"></testcase>
-           <testcase name="testAddAppenderToLogger" time="0.001"></testcase>
-       </testsuite>
-   </testsuites>
+   &lt;?xml version="1.0" encoding="UTF-8"?>
+   &lt;testsuites>
+       &lt;testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
+           &lt;testcase name="testLoggerNotInitialized" time="0.001">&lt;/testcase>
+           &lt;testcase name="testInitRocketStats" time="0.001">&lt;/testcase>
+           &lt;testcase name="testLoggerInititialized" time="0"> &lt;/testcase>
+       &lt;/testsuite>
+       &lt;testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.logger" tests="4" failures="0" time="0.025">
+           &lt;testcase name="testGetTheInitializedLoggerObject" time="0"> &lt;/testcase>
+           &lt;testcase name="testLoggerHasCorrectLogLevels" time="0.001"> &lt;/testcase>                                                                                                                      
+           &lt;testcase name="testLoggerHasRightNumberOfAppenders" time="0.001">&lt;/testcase>
+           &lt;testcase name="testAddAppenderToLogger" time="0.001">&lt;/testcase>
+       &lt;/testsuite>
+   &lt;/testsuites>
 </pre>
 
 
@@ -149,33 +149,33 @@ You must include YUI3 3.1.1+
 Here is a standard test HTML file - we will examine all the important bits below.
 
 <pre>
-  1 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 [Transitional//EN](Transitional//EN.html)">
-  2 <html lang="en">
+  1 &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 [Transitional//EN](Transitional//EN.html)">
+  2 &lt;html lang="en">
   3 
-  4 <head>
-  5   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-  6 </head>
+  4 &lt;head>
+  5   &lt;meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  6 &lt;/head>
   7 
-  8 <body class="yui3-skin-sam">
-  9     <div id="log"></div>
+  8 &lt;body class="yui3-skin-sam">
+  9     &lt;div id="log">&lt;/div>
  10 
- 11     <div id="pagetoolbar">
- 12         <span class="btn left right" >
- 13             <a id="deleteLink" href="http://dont.go.here.com" title="{{str|replace_me}}" data-action="delete">Delete</a>
- 14         </span>
- 15         <span class="btn menu" id="btn-move" data-action="menu">
- 16             <a id="moveLink" href="http://dont.go.here.com" title="{{str|replace_me}}">Move<b></b></a>
- 17         </span>
- 18     </div>
+ 11     &lt;div id="pagetoolbar">
+ 12         &lt;span class="btn left right" >
+ 13             &lt;a id="deleteLink" href="http://dont.go.here.com" title="{{str|replace_me}}" data-action="delete">Delete&lt;/a>
+ 14         &lt;/span>
+ 15         &lt;span class="btn menu" id="btn-move" data-action="menu">
+ 16             &lt;a id="moveLink" href="http://dont.go.here.com" title="{{str|replace_me}}">Move&lt;b>&lt;/b>&lt;/a>
+ 17         &lt;/span>
+ 18     &lt;/div>
  19 
- 20     <script src="http://yui.yahooapis.com/3.3.0/build/yui/yui.js"></script>
- 21     <script src="../../../../src/common/utils/utils.js"></script>
- 22     <script src="../../../../src/common/ui/toolbar/toolbar.js?coverage=1"></script>
- 23     <script src="../../../../src/mods/neo.js"></script>
- 24     <script src="../../../../src/templates/js/minty/module/toolbar/inbox.js"></script>
- 25     <script src="testToolbar.js"></script>
- 26 </body>
- 27 </html>   
+ 20     &lt;script src="http://yui.yahooapis.com/3.3.0/build/yui/yui.js">&lt;/script>
+ 21     &lt;script src="../../../../src/common/utils/utils.js">&lt;/script>
+ 22     &lt;script src="../../../../src/common/ui/toolbar/toolbar.js?coverage=1">&lt;/script>
+ 23     &lt;script src="../../../../src/mods/neo.js">&lt;/script>
+ 24     &lt;script src="../../../../src/templates/js/minty/module/toolbar/inbox.js">&lt;/script>
+ 25     &lt;script src="testToolbar.js">&lt;/script>
+ 26 &lt;/body>
+ 27 &lt;/html>   
 </pre>
 
 Line 8 - the class on the body tag tell YUI3 which skin we want to use.

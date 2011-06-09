@@ -349,4 +349,10 @@ make_total_lcov:
   $(LCOV_GENHTML) -o $(OUTPUT_DIR)/lcov-report $(TOTAL_LCOV_FILE)
 </pre>
 
-Now to aggregate your coverage output for Hudson or other just:  % make make_total_lcov
+Now to aggregate your coverage output for Hudson or other just:  
+
+<pre>
+% make make_total_lcov
+</pre>
+
+And JUTE_OUTPUT_ROOT/lcov-report/index.html will have the rolled-up code coverage information.

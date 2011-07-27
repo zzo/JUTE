@@ -8,7 +8,6 @@ Create:  function(hub) {
                 uid:            process.getuid(),
                 gid:            process.getgid(),
                 port:           8080,
-                cFile:          '/etc/jute.conf', // Default config file location
                 docRoot:        '/var/www/',
                 jutebase:       'jutebase/',
                 testDir:        'test/',
@@ -20,7 +19,6 @@ Create:  function(hub) {
             fs   = require('fs');
 
         if (cFile) {
-            console.log("cFILE is " + cFile);
             // If not a FQPath prepend './'
             if (!cFile.match(/^\//)) {
                 cFile = './' + cFile;
@@ -28,9 +26,8 @@ Create:  function(hub) {
             try {
                 conf = require(cFile) 
             } catch(e) {
-                hub.emit('log', 'error', '\n** Config file "' + cFile + '" does not exist or is invalid! **\n');
-                /*
-                hub.emit('log', 'error', "Format of config file is:\n\
+                hub.emit(hub.LOG, 'rror', '\n** Config file "' + cFile + '" does not exist or is invalid! **\n');
+                hub.emit(hub.LOG, 'error', "Format of config file is:\n\
     module.exports = {\n\
         port:           8080,\n\
         uid:            'trostler',\n\
@@ -43,7 +40,6 @@ Create:  function(hub) {
         coverageJarDir: '/usr/lib/yuitest_coverage'\n\
     };\n\n\
                 ");
-                */
                 process.exit(1);
             }
         }
@@ -66,7 +62,7 @@ Create:  function(hub) {
             process.setgid(config.gid);
             process.setuid(config.uid);
         } catch(e) {
-            hub.emit('log', 'error', "** Unable to set uid/gid: " + e + " **");
+            hub.emit(hub.LOG, 'error', "** Unable to set uid/gid: " + e + " **");
             process.exit(1);
         }
 
@@ -75,8 +71,8 @@ Create:  function(hub) {
             fs.statSync(config.coverageJarDir + 'yuitest-coverage.jar');
             fs.statSync(config.coverageJarDir + 'yuitest-coverage-report.jar');
         } catch(e) {
-            hub.emit('log', 'error', "** Cannot find the YUI Test Coverage JARs in '" + config.coverageJarDir + "' **");
-            hub.emit('log', 'error', "Dowload them from here: https://github.com/yui/yuitest/tree/master/java/build");
+            hub.emit(hub.LOG, 'error', "** Cannot find the YUI Test Coverage JARs in '" + config.coverageJarDir + "' **");
+            hub.emit(hub.LOG, 'error', "Dowload them from here: https://github.com/yui/yuitest/tree/master/java/build");
             process.exit(1);
         }
 
@@ -90,8 +86,8 @@ Create:  function(hub) {
                 throw 'fooble';
             }
         } catch(e) {
-            hub.emit('log', 'error', '** Cannot find "java" executable **');
-            hub.emit('log', 'error', 'Set $JAVA_HOME OR set "java" in your configuration file');
+            hub.emit(hub.LOG, 'error', '** Cannot find "java" executable **');
+            hub.emit(hub.LOG, 'error', 'Set $JAVA_HOME OR set "java" in your configuration file');
             process.exit(1);
         }
 
@@ -99,7 +95,7 @@ Create:  function(hub) {
         var testFile = config.docRoot + config.jutebase + config.outputDir + 'foo';
         fs.writeFile(testFile, 'Test', function (err) {
             if (err) {
-                hub.emit('log', 'error', "** Output directory '" + config.docRoot + config.jutebase + config.outputDir + "' not writable!! **");
+                hub.emit(hub.LOG, 'error', "** Output directory '" + config.docRoot + config.jutebase + config.outputDir + "' not writable!! **");
                 process.exit(1);
             }
             fs.unlinkSync(testFile);

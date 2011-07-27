@@ -4,7 +4,7 @@ var sys       = require('sys'),
     events    = require("events"),
     configure = require('./jute/configure');
     server    = require('./jute/server');
-    eventHubF = function() { events.EventEmitter.call(this) }
+    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; }
     ;
 
 /**
@@ -17,16 +17,16 @@ var eventHub = new eventHubF();
 configure.Create(eventHub);
 server.Create(eventHub);
 
-// Get Party Started
-eventHub.emit('configure', process.argv[2]);
-
 // Some app-wide helpers
-eventHub.addListener('log', function(sev, str) {
+eventHub.addListener(eventHub.LOG, function(sev, str) {
     if (sev === 'error') {
         console.error(str);
     } else {
         console.log(str);
     }
-    
+
 });
+
+// Get Party Started
+eventHub.emit('configure', process.argv[2]);
 

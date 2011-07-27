@@ -95,6 +95,8 @@ The 'jute_v8' command line requires 1 mandatory argument - the test file name - 
 
 If a '1' (or any true value) is provided after the test name then code coverage information for this test run is generated.
 
+&lt;test_file_name> is realtive to JUTE_TEST_ROOT
+
 NOTE!
 =====
 

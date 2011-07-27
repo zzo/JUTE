@@ -1,6 +1,6 @@
 <!-- The code below creates a default page header by spacing out the topic name -->
 
-%SPACEOUT{%TOPIC%}%
+JUTE
 ====================
 
 <!-- %TOC% -->
@@ -23,7 +23,7 @@ Requirements
 yapache 1.x (maybe 2.x works - have not tested) for Selenium and Capture modes
 -------------------------------------------------------------------------------
 
-[NodeJS](NodeJS.html) .2 for v8 mode
+[NodeJS](http://nodejs.org) .4 for v8 mode
 -------------------------------------
 
 

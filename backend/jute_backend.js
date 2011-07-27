@@ -1,18 +1,9 @@
 #!/usr/bin/env node
 
-var connect  = require('connect'), conf,
-    uuid     = require('node-uuid'),
-    os       = require('os'),
-    fs       = require('fs'),
+var cFile    = '/etc/jute.conf',
     sys      = require('sys'),
     events   = require("events"),
-    cFile    = '/etc/jute.conf', // Default config file location
-    docRoot  = '/var/www/',
-    jutebase  = 'jutebase/',
-    testDir   = 'test/',
-    outputDir = 'output/',
-    coverageJarDir = '/usr/lib/yuitest_coverage',
-    eventHubF  = function() { events.EventEmitter.call(this) };
+    eventHubF  = function() { events.EventEmitter.call(this) }
     ;
 
     /**
@@ -21,99 +12,141 @@ var connect  = require('connect'), conf,
     sys.inherits(eventHubF, events.EventEmitter);
     var eventHub = new eventHubF();
 
+    /*
+     * Events we care about
+     */
     eventHub.addListener('configure', configure);
+    eventHub.addListener('configureDone', startServer);
 
-if (process.argv[2]) {
-    // 0 is 'node', 1 is this script
-    cFile = process.argv[2];
-}
-    eventHub.emit('configure', cFile);
+    // Get Party Started
+    eventHub.emit('configure', process.argv[2]);
 
     function configure(cFile) {
+        var config = {
+                uid:            process.getuid(),
+                gid:            process.getgid(),
+                port:           8080,
+                cFile:          '/etc/jute.conf', // Default config file location
+                docRoot:        '/var/www/',
+                jutebase:       'jutebase/',
+                testDir:        'test/',
+                outputDir:      'output/',
+                java:           '/usr/bin/java',
+                coverageJarDir: '/usr/lib/yuitest_coverage'
+            },
+            conf = {},
+            fs   = require('fs');
 
-        console.log('IN CONFIGURE with: ' + cFile);
-try {
-    conf = require(cFile) 
-} catch(e) { 
-    console.log('\n**Config file "' + cFile + '" does not exist or is invalid!**\n'); 
-    console.log('Put the default config file in /etc/jute.conf');
-    console.log("Format of config file is:\n\
-module.exports = {\n\
-    port: 8080,\n\
-    uid: 'trostler',\n\
-    gid: 'pg1090052',\n\
-    docRoot: '/var/www/',\n\
-    jutebase: 'jutebase/',\n\
-    testDir: 'test/',\n\
-    outputDir: 'output/',\n\
-    coverageJarDir: '/usr/lib/yuitest_coverage'\n\
-};\n\
-");
-    process.exit(1);
-}
+        if (cFile) {
+            // If not a FQPath prepend './'
+            if (!cFile.match(/^\//)) {
+                cFile = './' + cFile;
+            }
+            try {
+                conf = require(cFile) 
+            } catch(e) {
+                console.error('\n** Config file "' + cFile + '" does not exist or is invalid! **\n'); 
+                console.error("Format of config file is:\n\
+    module.exports = {\n\
+        port:           8080,\n\
+        uid:            'trostler',\n\
+        gid:            'pg1090052',\n\
+        docRoot:        '/var/www/',\n\
+        jutebase:       'jutebase/',\n\
+        testDir:        'test/',\n\
+        outputDir:      'output/',\n\
+        java:           '/usr/bin/java',\n\
+        coverageJarDir: '/usr/lib/yuitest_coverage'\n\
+    };\n\n\
+                ");
+                process.exit(1);
+            }
+        }
 
-/**
- * SET UP CONFIG VARS
- */
-// run as right person
-if (conf.gid) {
-    process.setgid(conf.gid);
-}
-if (conf.uid) {
-    process.setuid(conf.uid);
-}
-if (conf.docRoot) {
-    docRoot = conf.doc_root;
-}
-if (!docRoot.match(/\/$/)) {
-        docRoot = docRoot + '/';
-}
-if (conf.jutebase) {
-    jutebase = conf.jutebase;
-}
-if (!jutebase.match(/\/$/)) {
-        jutebase = jutebase + '/';
-}
-if (conf.testDir) {
-    testDir = conf.testDir;
-}
-if (!testDir.match(/\/$/)) {
-        testDir = testDir + '/';
-}
-if (conf.outputDir) {
-    outputDir = conf.outputDir;
-}
-if (!outputDir.match(/\/$/)) {
-        outputDir = outputDir + '/';
-}
-if (conf.coverageJarDir) {
-    coverageJarDir = conf.coverageJarDir;
-}
-if (!coverageJarDir.match(/\/$/)) {
-        coverageJarDir = coverageJarDir + '/';
-}
-/**
- * END SET UP CONFIG VARS
- */
-}
+        for(var val in config) {
+            if (conf[val]) {
+                config[val] = conf[val];
+            }
+        }
 
-console.log("Running as " + process.getuid() + '/' + process.getgid());
-console.log("Connect at http://" + os.hostname() + '/jute/');
+        // Make sure all directory values end in '/'...
+        [ 'docRoot', 'jutebase', 'testDir', 'outputDir', 'coverageJarDir' ].forEach(function(dir) {
+            if (!config[dir].match(/\/$/)) {
+                config[dir] += '/';
+            }
+        });
 
+        // Set process uid/gid
+        try {
+            process.setgid(config.gid);
+            process.setuid(config.uid);
+        } catch(e) {
+            console.error("** Unable to set uid/gid: " + e + " **");
+            process.exit(1);
+        }
 
-connect(
-    connect.cookieParser()
-  , connect.session({ secret: 'jute rox', cookie: { maxAge: 5000 }})
-  , connect.favicon()
-  , function(req, res, next){
-    var sess = req.session;
-    console.log(sess);
-    if (!sess.uuid) {
-      sess.uuid = uuid();
-      sess.cookie.expires = false;
+        // Find the YUI coverage JARs
+        try {
+            fs.statSync(config.coverageJarDir + 'yuitest-coverage.jar');
+            fs.statSync(config.coverageJarDir + 'yuitest-coverage-report.jar');
+        } catch(e) {
+            console.error("** Cannot find the YUI Test Coverage JARs in '" + config.coverageJarDir + "' **");
+            console.error("Dowload them from here: https://github.com/yui/yuitest/tree/master/java/build");
+            process.exit(1);
+        }
+
+        // Find Java executable
+        if (process.env.JAVA_HOME) {
+            config.java = [process.env.JAVA_HOME, 'bin', 'java'].join('/');
+        }
+        try {
+            var stat = fs.statSync(config.java);
+            if (!stat.isFile()) {
+                throw 'fooble';
+            }
+        } catch(e) {
+            console.error('** Cannot find "java" executable **');
+            console.error('Set $JAVA_HOME OR set "java" in your configuration file');
+            process.exit(1);
+        }
+
+        // Make sure output directory is writable for grins...
+        var testFile = config.docRoot + config.jutebase + config.outputDir + 'foo';
+        fs.writeFile(testFile, 'Test', function (err) {
+            if (err) {
+                console.error("** Output directory '" + config.docRoot + config.jutebase + config.outputDir + "' not writable!! **");
+                process.exit(1);
+            }
+            fs.unlinkSync(testFile);
+
+            // All is cool
+            eventHub.emit('configureDone', config);
+        });
     }
-        res.setHeader('Content-Type', 'text/html');
-        res.end('<p>views: ' + sess.uuid + '</p>');
-  }
-).listen(conf.port || 80);
+
+    function startServer(config) {
+
+        var connect  = require('connect'),
+            os       = require('os'),
+            uuid     = require('node-uuid');
+
+        console.log("Running as " + process.getuid() + '/' + process.getgid());
+        console.log("Connect at http://" + os.hostname() + '/jute/');
+
+        connect(
+          connect.cookieParser()
+        , connect.session({ secret: 'jute rox', cookie: { maxAge: 5000 }})
+        , connect.favicon()
+        , function(req, res, next) {
+            var sess = req.session;
+            console.log(sess);
+            if (!sess.uuid) {
+                sess.uuid = uuid();
+                sess.cookie.expires = false;
+            }
+            res.setHeader('Content-Type', 'text/html');
+            res.end('<p>views: ' + sess.uuid + '</p>');
+        }
+        ).listen(config.port);
+    }
 

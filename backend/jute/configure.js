@@ -1,5 +1,7 @@
 module.exports = {
 Create:  function(hub) {
+    path = require('path');
+
     // Events I care about
     hub.addListener('configure', configure);
 
@@ -13,6 +15,7 @@ Create:  function(hub) {
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
+                testRegex:      '*.htm*',
                 coverageJarDir: '/usr/lib/yuitest_coverage'
             },
             conf = {},
@@ -57,6 +60,11 @@ Create:  function(hub) {
             }
         });
 
+        config.outputDir = path.join(config.docRoot, config.jutebase, config.outputDir);
+
+        config.testDirWeb   = path.join('/', config.jutebase, config.testDir);
+        config.testDir      = path.join(config.docRoot, config.jutebase, config.testDir);
+
         // Set process uid/gid
         try {
             process.setgid(config.gid);
@@ -68,8 +76,8 @@ Create:  function(hub) {
 
         // Find the YUI coverage JARs
         try {
-            fs.statSync(config.coverageJarDir + 'yuitest-coverage.jar');
-            fs.statSync(config.coverageJarDir + 'yuitest-coverage-report.jar');
+            fs.statSync(path.join(config.coverageJarDir, 'yuitest-coverage.jar'));
+            fs.statSync(path.join(config.coverageJarDir, 'yuitest-coverage-report.jar'));
         } catch(e) {
             hub.emit(hub.LOG, 'error', "** Cannot find the YUI Test Coverage JARs in '" + config.coverageJarDir + "' **");
             hub.emit(hub.LOG, 'error', "Dowload them from here: https://github.com/yui/yuitest/tree/master/java/build");
@@ -78,7 +86,7 @@ Create:  function(hub) {
 
         // Find Java executable
         if (process.env.JAVA_HOME) {
-            config.java = [process.env.JAVA_HOME, 'bin', 'java'].join('/');
+            config.java = path.join(process.env.JAVA_HOME, 'bin', 'java');
         }
         try {
             var stat = fs.statSync(config.java);
@@ -92,15 +100,16 @@ Create:  function(hub) {
         }
 
         // Make sure output directory is writable for grins...
-        var testFile = config.docRoot + config.jutebase + config.outputDir + 'foo';
+        var testFile = path.join(config.outputDir, 'foo');
         fs.writeFile(testFile, 'Test', function (err) {
             if (err) {
-                hub.emit(hub.LOG, 'error', "** Output directory '" + config.docRoot + config.jutebase + config.outputDir + "' not writable!! **");
+                hub.emit(hub.LOG, 'error', "** Output directory '" + config.outputDir + "' not writable!! **");
                 process.exit(1);
             }
             fs.unlinkSync(testFile);
 
-            // All is cool
+            // All is cool - stash config & move on
+            hub.config = config;
             hub.emit('configureDone', config);
         });
     }

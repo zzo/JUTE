@@ -3,17 +3,16 @@ Create:  function(hub) {
     // Events I care about
     hub.addListener('configureDone', startServer);
 
-    function startServer(config) {
+    function startServer() {
 
         var connect  = require('connect'),
             os       = require('os'),
             sys      = require('sys'),
             uuid     = require('node-uuid');
 
-
         hub.emit(hub.LOG, 'info', "Running as " + process.getuid() + '/' + process.getgid());
         hub.emit(hub.LOG, 'info', "Connect at http://" + os.hostname() + '/jute/');
-        hub.emit(hub.LOG, 'info', sys.inspect(config));
+        hub.emit(hub.LOG, 'info', sys.inspect(hub.config));
 
         connect(
           connect.cookieParser()
@@ -38,21 +37,36 @@ Create:  function(hub) {
         }
         , connect.logger()
         , connect.router(function(app){
-              app.get('/jute_docs/:file', function(req, res, next){
-                sendFullFile(config.docRoot + req.url, req, res, next);
-              });
-            app.put('/user/:id', function(req, res, next){
-                // populates req.params.id
-              });
-        })
-        ).listen(config.port);
+            app.get('/jute_docs/:file', function(req, res, next){
+                sendFullFile(hub.config.docRoot + req.url, req, res, next);
+            });
+            //app.get('/jute/_:action:qs?', function(req, res, next){
+            app.get(/\/jute\/_([^\?]+)/, function(req, res, next){
+                    console.log('MATCHED: ' + sys.inspect(req.params));
+                hub.once('pruneDone', function(redirect) {
+                    if (redirect) {
+                        // done
+                        res.end(JSON.stringify({ redirect_run_tests: '/jute_docs/run_tests.html' }));
+                    } else {
+                        // do what they actually want
+                        hub.emit('action:' + req.params[0], req, res);
+                    }
+                });
 
-        hub.emit('serverStarted', config);
+                // ALWAYS CALL PRUNE FIRST!!
+                hub.emit('action:prune', req.params[0], req);
+            });
+        })
+        ).listen(hub.config.port);
+
+        hub.emit('serverStarted');
     }
 
     function sendFullFile(path, req, res, next) {
 
         var fs = require('fs');
+        path = path.replace(/\?.*/,''); // get rid of any query string
+
         fs.stat(path, function(err, stat) {
             var mime = require('mime'), type, charset,
                 cutils = require('connect/lib/utils');

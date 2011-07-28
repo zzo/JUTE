@@ -54,11 +54,13 @@ Create:  function(hub) {
         }
 
         // Make sure all directory values end in '/'...
+        /*
         [ 'docRoot', 'jutebase', 'testDir', 'outputDir', 'coverageJarDir' ].forEach(function(dir) {
             if (!config[dir].match(/\/$/)) {
                 config[dir] += '/';
             }
         });
+        */
 
         config.outputDir = path.join(config.docRoot, config.jutebase, config.outputDir);
 
@@ -100,13 +102,13 @@ Create:  function(hub) {
         }
 
         // Make sure output directory is writable for grins...
-        var testFile = path.join(config.outputDir, 'foo');
-        fs.writeFile(testFile, 'Test', function (err) {
+        var testDir = path.join(config.outputDir, 'foo');
+        fs.mkdir(testDir, 0777, function(err) {
             if (err) {
                 hub.emit(hub.LOG, 'error', "** Output directory '" + config.outputDir + "' not writable!! **");
                 process.exit(1);
             }
-            fs.unlinkSync(testFile);
+            fs.rmdirSync(testDir);
 
             // All is cool - stash config & move on
             hub.config = config;

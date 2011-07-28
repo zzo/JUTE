@@ -1,18 +1,19 @@
 module.exports = {
 Create:  function(hub) {
     // Events I care about
-    hub.addListener('configureDone', startServer);
+    hub.addListener('startServer', startServer);
 
     function startServer() {
 
         var connect  = require('connect'),
             os       = require('os'),
             sys      = require('sys'),
+            path     = require('path'),
             uuid     = require('node-uuid');
 
         hub.emit(hub.LOG, 'info', "Running as " + process.getuid() + '/' + process.getgid());
         hub.emit(hub.LOG, 'info', "Connect at http://" + os.hostname() + '/jute/');
-        hub.emit(hub.LOG, 'info', sys.inspect(hub.config));
+//        hub.emit(hub.LOG, 'debug', sys.inspect(hub.config));
 
         connect(
           connect.cookieParser()
@@ -38,23 +39,20 @@ Create:  function(hub) {
         , connect.logger()
         , connect.router(function(app){
             app.get('/jute_docs/:file', function(req, res, next){
-                sendFullFile(hub.config.docRoot + req.url, req, res, next);
+                sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
             });
-            //app.get('/jute/_:action:qs?', function(req, res, next){
             app.get(/\/jute\/_([^\?]+)/, function(req, res, next){
-                    console.log('MATCHED: ' + sys.inspect(req.params));
-                hub.once('pruneDone', function(redirect) {
-                    if (redirect) {
-                        // done
-                        res.end(JSON.stringify({ redirect_run_tests: '/jute_docs/run_tests.html' }));
-                    } else {
-                        // do what they actually want
-                        hub.emit('action:' + req.params[0], req, res);
-                    }
-                });
-
-                // ALWAYS CALL PRUNE FIRST!!
-                hub.emit('action:prune', req.params[0], req);
+                hub.emit('action', req.params[0], req, res);
+            });
+            app.post('/jute/_test_report', function(req, res, next){
+                hub.emit('action', 'test_report', req, res);
+            });
+            app.get(/\/jutebase\/([^\?]+)/, function(req, res, next){
+                // Fetching a TEST or SRC file!!
+                // If this file has do_coverage=1 on it we may need to do
+                //  something - otherwise it's just a static file
+                //  lop off query string & send it
+                sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
             });
         })
         ).listen(hub.config.port);
@@ -62,6 +60,9 @@ Create:  function(hub) {
         hub.emit('serverStarted');
     }
 
+    /*
+     * Sucked mostly from connection/middleware/static
+     */
     function sendFullFile(path, req, res, next) {
 
         var fs = require('fs');

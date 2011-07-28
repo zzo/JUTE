@@ -14,7 +14,7 @@ var sys       = require('sys'),
 sys.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
-// Start up modules
+// Start up base modules
 configure.Create(eventHub);
 server.Create(eventHub);
 actions.Create(eventHub);
@@ -30,5 +30,9 @@ eventHub.addListener(eventHub.LOG, function(sev, str) {
 });
 
 // Get Party Started
+eventHub.on('configureDone', function() {
+    // Note config gets stashed in eventHub (eventHub.config)
+    eventHub.emit('startServer');
+});
 eventHub.emit('configure', process.argv[2]);
 

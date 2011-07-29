@@ -37,19 +37,17 @@ module.exports = {
                     continue;
                 }
 
-                // So either the browser matches OR it's a Selenium test
-                //   so we match on remote IP
+                // If this test doesn't have a specific browser for it
+                //  then it is a Selenium test - which means give it to anyone
                 if (!test.browser) {
                     // A Selenium host
                     test.browser = browser;
-                    cache.browsers[browser].is_selenium = 1;
                 }
 
                 // This test already running in another browser
-                if (test.browser != browser) {
-                    continue;
-                }
+                if (test.browser != browser) continue;
 
+                // Otherwise start running this test in capture mode!!
                 test.running = now;
                 testURL = test.url;
                 break;

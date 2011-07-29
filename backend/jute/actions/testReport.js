@@ -51,11 +51,11 @@ module.exports = {
                 var totalTests = cache.tests_to_run.length;
                 for (var i = 0; i < totalTests; i++) {
                     var test = cache.tests_to_run[i];
-                    if (test.browser == browser.session.uuid) {
+                    if (test.browser == req.session.uuid) {
                         if (test.sendOutput) {
                             common.sendRemoteOutput(test.sendOutput, obj.name + "finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + ' seconds');
                         }
-                        cache.test_to_run.splice(i, 1);
+                        cache.tests_to_run.splice(i, 1);
                         break;
                     }
                 }

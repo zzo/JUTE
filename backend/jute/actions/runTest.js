@@ -9,53 +9,87 @@ module.exports = {
         hub.addListener('action:run_test', runTest);
 
         function runTest(req, res, cache) {
+            var report = '';
             req.on('data', function(chunk) {
                 report += chunk;
             });
+
             req.on('end', function() {
-                var obj = qs.parse(report),
-                    tests
+                var qs = require('querystring'),
+                    obj = qs.parse(report),
+                    sys = require('sys'),
+                    tests, multipleFromUI = false
                 ;
 
                 if (obj.test) {
-                    tests = [ obj.test ];
+                    // 'run multiple' from UI
+                    if (typeof obj.test == 'object') {
+                        multipleFromUI = true;
+                        // take off lame ';' at end of each test
+                        tests = [];
+                        obj.test.forEach(function(test) {
+                            tests.push(test.replace(/;$/, ''));
+                        });
+                    } else {
+                        tests = [ obj.test ];
+                    }
                 } else if (obj.tests) {
                     tests = obj.tests.split(/\s+/);
                 }
 
-                tests.forEach(function(test) {
-                    var path = require('path');
+                console.log('TESTS: ' + sys.inspect(tests));
+                console.log(Array.map);
 
-                    if (obj.sel_host) {
-                        // A Selenium Test!
-                        var base_url   = req.headers.host,
-                            url_to_hit = '/';
-                        ;
-
-                        cache.tests_to_run.push({
-                            url:            req.headers.host,
-                            sel_url:        '/',
-                            sel_host:       obj.sel_host,
-                            sel_browser:    obj.sel_browser,
+                var pushed = false;
+                for (var i = 0; i < tests.length; i++) {
+                    var test = tests[i],
+                        test_obj = {
+                            url:            test,
                             running:        0,
                             sendOutput:     obj.send_output
-                        });
-                    } else {
-                        // Send to each captured browser
-                        cache.browsers.forEach(function(browser) {
-                            // Don't add tests to any Selenium browsers - they go away...
-                            if (cache.browsers[browser].is_selenium) continue;
+                        };
 
-                            cache.tests.to_run.push({
-                                url:        test,
-                                browser:    browser,
-                                running:    0,
-                                sendOutput: obj.send_output
-                            });
-                        });
+                    if (obj.sel_host) {
+                        // A Selenium Test! - meaning anyone can run it
+                        cache.tests_to_run.push(test_obj);
+                        pushed = true;
+                    } else {
+                        // Send to each test to each captured browser
+                        //  only THIS browser can run this test
+                        test_obj.browser = browser;
+                        for (var browser in cache.browsers) {
+                            cache.tests_to_run.push(test_obj);
+                            pushed = true;
+                        }
                     }
-                });
-        });
+                }
+
+                if (pushed) {
+                    if (obj.sel_host) {
+                        if (obj.send_output) {
+                            common.sendToClient(req, "Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
+                        }
+
+                        // Start up Selenium
+                        hub.emit('action:startSelenium', req, res, cache, tests.length);
+                    } else {
+                        // UI wants to run multiple tests - redirect to it!
+                        if (multipleFromUI) {
+                            // Now tell browser to run the tests!
+                            res.writeHead(302, { Location: "/jute_docs/run_tests.html" });
+                            res.end("/jute_docs/run_tests.html");
+                        } else {
+                            // Command line client
+                            res.end('Added ' + (obj.test || obj.tests) + ' tests');
+                        }
+                    }
+                } else {
+                    hub.emit(hub.LOG, 'error',  "No browsers listening!");
+                    response.statusCode = 412; // Ye Olde Failed Precondition
+                    res.end('No browsers listening!!  Test(s) not added!');
+                }
+            });
+        }
     }
 };
 

@@ -66,28 +66,21 @@ if ($v8) {
 
 $args->{send_output} = $send_output;
 
-my $jute_server = '$(jute_server)' || 'localhost';
+my $jute_server = 'http://dashr.net:8080';
 
 print "Submitting: " . Dumper($args) . "\n";
-#my $response = $ua->post("http://$jute_server/jute/_run_test", $args);
 my $bytes_received = 0;
-my $response = $ua->request(POST("http://$jute_server/jute/_run_test", $args), 
-               sub {
-                   my($chunk, $res) = @_;
-                   $bytes_received += length($chunk);
-                   unless (defined $expected_length) {
-                      $expected_length = $res->content_length || 0;
-                   }
-                   if ($expected_length) {
-#                        printf STDERR "%d%% - ", 100 * $bytes_received / $expected_length;
-                   }
-#                   print STDERR "$bytes_received bytes received\n";
-
-                   # XXX Should really do something with the chunk itself
-                   # print $chunk;
-                    print "The chunk is:\n" . $chunk;
-               }
+my $response = $ua->request(POST("$jute_server/jute/_run_test", $args),
+    sub {
+        my($chunk, $res) = @_;
+        $bytes_received += length($chunk);
+        unless (defined $expected_length) {
+            $expected_length = $res->content_length || 0;
+        }
+        print "The chunk is:\n" . $chunk;
+    }
 );
+
 print "The response code is:\n" . $response->code . "\n";
 print "The response decoded content is:\n" . $response->decoded_content . "\n";
 exit if ($response->is_success);
@@ -98,10 +91,10 @@ sub fix_test {
 
     return $test if ($v8);
 
-    $test =~ s#^\.\.#/$(html_root)#;
-    if ($test !~ m#^/#) {
-        $test = '/$(html_root)/$(test_dir)/' . $test;
-    }
+#    $test =~ s#^\.\.#/$(html_root)#;
+#    if ($test !~ m#^/#) {
+#        $test = '/$(html_root)/$(test_dir)/' . $test;
+#    }
 
     return $test;
 }

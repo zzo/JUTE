@@ -37,9 +37,6 @@ module.exports = {
                     tests = obj.tests.split(/\s+/);
                 }
 
-                console.log('TESTS: ' + sys.inspect(tests));
-                console.log(Array.map);
-
                 var pushed = false;
                 for (var i = 0; i < tests.length; i++) {
                     var test = tests[i],
@@ -54,15 +51,24 @@ module.exports = {
                         cache.tests_to_run.push(test_obj);
                         pushed = true;
                     } else {
-                        // Send to each test to each captured browser
-                        //  only THIS browser can run this test
-                        test_obj.browser = browser;
-                        for (var browser in cache.browsers) {
+                        if (multipleFromUI) {
+                            // Only run these tests in THIS browser from the UI
+                            test_obj.browser = req.session.uuid;
                             cache.tests_to_run.push(test_obj);
                             pushed = true;
+                        } else {
+                            // Send to each test to each captured browser
+                            for (var browser in cache.browsers) {
+                                test_obj.browser = browser;
+                                cache.tests_to_run.push(test_obj);
+                                pushed = true;
+                            }
                         }
                     }
                 }
+
+                console.log('RUNNING THESE TESTS!');
+                console.log(sys.inspect(cache.tests_to_run));
 
                 if (pushed) {
                     if (obj.sel_host) {

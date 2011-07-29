@@ -29,7 +29,8 @@ Create:  function(hub) {
             try {
                 conf = require(cFile) 
             } catch(e) {
-                hub.emit(hub.LOG, 'rror', '\n** Config file "' + cFile + '" does not exist or is invalid! **\n');
+                hub.emit(hub.LOG, 'error', '\n** Config file "' + cFile + '" does not exist or is invalid! **\n');
+                hub.emit(hub.LOG, 'error', e.toString() + "\n");
                 hub.emit(hub.LOG, 'error', "Format of config file is:\n\
     module.exports = {\n\
         port:           8080,\n\
@@ -42,6 +43,8 @@ Create:  function(hub) {
         java:           '/usr/bin/java',\n\
         coverageJarDir: '/usr/lib/yuitest_coverage'\n\
     };\n\n\
+\
+All values are optional.\n\
                 ");
                 process.exit(1);
             }

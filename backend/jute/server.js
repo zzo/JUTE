@@ -17,7 +17,7 @@ Create:  function(hub) {
 
         connect(
           connect.cookieParser()
-        , connect.session({ secret: 'jute rox', cookie: { maxAge: 5000 }})
+        , connect.session({ secret: 'jute rox' })
         , connect.favicon()
         , connect.query()
         , function(req, res, next) {
@@ -44,9 +44,14 @@ Create:  function(hub) {
             app.get(/\/jute\/_([^\?]+)/, function(req, res, next){
                 hub.emit('action', req.params[0], req, res);
             });
+            app.post(/\/jute\/_([^\?]+)/, function(req, res, next){
+                hub.emit('action', req.params[0], req, res);
+            });
+            /*
             app.post('/jute/_test_report', function(req, res, next){
                 hub.emit('action', 'test_report', req, res);
             });
+            */
             app.get(/\/jutebase\/([^\?]+)/, function(req, res, next){
                 // Fetching a TEST or SRC file!!
                 // If this file has do_coverage=1 on it we may need to do
@@ -65,8 +70,31 @@ Create:  function(hub) {
      */
     function sendFullFile(path, req, res, next) {
 
-        var fs = require('fs');
+        var p = require('path'),
+            exec = require('child_process').exec;
+
         path = path.replace(/\?.*/,''); // get rid of any query string
+
+        // Coverage this bad boy!
+        if (req.query.coverage && req.headers.referer.match('do_coverage=1')) {
+            var tempFile = p.join('/tmp', p.basename(path));
+            hub.emit(hub.LOG, 'info', "Generating coverage file " + tempFile + " for " + path);
+            exec(hub.config.java + ' -jar ' + p.join(hub.config.coverageJarDir, "yuitest-coverage.jar") + " -o " + tempFile + " " + path, function(err) {
+                if (err) {
+                    hub.emit(hub.LOG, 'error', "Error coverage'ing " + path + ": " + err);
+                } else {
+                    _doSend(tempFile, req, res, next);
+                    // DO NOT delete coverage'd file for debugging
+                }
+            });
+        } else {
+            _doSend(path, req, res, next);
+        }
+    }
+
+    function _doSend(path, req, res, next) {
+
+        var fs = require('fs');
 
         fs.stat(path, function(err, stat) {
             var mime = require('mime'), type, charset,

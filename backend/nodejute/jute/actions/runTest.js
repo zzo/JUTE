@@ -9,7 +9,9 @@ module.exports = {
         hub.addListener('action:run_test', runTest);
 
         function runTest(req, res, cache) {
-            var report = '';
+            var report = ''
+                uuid   = require('node-uuid');
+
             req.on('data', function(chunk) {
                 report += chunk;
             });
@@ -50,6 +52,11 @@ module.exports = {
                         if (obj.send_output) {
                             test_obj.sendOutput = 1;
                         }
+
+                        // Only pass these tests out to selenium hosts started by this
+                        //  this is how we keep track
+                        obj.uuid = test_obj.browser = uuid();
+
                         cache.tests_to_run.push(test_obj);
                         pushed = true;
                     } else {
@@ -72,7 +79,7 @@ module.exports = {
                 if (pushed) {
                     if (obj.sel_host) {
                         if (obj.send_output) {
-                            common.sendToClient(req, "Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
+                            res.write("Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
                         }
 
                         // Start up Selenium & Listen for results
@@ -87,7 +94,8 @@ module.exports = {
                                 hub.emit('action:checkResults');
                             }
                         });
-                        hub.emit('action:seleniumStart', req, res, cache, obj, tests.length);
+
+                        hub.emit('action:seleniumStart', req, res, obj, tests.length);
                     } else {
                         // UI wants to run multiple tests - redirect to it!
                         if (multipleFromUI) {

@@ -1,0 +1,18 @@
+info it worked if it ends with ok
+verbose cli [ 'node', '/usr/local/bin/npm', 'start', 'jute' ]
+info using npm@1.0.22
+info using node@v0.4.5
+verbose config file /home/trostler/.npmrc
+verbose config file /usr/local/etc/npmrc
+ERR! Error: ENOENT, No such file or directory '/home/trostler/JUTE/backend/nodejute/node_modules/jute/package.json'
+ERR! Report this *entire* log at:
+ERR!     <http://github.com/isaacs/npm/issues>
+ERR! or email it to:
+ERR!     <npm-@googlegroups.com>
+ERR! 
+ERR! System Linux 2.6.38.8-vs2.3.0.37-rc17+
+ERR! command "node" "/usr/local/bin/npm" "start" "jute"
+ERR! cwd /home/trostler/JUTE/backend/nodejute/jute/actions
+ERR! node -v v0.4.5
+ERR! npm -v 1.0.22
+verbose exit [ 2, true ]

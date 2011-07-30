@@ -8,6 +8,7 @@ Create:  function(hub) {
         var connect  = require('connect'),
             os       = require('os'),
             sys      = require('sys'),
+            mime     = require('mime'),
             path     = require('path'),
             uuid     = require('node-uuid');
 
@@ -28,15 +29,13 @@ Create:  function(hub) {
             }
             next();
         }
+        , connect.logger('dev')
         , function(req, res, next) {
-            if (req.url == '/') {
-                res.writeHead(301, { Location: '/jute_docs/capture.html' });
-                res.end();
-            } else {
-                next();
+            if (req.query.selenium) {
+                req.session.seleniumUUID = req.query.selenium;
             }
+            next();
         }
-        , connect.logger()
         , connect.router(function(app){
             app.get('/jute_docs/:file', function(req, res, next){
                 sendFullFile(path.join(__dirname, req.url), req, res, next);
@@ -47,11 +46,6 @@ Create:  function(hub) {
             app.post(/\/jute\/_([^\?]+)/, function(req, res, next){
                 hub.emit('action', req.params[0], req, res);
             });
-            /*
-            app.post('/jute/_test_report', function(req, res, next){
-                hub.emit('action', 'test_report', req, res);
-            });
-            */
             app.get(/\/jutebase\/([^\?]+)/, function(req, res, next){
                 // Fetching a TEST or SRC file!!
                 // If this file has do_coverage=1 on it we may need to do
@@ -60,6 +54,10 @@ Create:  function(hub) {
                 sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
             });
         })
+        , function(req, res, next) {
+                res.writeHead(301, { Location: '/jute_docs/capture.html' });
+                res.end();
+        }
         ).listen(hub.config.port);
 
         hub.emit('serverStarted');
@@ -97,7 +95,7 @@ Create:  function(hub) {
         var fs = require('fs');
 
         fs.stat(path, function(err, stat) {
-            var mime = require('mime'), type, charset,
+            var type, charset,
                 cutils = require('connect/lib/utils');
 
             if (err) {
@@ -107,23 +105,23 @@ Create:  function(hub) {
                 next();
             }
 
-            type = mime.lookup(path);
-            res.setHeader('Content-Length', stat.size);
-            res.setHeader('Last-Modified', stat.mtime.toUTCString());
-            res.setHeader('ETag', cutils.etag(stat));
-
-            // conditional GET support
-            if (cutils.conditionalGET(req)) {
-                if (!cutils.modified(req, res)) {
-                return cutils.notModified(res);
-                }
+//            type = mime.lookup(path);
+            var type;
+            if (path.match(/\.html$/)) {
+                type = 'text/html';
+            }  else if (path.match(/\.js$/)) {
+                type = 'application/javascript';
             }
+            res.setHeader('Content-Length', stat.size);
+            res.setHeader('Last-Modified', new Date().toUTCString());
 
             // header fields
+            /*
             if (!res.getHeader('content-type')) {
                 charset = mime.charsets.lookup(type);
                 res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
             }
+            */
 
             fs.createReadStream(path).pipe(res);
         });

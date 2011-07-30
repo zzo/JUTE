@@ -53,7 +53,7 @@ module.exports = {
                     var test = cache.tests_to_run[i];
                     if (test.browser == req.session.uuid) {
                         if (test.sendOutput) {
-                            common.sendRemoteOutput(test.sendOutput, obj.name + "finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + ' seconds');
+                            res.write(obj.name + "finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + ' seconds');
                         }
                         cache.tests_to_run.splice(i, 1);
                         break;

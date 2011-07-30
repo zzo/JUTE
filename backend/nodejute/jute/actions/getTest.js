@@ -30,7 +30,7 @@ module.exports = {
                     var error = 'Skipping bad test: ' + test.url + ': we thought it was running!';
                     hub.emit(hub.LOG, 'error', error);
                     if (test.sendOutput) {
-                        common.sendRemoteOutput(test.send_output, error);
+                        res.write(error);
                     }
                     cache.tests_to_run.splice(i, 1);
                     i--;
@@ -39,8 +39,8 @@ module.exports = {
 
                 // If this test doesn't have a specific browser for it
                 //  then it is a Selenium test - which means give it to anyone
-                if (!test.browser) {
-                    // A Selenium host
+                if (test.browser == req.session.seleniumUUID) {
+                    // The Selenium host
                     test.browser = browser;
                 }
 

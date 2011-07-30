@@ -56,14 +56,6 @@ module.exports = {
                     file = fs.readFileSync(filename, 'utf8');
 
                 return file.match(/failures="[1-9]/);
-            },
-
-            sendToClient: function(req, str) {
-                req.write(str);
-            },
-
-            sendRemoteOutput: function(req, str) {
-                req.write(str);
             }
         };
     }

@@ -9,12 +9,8 @@ module.exports = {
 
         // Suck in all available actions
         actions.forEach(function(action) {
-            var h = require(action).Create(hub);
-            if (path.basename(action, '.js') == 'common') {
-                h.common = h;
-            }
-
-
+            var act = require(action);
+            act.Create && act.Create(hub);
         });
 
         hub.addListener('action', function(action, req, res) {

@@ -8,7 +8,7 @@ module.exports = {
         // Events I care about
         hub.addListener('action:checkResults', checkResults);
 
-        hub.addListener('action:status', function(res, req, cache) {
+        hub.addListener('action:status', function(req, res, cache) {
             hub.once('action:checkedResults', function(results) {
                 results.current_status = cache;
                 res.end(JSON.stringify(results));

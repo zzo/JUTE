@@ -1,0 +1,37 @@
+{
+  "name": "jute",
+  "description": "Javascript Unit Test Environment",
+  "keywords": ["selenium", "test", "testing", "unit", "tests"],
+  "version": "0.0.1",
+  "author": "Mark Ethan Trostler <mark@zzo.com>",
+  "bin" : { "jute" : "./jute_backend.js", "jute_submit_test": "./submit_test.js" },
+  "scripts" : { 
+    "start" : "nohup node ./jute_backend.js > /tmp/jute.log  &",
+    "stop"  : "kill `cat /tmp/jute.pid`",
+    "install": "npm install glob"
+  },
+  "engines": { "node": ">= 0.4.0" },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zzo/JUTE.git"
+  },
+  "homepage": "https://github.com/zzo/JUTE",
+  "dependencies" :
+    {
+        "soda" : "0.2.4"
+      , "node-uuid": "1.2.0"
+      , "glob" : "2.0.7"
+      , "connect" : "1.6.0"
+      , "argsparser" : ""
+  },
+  "config" : {
+    "port" : "8080",
+    "docRoot":  "/var/www/",
+    "jutebase": "jutebase/",
+    "testDir":  "test/",
+    "outputDir": "output/",
+    "java": "/usr/bin/java",
+    "testRegex": "*.htm*"
+  }
+}
+

@@ -1,0 +1,14 @@
+{
+  "name": "jute",
+  "description": "Javascript Unit Test Environment",
+  "keywords": ["selenium", "test", "testing", "unit", "tests"],
+  "version": "1.0",
+  "author": "Mark Ethan Trostler <mark@zzo.com>",
+  "main": "./lib/soda/index.js",
+  "engines": { "node": ">= 0.4.0" },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zzo/JUTE.git"
+  }
+}
+

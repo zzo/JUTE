@@ -25,8 +25,8 @@ var  fs         = require('fs')
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
     ,DONE       = false
     ,EXIT       = false
-    ,coverageReportJar = PATH.join(__dirname, 'jute', 'actions')
-    ,coverageJar = PATH.join(__dirname, 'jute')
+    ,coverageReportJar = PATH.join(__dirname, 'jute', 'actions', 'yuitest-coverage-report.jar')
+    ,coverageJar       = PATH.join(__dirname, 'jute', 'yuitest-coverage.jar')
     ,DOC_ROOT
     ,TEST_ROOT
     ,OUTPUT_DIR
@@ -51,6 +51,8 @@ eventHub.on('configureDone', function() {
 
     DO_COVERAGE = TEST_FILE.match(/do_coverage=1/);
     TEST_FILE   = TEST_FILE.replace(/\?.*/,''); // get rid of any query string
+
+    console.log('Testing ' + TEST_FILE + ' with' + (DO_COVERAGE ? '' : 'out') + ' code coverage');
 
     // Find java is we're doing coverage....
     if (DO_COVERAGE) {
@@ -99,7 +101,7 @@ function tests_done(data, report_data, cover_object, cover_out) {
 
         fs.writeFileSync(cover_out_file, cover_out);
 
-        coverage = spawn(config.java, [ '-jar', PATH.join(coverageReportJar, 'yuitest-coverage-report.jar'), '--format', 'lcov', '-o', PATH.join(dirname, 'lcov-report'), cover_out_file ]);
+        coverage = spawn(config.java, [ '-jar', coverageReportJar, '--format', 'lcov', '-o', PATH.join(dirname, 'lcov-report'), cover_out_file ]);
         coverage.on('exit', function(code) {
             for (file in cover_object) {
                 cover = cover_object[file];
@@ -162,7 +164,6 @@ function doit(data, d, w) {
 
         document.innerHTML = data;
         document.createElement = createElement;
-        Y.log('Running ' + TEST_FILE);
 
         // Work around some eval goo - eval in global context otherwise webkit complains
         window.eval = eval = function(goo) { return orig_eval.call(null, goo); }
@@ -185,7 +186,7 @@ function doit(data, d, w) {
                 ,navigator: window.navigator
                 ,location: { href: '' }
                 ,Image: function(){}
-                ,alert: function(str) { console.log('ALERT: ' + str); }
+                ,alert: Y.log
                 ,__NODE: true
             }
         );
@@ -294,7 +295,7 @@ function doit(data, d, w) {
                         // Get coveraged version of this file
                         DEBUG('Doing coverage for ' + ssrc[0]);
                         full_path_file = PATH.join('/tmp/', PATH.basename(ssrc[0]));
-                        coverage = spawn(config.java, [ '-jar', PATH.join(coverageJar, 'yuitest-coverage.jar'), '-o', full_path_file, ssrc[0] ]);
+                        coverage = spawn(config.java, [ '-jar', coverageJar, '-o', full_path_file, ssrc[0] ]);
                         coverage.on('exit', function(code) {
                             fs.readFile(full_path_file, 'utf8', function (err, data) {
                                 if (err) throw err;

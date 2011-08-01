@@ -44,10 +44,6 @@ if (args.v8 && args.sel_host) {
     process.exit(1);
 }
 
-if (args.v8 && (args.host || args.port)) {
-    console.error("Erg V8 or Capture?  Defaulting to V8...");
-}
-
 // Make sure we have an array of test(s)
 if (typeof args.test != 'object') {
     args.test = [ args.test ];
@@ -57,66 +53,78 @@ if (args.v8) {
     var exec = require('child_process').exec,
         path = require('path');
 
-    args.test.forEach(function(test) {
-        exec(path.join(__dirname, 'jute_v8.js'), test);
+    for (var i = 0; i < args.test.length; i++) {
+        var test = args.test[i];
+        exec(path.join(__dirname, 'jute_v8.js') + ' ' + test, function(error, stdout, stderr) {
+            if (error) {
+                console.error("Error running jute_v8: " + error);
+            } else {
+                console.log(stdout);
+                console.error(stderr);
+            }
+
+            if (i == args.length) {
+                process.exit(0);
+            }
+        });
+    }
+
+} else {
+    // POST space separated list of tests
+    juteArgs.tests = args.test.join(' ');
+    
+    // Toss in Selenium stuff
+    if (args.sel_host) {
+        juteArgs.sel_host = args.sel_host;
+        juteArgs.sel_browser = args.sel_browser;
+    }
+    
+    // Whether to stream output back
+    if (args.send_output) {
+        juteArgs.send_output = 1;
+    }
+    
+    var options = {
+        host: args.host,
+        port: args.port,
+    };
+    
+    if (args.clear_results) {
+        console.log('Clearing all previous results...');
+        options.path = '/jute/_clear_results';
+        http.get(options, function(res) { });
+    }
+    
+    options.path = '/jute/_run_test';
+    options.method = 'POST';
+    // See what we got
+    console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
+    
+    // POST AWAY!
+    var req = http.request(options, function(res) {
+        console.log('Status Response from JUTE: ' + res.statusCode);
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log(chunk);
+        });
+        res.on('end', function() {
+        });
     });
-    process.exit(0);
-}
-
-// POST space separated list of tests
-juteArgs.tests = args.test.join(' ');
-
-// Toss in Selenium stuff
-if (args.sel_host) {
-    juteArgs.sel_host = args.sel_host;
-    juteArgs.sel_browser = args.sel_browser;
-}
-
-// Whether to stream output back
-if (args.send_output) {
-    juteArgs.send_output = 1;
-}
-
-var options = {
-    host: args.host,
-    port: args.port,
-};
-
-if (args.clear_results) {
-    console.log('Clearing all previous results...');
-    options.path = '/jute/_clear_results';
-    http.get(options, function(res) { });
-}
-
-options.path = '/jute/_run_test';
-options.method = 'POST';
-// See what we got
-console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
-
-// POST AWAY!
-var req = http.request(options, function(res) {
-    console.log('Status Response from JUTE: ' + res.statusCode);
-    res.setEncoding('utf8');
-    res.on('data', function (chunk) {
-        console.log(chunk);
+    
+    // Not Good
+    req.on('error', function(e) {
+        console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
+        console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
+        process.exit(1);
     });
-    res.on('end', function() {
-    });
-});
-
-// Not Good
-req.on('error', function(e) {
-    console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
-    console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
-    process.exit(1);
-});
-
-req.end(qs.stringify(juteArgs));
-
-if (!args.sel_host && args.wait) {
-    options.path = '/jute/_status';
-    setInterval(wait, 5000, options);
-}
+    
+    req.end(qs.stringify(juteArgs));
+    
+    if (!args.sel_host && args.wait) {
+        options.path = '/jute/_status';
+        setInterval(wait, 5000, options);
+    }
+    }
 
 function wait(options) {
     http.get(options, function(res) {

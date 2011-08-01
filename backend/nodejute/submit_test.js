@@ -59,8 +59,8 @@ if (args.v8) {
             if (error) {
                 console.error("Error running jute_v8: " + error);
             } else {
-                console.log(stdout);
                 console.error(stderr);
+                console.log(stdout);
             }
 
             if (i == args.length) {
@@ -68,7 +68,6 @@ if (args.v8) {
             }
         });
     }
-
 } else {
     // POST space separated list of tests
     juteArgs.tests = args.test.join(' ');

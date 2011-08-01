@@ -20,8 +20,8 @@ var  fs         = require('fs')
     ,events     = require("events")
     ,eventHubF  = function() { events.EventEmitter.call(this); }
     ,config     = {}
-    ,xmlhttp    = require(PATH.join(__dirname, 'jute_v8', 'xml_node'))
     ,jsdom      = require('jsdom').jsdom
+    ,xmlhttp    = require("xmlhttprequest").XMLHttpRequest
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
     ,DONE       = false
     ,EXIT       = false

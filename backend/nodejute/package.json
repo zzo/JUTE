@@ -4,7 +4,11 @@
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
   "version": "0.0.2",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
-  "bin" : { "jute" : "./jute_backend.js", "jute_submit_test": "./submit_test.js", "jute_v8" : "./jute_v8.js" },
+  "bin" : { 
+    "jute" :            "./jute_backend.js",
+    "jute_submit_test": "./submit_test.js",
+    "jute_v8":          "./jute_v8.js"
+  },
   "scripts" : { 
     "start" : "node ./jute_backend.js",
     "stop"  : "kill `cat /tmp/jute.pid` && unlink /tmp/jute.pid",
@@ -23,6 +27,7 @@
       , "glob" : ">= 2.0.7"
       , "connect" : ">= 1.6.0"
       , "yui3": ">= 0.5.33"
+      , "xmlhttprequest" : ">= 1.2.2"
       , "jsdom": ""
       , "mime" : ""
       , "daemon" : ""

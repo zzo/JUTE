@@ -77,7 +77,7 @@ module.exports = {
                     data.push({ test_url: testFile });
                 });
 
-                res.end(JSON.stringify({ availableTests: data }));
+                res.end(JSON.stringify({ availableTests: data, config: hub.config }));
             }
         }
     }

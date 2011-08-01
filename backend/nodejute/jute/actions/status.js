@@ -11,6 +11,7 @@ module.exports = {
         hub.addListener('action:status', function(req, res, cache) {
             hub.once('action:checkedResults', function(results) {
                 results.current_status = cache;
+                results.config = hub.config;
                 res.end(JSON.stringify(results));
             });
             hub.emit('action:checkResults');

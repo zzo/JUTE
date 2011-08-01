@@ -124,14 +124,13 @@
     <iframe id="grabber" src="" width="0" height="0"></iframe>
 
     <script src="http://yui.yahooapis.com/3.3.0/build/yui/yui-min.js"></script>
+    <script src="/jute_docs/jute.js"></script>
     <script>
         var qs = window.location.search.substring(1);
         document.getElementById('run_tests').src = '/jute_docs/run_tests.html?' + qs;
 
-        YUI({
-                gallery: 'gallery-2011.06.22-20-13'
-            }).use('gallery-jute', function(Y) {
-                Y.UnitTest.heartBeat();
+        YUI().use('jute', function(Y) {
+            Y.UnitTest.heartBeat();
         });
     </script>
     </div>

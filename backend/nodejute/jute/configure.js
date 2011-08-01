@@ -11,7 +11,6 @@ Create:  function(hub) {
                 gid:            process.getgid(),
                 port:           8080,
                 docRoot:        '/var/www/',
-                jutebase:       'jutebase/',
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
@@ -38,7 +37,6 @@ Create:  function(hub) {
         uid:            'trostler',\n\
         gid:            'pg1090052',\n\
         docRoot:        '/var/www/',\n\
-        jutebase:       'jutebase/',\n\
         testDir:        'test/',\n\
         outputDir:      'output/',\n\
         logFile:        '/tmp/jute.log',\n\
@@ -64,10 +62,12 @@ All values are optional.\n\
             }
         }
 
-        config.outputDir = path.join(config.docRoot, config.jutebase, config.outputDir);
+        // Web paths and full paths...
+        config.outputDirWeb = config.outputDir;
+        config.outputDir    = path.join(config.docRoot, config.outputDir);
 
-        config.testDirWeb   = path.join('/', config.jutebase, config.testDir);
-        config.testDir      = path.join(config.docRoot, config.jutebase, config.testDir);
+        config.testDirWeb   = config.testDir;
+        config.testDir      = path.join(config.docRoot, config.testDir);
 
         // Set process uid/gid
         try {

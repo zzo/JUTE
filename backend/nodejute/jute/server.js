@@ -46,17 +46,26 @@ Create:  function(hub) {
             app.post(/\/jute\/_([^\?]+)/, function(req, res, next){
                 hub.emit('action', req.params[0], req, res);
             });
-            app.get(/\/jutebase\/([^\?]+)/, function(req, res, next){
+            app.get('/', function(req, res, next){
+                res.writeHead(301, { Location: '/jute_docs/capture.html' });
+                res.end();
+            });
+            /*
+            app.get(/\/([^\?]+)/, function(req, res, next){
                 // Fetching a TEST or SRC file!!
                 // If this file has do_coverage=1 on it we may need to do
                 //  something - otherwise it's just a static file
                 //  lop off query string & send it
                 sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
             });
+            */
         })
         , function(req, res, next) {
+                sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
+                /*
                 res.writeHead(301, { Location: '/jute_docs/capture.html' });
                 res.end();
+                */
         }
         ).listen(hub.config.port);
 

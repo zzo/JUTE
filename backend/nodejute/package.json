@@ -29,7 +29,6 @@
   "config" : {
     "port" : "8080",
     "docRoot":  "/var/www/",
-    "jutebase": "jutebase/",
     "testDir":  "test/",
     "outputDir": "output/",
     "java": "/usr/bin/java",

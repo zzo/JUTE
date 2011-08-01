@@ -40,11 +40,10 @@ td {
 <body>
     <div id="content">Don't mind me - waiting around to run tests...</div>
     <script src="http://yui.yahooapis.com/3.3.0/build/yui/yui-min.js"></script>
+    <script src="/jute_docs/jute.js"></script>
     <script>
-        YUI({
-                gallery: 'gallery-2011.06.22-20-13'
-            }).use('gallery-jute', function(Y) {
-                Y.UnitTest.waitLoop();
+        YUI().use('jute', function(Y) {
+            Y.UnitTest.waitLoop();
         });
     </script>
 </body>

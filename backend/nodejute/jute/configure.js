@@ -5,7 +5,7 @@ Create:  function(hub) {
     // Events I care about
     hub.addListener('configure', configure);
 
-    function configure(cFile) {
+    function configure() {
         var config = {
                 uid:            process.getuid(),
                 gid:            process.getgid(),
@@ -13,52 +13,19 @@ Create:  function(hub) {
                 docRoot:        '/var/www/',
                 testDir:        'test/',
                 outputDir:      'output/',
-                java:           '/usr/bin/java',
+                java:           '',
                 logFile:        '/tmp/jute.log',
                 logFormat:      '',
                 testRegex:      '*.htm*'
             },
-            conf = {},
+            exec = require('child_process').exec,
             fs   = require('fs');
 
-        if (cFile) {
-            // If not a FQPath prepend './'
-            if (!cFile.match(/^\//)) {
-                cFile = './' + cFile;
-            }
-            try {
-                conf = require(cFile) 
-            } catch(e) {
-                hub.emit(hub.LOG, 'error', '\n** Config file "' + cFile + '" does not exist or is invalid! **\n');
-                hub.emit(hub.LOG, 'error', e.toString() + "\n");
-                hub.emit(hub.LOG, 'error', "Format of config file is:\n\
-    module.exports = {\n\
-        port:           8080,\n\
-        uid:            'trostler',\n\
-        gid:            'pg1090052',\n\
-        docRoot:        '/var/www/',\n\
-        testDir:        'test/',\n\
-        outputDir:      'output/',\n\
-        logFile:        '/tmp/jute.log',\n\
-        java:           '/usr/bin/java'\n\
-    };\n\n\
-\
-All values are optional.\n\
-                ");
-                process.exit(1);
-            }
-        } else {
-            for (var key in config) {
-                var val = process.env['npm_package_config_' + key];
-                if (val) {
-                    conf[key] = val;
-                }
-            }
-        }
-
-        for(var val in config) {
-            if (conf[val]) {
-                config[val] = conf[val];
+        // Suck in NPM config variables
+        for (var key in config) {
+            var val = process.env['npm_package_config_' + key];
+            if (val) {
+                config[key] = val;
             }
         }
 
@@ -81,15 +48,24 @@ All values are optional.\n\
         // Find Java executable
         if (process.env.JAVA_HOME) {
             config.java = path.join(process.env.JAVA_HOME, 'bin', 'java');
+        } else if (!config.java) {
+            exec('which java', function (error, stdout, stderr) {
+                if (error !== null) {
+                    hub.log(hub.LOG, 'error', 'Cannot find "java" executable - you will not be able to get code coverage - make sure "java" is in your PATH');
+                    process.exit(1);
+                }
+                config.java = stdout.trim();
+            });
         }
+
         try {
             var stat = fs.statSync(config.java);
             if (!stat.isFile()) {
-                throw 'fooble';
+                throw 'foobie';
             }
         } catch(e) {
             hub.emit(hub.LOG, 'error', '** Cannot find "java" executable **');
-            hub.emit(hub.LOG, 'error', 'Set $JAVA_HOME OR set "java" in your configuration file');
+            hub.emit(hub.LOG, 'error', 'Set $JAVA_HOME OR set the "java" configuration variable (% npm config set jute:java <path>)');
             process.exit(1);
         }
 

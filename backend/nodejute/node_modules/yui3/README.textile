@@ -1,0 +1,112 @@
+h1. YUI Bootstrapper for Node.js
+
+The YUI3NodeJS project uses several 3rd party open source libraries and tools.
+
+This file summarizes the tools used, their purpose, and the licenses under which they're released. 
+
+This node.js module attempts to setup and bootstrap a working YUI 3 instance.
+
+This module includes support for remote script loading via Y.Get.script() and remote data fetching via Y.io.
+
+See "JSDom Support" below for DOM manipulation.
+
+h2. Node.js
+
+All of the examples and tests assume you have @node@ in your path and they are all executable.
+
+h2. Dependencies
+
+All dependencies are installed when you install the yui3 package via @npm@
+
+For server side dom manipulation, you need the following packages installed:
+
+"JSDom":http://github.com/tmpvar/jsdom : "LICENSE":http://github.com/tmpvar/jsdom/blob/master/LICENSE.txt
+
+<pre class="console">npm install jsdom</pre>
+
+"HTML Parser":http://github.com/tautologistics/node-htmlparser : "LICENSE":http://github.com/tautologistics/node-htmlparser/blob/master/LICENSE
+
+<pre class="console">npm install htmlparser</pre>
+
+h2. Optional Dependancies
+
+"Express":http://expressjs.com/ : LICENSE (MIT)
+    
+<pre class="console">npm install express</pre>
+
+"Connect":http://github.com/senchalabs/connect : LICENSE (MIT)
+    
+ <pre class="console">npm install connect</pre>
+
+h2. Installing - via NPM
+
+<pre class="console">
+npm install yui3
+</pre>
+
+h2. Installing - as a developer
+
+You must have git and npm installed before you can develop.
+
+<pre class="console">
+git clone git://github.com/davglass/nodejs-yui3.git
+cd nodejs-yui3/
+npm install .
+</pre>
+
+h2. Using YUI3
+
+"This is the general-dom example":http://gist.github.com/541501
+
+h2. Remote Fetching
+
+"This example shows fetching a remote document and then using Node to modify it":http://gist.github.com/574000
+
+h2. Using the Y.Browser object
+
+To comply with the "no-globals" CommonJS spec, there is no global document or window in this mode.
+Just including the nodejs-dom module will create a fake dom for this instance.
+You can create a document like this:
+"View this Gist":http://gist.github.com/359776
+
+You can make older DOM code run by setting up a couple of local variables, "like this":http://gist.github.com/359778
+
+
+If you are using YUI to serve pages, you should use a Nested Use to create the document when the request comes in.
+
+"Something like this":http://gist.github.com/359781
+
+
+I have an example showing this: @examples/y-browser.js@
+
+
+h2. Examples
+
+<pre class="console">
+    cd examples/
+    ./general-dom.js
+    ./io.js
+    ./library.js
+    ./y-brower.js
+</pre>
+
+h2. Tests
+
+When using JSDom, All relevent YUI 3 Dom & Selector tests pass. The ones that are skipped revolve around styles and postioning. Since there is no window or CSS cascade, these seem unimportant at the moment.
+
+Testing is pretty simple now once you install `yuitest`:
+
+<pre class="console">
+    npm install yuitest
+    yuitest ./tests/*.js
+</pre>
+
+h2. License
+
+This software is offered under the terms of the BSD license. See the LICENSE file or the "YUI License":http://developer.yahoo.com/yui/license.html for license text and copyright information.
+
+h2. Contribute
+
+Your contributions are welcome! Please review the "YUI contributor guide":http://developer.yahoo.com/yui/community/#cla before contributing. If you haven't contributed to a "YUI project":http://yuilibrary.com before, you'll need to review and sign the "YUI CLA":http://developer.yahoo.com/yui/community/#cla before we can accept your pull request.
+
+

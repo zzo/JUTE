@@ -7,12 +7,9 @@ var sys       = require('sys'),
     configure = require('./jute/configure');
     server    = require('./jute/server');
     actions   = require('./jute/actions');
-    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; }
+    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; }
     ;
 
-
-// Dump PID
-fs.writeFileSync('/tmp/jute.pid', '' + process.pid, 'utf8');
 
 /**
  * Create our event hub
@@ -44,5 +41,5 @@ eventHub.on('configureDone', function() {
         eventHub.emit('startServer');
     });
 });
-eventHub.emit('configure', process.argv[2]);
+eventHub.emit('configure');
 

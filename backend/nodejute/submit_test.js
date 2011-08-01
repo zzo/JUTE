@@ -2,12 +2,13 @@
 
 var opt  = require( "optimist" ),
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ]')
         .demand(['test'])
         .default('host', 'localhost')
         .default('port', 80)
         .default('send_output', false)
         .default('wait', false)
+        .default('v8', false)
         .default('clear_results', false)
         .default('sel_browser', '*firefox')
         .describe('test', 'Test file to run - relative to your docoument root (npm set jute.docRoot) - can specify multiple of these')
@@ -18,6 +19,7 @@ var opt  = require( "optimist" ),
         .describe('send_output', 'For Selenium tests ONLY - send status messages back while running')
         .describe('wait', 'Wait for captured tests to finish')
         .describe('clear_results', 'Clear ALL previous test results before running specified test(s)')
+        .describe('v8', 'Run these test(s) using the V8 backend')
         .argv,
     sys  = require('sys'),
     qs   = require('querystring'),
@@ -33,9 +35,32 @@ if (args.wait && args.sel_host) {
     console.log("You don't need '--wait' for Selenium tests!");
 }
 
+if (args.wait && args.v8) {
+    console.log("You don't need '--wait' for V8 tests!");
+}
+
+if (args.v8 && args.sel_host) {
+    console.error("Erg V8 or Selenium - pick one!");
+    process.exit(1);
+}
+
+if (args.v8 && (args.host || args.port)) {
+    console.error("Erg V8 or Capture?  Defaulting to V8...");
+}
+
 // Make sure we have an array of test(s)
 if (typeof args.test != 'object') {
     args.test = [ args.test ];
+}
+
+if (args.v8) {
+    var exec = require('child_process').exec,
+        path = require('path');
+
+    args.test.forEach(function(test) {
+        exec(path.join(__dirname, 'jute_v8.js'), test);
+    });
+    process.exit(0);
 }
 
 // POST space separated list of tests

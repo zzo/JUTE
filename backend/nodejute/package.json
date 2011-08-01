@@ -2,9 +2,9 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
-  "bin" : { "jute" : "./jute_backend.js", "jute_submit_test": "./submit_test.js" },
+  "bin" : { "jute" : "./jute_backend.js", "jute_submit_test": "./submit_test.js", "jute_v8" : "./jute_v8.js" },
   "scripts" : { 
     "start" : "node ./jute_backend.js",
     "stop"  : "kill `cat /tmp/jute.pid` && unlink /tmp/jute.pid",
@@ -18,10 +18,12 @@
   "homepage": "https://github.com/zzo/JUTE",
   "dependencies" :
     {
-        "soda" : "0.2.4"
-      , "node-uuid": "1.2.0"
-      , "glob" : "2.0.7"
-      , "connect" : "1.6.0"
+        "soda" : ">= 0.2.4"
+      , "node-uuid": ">= 1.2.0"
+      , "glob" : ">= 2.0.7"
+      , "connect" : ">= 1.6.0"
+      , "yui3": ">= 0.5.33"
+      , "jsdom": ""
       , "mime" : ""
       , "daemon" : ""
       , "optimist" : ""

@@ -1,0 +1,4 @@
+.git
+src
+sandbox
+!build

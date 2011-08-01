@@ -18,9 +18,12 @@ module.exports = {
 
             req.on('end', function() {
                 var qs = require('querystring'),
+                    path = require('path'),
+                    fs = require('fs'),
                     obj = qs.parse(report),
                     sys = require('sys'),
-                    tests, multipleFromUI = false
+                    tests, multipleFromUI = false,
+                    errors = []
                 ;
 
                 if (obj.test) {
@@ -37,6 +40,29 @@ module.exports = {
                     }
                 } else if (obj.tests) {
                     tests = obj.tests.split(/\s+/);
+                }
+
+                // FIRST make sure all thesee alleged test files exist
+                for (var i = 0; i < tests.length; i++) {
+                    var realFullFile = path.join(hub.config.docRoot, tests[i].replace(/\?.*/, ''));
+
+                    try {
+                        fs.statSync(realFullFile);
+                    } catch (e) {
+                        errors.push(realFullFile);
+                    }
+                }
+
+                if (errors.length > 0) {
+                    res.writeHead(404);
+                    res.end("Cannot find test files: " + errors.join(', '));
+                    return;
+                }
+
+                if (!Object.keys(cache.browsers).length && !obj.sel_host) {
+                    res.writeHead(412);
+                    res.end("There are no currently captured browsers!");
+                    return;
                 }
 
                 var pushed = false;
@@ -104,7 +130,7 @@ module.exports = {
                             res.end("/jute_docs/run_tests.html");
                         } else {
                             // Command line client
-                            res.end('Added ' + (obj.test || obj.tests) + ' tests');
+                            res.end('Added ' + (obj.test || obj.tests) + ' to capture tests');
                         }
                     }
                 } else {

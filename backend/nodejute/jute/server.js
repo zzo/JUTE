@@ -8,13 +8,13 @@ Create:  function(hub) {
         var connect  = require('connect'),
             os       = require('os'),
             sys      = require('sys'),
-            mime     = require('mime'),
             path     = require('path'),
             uuid     = require('node-uuid');
 
         hub.emit(hub.LOG, 'info', "Running as " + process.getuid() + '/' + process.getgid());
         hub.emit(hub.LOG, 'info', "Connect at http://" + os.hostname() + '/jute/');
 //        hub.emit(hub.LOG, 'debug', sys.inspect(hub.config));
+//
 
         connect(
           connect.cookieParser()
@@ -29,7 +29,7 @@ Create:  function(hub) {
             }
             next();
         }
-        , connect.logger('dev')
+        , connect.logger(hub.config.logFormat)
         , function(req, res, next) {
             if (req.query.selenium) {
                 req.session.seleniumUUID = req.query.selenium;
@@ -92,7 +92,8 @@ Create:  function(hub) {
 
     function _doSend(path, req, res, next) {
 
-        var fs = require('fs');
+        var fs = require('fs'),
+            mime = require('mime');
 
         fs.stat(path, function(err, stat) {
             var type, charset,
@@ -105,23 +106,16 @@ Create:  function(hub) {
                 next();
             }
 
-//            type = mime.lookup(path);
-            var type;
-            if (path.match(/\.html$/)) {
-                type = 'text/html';
-            }  else if (path.match(/\.js$/)) {
-                type = 'application/javascript';
-            }
+            type = mime.lookup(path);
+
             res.setHeader('Content-Length', stat.size);
             res.setHeader('Last-Modified', new Date().toUTCString());
 
             // header fields
-            /*
             if (!res.getHeader('content-type')) {
                 charset = mime.charsets.lookup(type);
                 res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
             }
-            */
 
             fs.createReadStream(path).pipe(res);
         });

@@ -66,6 +66,12 @@ module.exports = {
                     data             = [];
                 ;
 
+                // No tests for me - end if we're a Selenium browser
+                if (req.session.seleniumUUID) {
+                    // Selenium job all done!!
+                    hub.emit('seleniumTestsFinished');
+                }
+
                 matches.forEach(function(testFile) {
                     testFile = testFile.replace(prefix, webPrefix);
                     data.push({ test_url: testFile });

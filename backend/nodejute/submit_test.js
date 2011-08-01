@@ -1,34 +1,37 @@
 #!/usr/bin/env node
 
-var args = require( "argsparser" ).parse(),
+var opt  = require( "optimist" ),
+    args = opt
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ]')
+        .demand(['test'])
+        .default('host', 'localhost')
+        .default('port', 80)
+        .default('send_output', false)
+        .default('wait', false)
+        .default('clear_results', false)
+        .default('sel_browser', '*firefox')
+        .describe('test', 'Test file to run - relative to your docoument root (npm set jute.docRoot) - can specify multiple of these')
+        .describe('host', 'Hostname of JUTE server')
+        .describe('port', 'Port of JUTE server')
+        .describe('sel_host', 'Hostname of Selenium RC or Grid Server (if not specified test(s) will run in all CURRENTLY captured browsers)')
+        .describe('sel_browser', 'Selenium browser specification')
+        .describe('send_output', 'For Selenium tests ONLY - send status messages back while running')
+        .describe('wait', 'Wait for captured tests to finish')
+        .describe('clear_results', 'Clear ALL previous test results before running specified test(s)')
+        .argv,
     sys  = require('sys'),
     qs   = require('querystring'),
     http = require('http'),
     juteArgs = {};
 
-
-for (var key in args) {
-    var old = args[key];
-    key = key.replace(/^-*/, '');
-    if (args[key]) {
-        if (typeof args[key] != 'object') {
-            args[key] = [ args[key], old ];
-        } else {
-            args[key].push(old);
-        }
-    } else {
-        args[key] = old;
-    }
+if (args.help) {
+    console.log(opt.help());
+    process.exit(0);
 }
 
-if (!args.test) {
-    console.error("You must specify some tests (use '-test')!!");
-    process.exit(1);
+if (args.wait && args.sel_host) {
+    console.log("You don't need '--wait' for Selenium tests!");
 }
-
-// Defaults
-args.host = args.host || 'localhost';
-args.port = args.port || 80;
 
 // Make sure we have an array of test(s)
 if (typeof args.test != 'object') {
@@ -41,7 +44,7 @@ juteArgs.tests = args.test.join(' ');
 // Toss in Selenium stuff
 if (args.sel_host) {
     juteArgs.sel_host = args.sel_host;
-    juteArgs.sel_browser = args.sel_browser || '*firefox';
+    juteArgs.sel_browser = args.sel_browser;
 }
 
 // Whether to stream output back
@@ -49,15 +52,21 @@ if (args.send_output) {
     juteArgs.send_output = 1;
 }
 
-// See what we got
-console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
-
 var options = {
     host: args.host,
     port: args.port,
-    path: '/jute/_run_test',
-    method: 'POST'
 };
+
+if (args.clear_results) {
+    console.log('Clearing all previous results...');
+    options.path = '/jute/_clear_results';
+    http.get(options, function(res) { });
+}
+
+options.path = '/jute/_run_test';
+options.method = 'POST';
+// See what we got
+console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
 
 // POST AWAY!
 var req = http.request(options, function(res) {
@@ -73,9 +82,49 @@ var req = http.request(options, function(res) {
 // Not Good
 req.on('error', function(e) {
     console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
-    console.error("Is JUTE running there?  Did you specify '-host' and '-port' correctly?");
+    console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
     process.exit(1);
 });
 
 req.end(qs.stringify(juteArgs));
+
+if (!args.sel_host && args.wait) {
+    options.path = '/jute/_status';
+    setInterval(wait, 5000, options);
+}
+
+function wait(options) {
+    http.get(options, function(res) {
+        var status = '';
+        res.on('data', function (chunk) {
+            status += chunk;
+        });
+
+        res.on('end', function () {
+            var statusObj = JSON.parse(status);
+                browsers = statusObj.current_status.browsers,
+                tests = statusObj.current_status.tests_to_run;
+
+            if (tests.length) {
+                console.log('Waiting for ' + tests[0].url + '...');
+            } else {
+                console.log('All tests finished - results: ');
+                for (var component in statusObj.current_results) {
+                    var result = statusObj.current_results[component].test_results[0].failed;
+                    console.log(component + ': ' + (result ? 'FAILED' : 'SUCCEEDED'));
+                }
+                //console.log(sys.inspect(statusObj.current_results, false, null));
+                process.exit(0);
+            }
+
+            if (!Object.keys(browsers).length) {
+                console.log('There are no currently captured browsers!');
+            }
+        });
+
+    }).on('error', function(e) {
+        console.error("Got error waiting: " + e.message);
+        process.exit(1);
+    });
+}
 

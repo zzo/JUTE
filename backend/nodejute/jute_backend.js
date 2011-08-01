@@ -3,6 +3,7 @@
 var sys       = require('sys'),
     fs        = require("fs"),
     events    = require("events"),
+    daemon    = require('daemon');
     configure = require('./jute/configure');
     server    = require('./jute/server');
     actions   = require('./jute/actions');
@@ -37,7 +38,11 @@ eventHub.addListener(eventHub.LOG, function(sev, str) {
 // Get Party Started
 eventHub.on('configureDone', function() {
     // Note config gets stashed in eventHub (eventHub.config)
-    eventHub.emit('startServer');
+    fs.open(eventHub.config.logFile, 'w+', function (err, fd) {
+        daemon.start(fd);
+        daemon.lock('/tmp/jute.pid');
+        eventHub.emit('startServer');
+    });
 });
 eventHub.emit('configure', process.argv[2]);
 

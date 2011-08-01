@@ -16,6 +16,7 @@ Create:  function(hub) {
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
                 logFile:        '/tmp/jute.log',
+                logFormat:      '',
                 testRegex:      '*.htm*'
             },
             conf = {},

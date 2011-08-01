@@ -6,8 +6,8 @@
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "bin" : { "jute" : "./jute_backend.js", "jute_submit_test": "./submit_test.js" },
   "scripts" : { 
-    "start" : "nohup node ./jute_backend.js > $npm_config_jute_logFile &",
-    "stop"  : "kill `cat /tmp/jute.pid`",
+    "start" : "node ./jute_backend.js",
+    "stop"  : "kill `cat /tmp/jute.pid` && unlink /tmp/jute.pid",
     "install": "npm install glob"
   },
   "engines": { "node": ">= 0.4.0" },
@@ -23,7 +23,8 @@
       , "glob" : "2.0.7"
       , "connect" : "1.6.0"
       , "mime" : ""
-      , "argsparser" : ""
+      , "daemon" : ""
+      , "optimist" : ""
   },
   "config" : {
     "port" : "8080",

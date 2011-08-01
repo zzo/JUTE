@@ -49,6 +49,17 @@ if (typeof args.test != 'object') {
     args.test = [ args.test ];
 }
 
+var options = {
+    host: args.host,
+    port: args.port
+};
+
+if (args.clear_results) {
+    console.log('Clearing all previous results...');
+    options.path = '/jute/_clear_results';
+    http.get(options, function(res) { });
+}
+
 if (args.v8) {
     var exec = require('child_process').exec,
         path = require('path');
@@ -71,29 +82,19 @@ if (args.v8) {
 } else {
     // POST space separated list of tests
     juteArgs.tests = args.test.join(' ');
-    
+
     // Toss in Selenium stuff
     if (args.sel_host) {
         juteArgs.sel_host = args.sel_host;
         juteArgs.sel_browser = args.sel_browser;
     }
-    
+
     // Whether to stream output back
     if (args.send_output) {
         juteArgs.send_output = 1;
     }
     
-    var options = {
-        host: args.host,
-        port: args.port,
-    };
-    
-    if (args.clear_results) {
-        console.log('Clearing all previous results...');
-        options.path = '/jute/_clear_results';
-        http.get(options, function(res) { });
-    }
-    
+   
     options.path = '/jute/_run_test';
     options.method = 'POST';
     // See what we got

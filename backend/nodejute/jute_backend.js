@@ -3,13 +3,20 @@
 var sys       = require('sys'),
     fs        = require("fs"),
     events    = require("events"),
-    daemon    = require('daemon');
-    configure = require('./jute/configure');
-    server    = require('./jute/server');
-    actions   = require('./jute/actions');
-    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; }
+    daemon    = require('daemon'),
+    configure = require('./jute/configure'),
+    server    = require('./jute/server'),
+    actions   = require('./jute/actions'),
+    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; },
+    pidFile   = '/tmp/jute.pid'
     ;
 
+// Stop
+switch(process.argv[2]) {
+  case "stop":
+    process.kill(parseInt(fs.readFileSync(pidFile)));
+    process.exit(0);
+}
 
 /**
  * Create our event hub
@@ -37,7 +44,7 @@ eventHub.on('configureDone', function() {
     // Note config gets stashed in eventHub (eventHub.config)
     fs.open(eventHub.config.logFile, 'w+', function (err, fd) {
         daemon.start(fd);
-        daemon.lock('/tmp/jute.pid');
+        daemon.lock(pidFile);
         eventHub.emit('startServer');
     });
 });

@@ -10,8 +10,8 @@
     "jute_v8":          "./jute_v8.js"
   },
   "scripts" : { 
-    "start" : "node ./jute_backend.js",
-    "stop"  : "kill `cat /tmp/jute.pid` && unlink /tmp/jute.pid"
+    "start" : "node ./jute_backend.js start",
+    "stop"  : "node ./jute_backend.js stop"
   },
   "engines": { "node": ">= 0.4.0" },
   "repository": {

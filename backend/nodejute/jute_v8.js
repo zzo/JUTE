@@ -18,8 +18,7 @@ var  fs         = require('fs')
     ,exec       = require('child_process').exec
     ,url        = require('url')
     ,events     = require("events")
-    ,eventHubF  = function() { events.EventEmitter.call(this); }
-    ,config     = {}
+    ,config     = (require('./getConfig'))(),
     ,jsdom      = require('jsdom').jsdom
     ,xmlhttp    = require("xmlhttprequest").XMLHttpRequest
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
@@ -39,45 +38,38 @@ if (!process.argv[2]) {
     process.exit(1);
 }
 
-sys.inherits(eventHubF, events.EventEmitter);
-var eventHub = new eventHubF();
 
-eventHub.on('configureDone', function() {
+DOC_ROOT   = config.docRoot;
+TEST_ROOT  = PATH.join(DOC_ROOT, config.testDir);
+OUTPUT_DIR = PATH.join(DOC_ROOT, config.outputDir);
+TEST_FILE  = PATH.join(TEST_ROOT, process.argv[2]);
 
-    DOC_ROOT   = config.docRoot;
-    TEST_ROOT  = PATH.join(DOC_ROOT, config.testDir);
-    OUTPUT_DIR = PATH.join(DOC_ROOT, config.outputDir);
-    TEST_FILE  = PATH.join(TEST_ROOT, process.argv[2]);
+DO_COVERAGE = TEST_FILE.match(/do_coverage=1/);
+TEST_FILE   = TEST_FILE.replace(/\?.*/,''); // get rid of any query string
 
-    DO_COVERAGE = TEST_FILE.match(/do_coverage=1/);
-    TEST_FILE   = TEST_FILE.replace(/\?.*/,''); // get rid of any query string
+console.log('Testing ' + TEST_FILE + ' with' + (DO_COVERAGE ? '' : 'out') + ' code coverage');
 
-    console.log('Testing ' + TEST_FILE + ' with' + (DO_COVERAGE ? '' : 'out') + ' code coverage');
-
-    // Find java is we're doing coverage....
-    if (DO_COVERAGE) {
-        if (!config.java) {
-            exec('which java', function (error, stdout, stderr) {
-                config.java = stdout.trim();
-                if (error !== null) {
-                    console.log('Cannot find "java" executable - you will not be able to get code coverage - make sure "java" is in your PATH');
-                    process.exit(1);
-                }
-            });
-        }
+// Find java is we're doing coverage....
+if (DO_COVERAGE) {
+    if (!config.java) {
+        exec('which java', function (error, stdout, stderr) {
+            config.java = stdout.trim();
+            if (error !== null) {
+                console.log('Cannot find "java" executable - you will not be able to get code coverage - make sure "java" is in your PATH');
+                process.exit(1);
+            }
+        });
     }
+}
 
-    fs.readFile(TEST_FILE, 'utf8', function (err, data) {
-        if (err) {
-            console.error("Cannot read " + TEST_FILE + ": " + err); 
-            process.exit(1); 
-        }
-        var d = jsdom(''), w = d.createWindow();
-        doit(data, d, w);
-    });
+fs.readFile(TEST_FILE, 'utf8', function (err, data) {
+    if (err) {
+        console.error("Cannot read " + TEST_FILE + ": " + err); 
+        process.exit(1); 
+    }
+    var d = jsdom(''), w = d.createWindow();
+    doit(data, d, w);
 });
-
-getConfig();
 
 /**
  * This gets called when the unit tests are finished
@@ -334,15 +326,3 @@ process.on('exit', function () {
     }
 });
 
-function getConfig() {
-    exec('npm config ls | grep jute:', function (error, stdout, stderr) {
-        var arr = stdout.split('\n');
-        arr.forEach(function(conf) {
-            var vals = conf.split('=');
-            if (vals.length == 2) {
-                config[vals[0].trim().replace(/jute:/, '')] = vals[1].trim().replace(/"/g, '');
-            }
-        });
-        eventHub.emit('configureDone');
-    });
-}

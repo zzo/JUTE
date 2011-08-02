@@ -41,7 +41,7 @@ Create:  function(hub) {
             process.setgid(config.gid);
             process.setuid(config.uid);
         } catch(e) {
-            hub.emit(hub.LOG, 'error', "** Unable to set uid/gid: " + e + " **");
+            hub.emit(hub.LOG, hub.ERROR, "** Unable to set uid/gid: " + e + " **");
             process.exit(1);
         }
 
@@ -51,7 +51,7 @@ Create:  function(hub) {
         } else if (!config.java) {
             exec('which java', function (error, stdout, stderr) {
                 if (error !== null) {
-                    hub.log(hub.LOG, 'error', 'Cannot find "java" executable - you will not be able to get code coverage - make sure "java" is in your PATH');
+                    hub.log(hub.LOG, hub.ERROR, 'Cannot find "java" executable - you will not be able to get code coverage - make sure "java" is in your PATH');
                     process.exit(1);
                 }
                 config.java = stdout.trim();
@@ -64,8 +64,8 @@ Create:  function(hub) {
                 throw 'foobie';
             }
         } catch(e) {
-            hub.emit(hub.LOG, 'error', '** Cannot find "java" executable **');
-            hub.emit(hub.LOG, 'error', 'Set $JAVA_HOME OR set the "java" configuration variable (% npm config set jute:java <path>)');
+            hub.emit(hub.LOG, hub.ERROR, '** Cannot find "java" executable **');
+            hub.emit(hub.LOG, hub.ERROR, 'Set $JAVA_HOME OR set the "java" configuration variable (% npm config set jute:java <path>)');
             process.exit(1);
         }
 
@@ -73,7 +73,7 @@ Create:  function(hub) {
         var testDir = path.join(config.outputDir, 'foo');
         fs.mkdir(testDir, 0777, function(err) {
             if (err) {
-                hub.emit(hub.LOG, 'error', "** Output directory '" + config.outputDir + "' not writable!! **");
+                hub.emit(hub.LOG, hub.ERROR, "** Output directory '" + config.outputDir + "' not writable!! **");
                 process.exit(1);
             }
             fs.rmdirSync(testDir);

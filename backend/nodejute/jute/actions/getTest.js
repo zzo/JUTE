@@ -20,7 +20,7 @@ module.exports = {
 
             cache.browsers[browser].get_test = now;
 
-            hub.emit(hub.LOG, 'info', 'Getting test for ' + bName);
+            hub.emit(hub.LOG, hub.INFO, 'Getting test for ' + bName);
 
             for (var i = 0; i < cache.tests_to_run.length; i++) {
                 var test = cache.tests_to_run[i];
@@ -28,7 +28,7 @@ module.exports = {
                     // um you're already running this test!
                     //  must be something wrong with it - pop it
                     var error = 'Skipping bad test: ' + test.url + ': we thought it was running!';
-                    hub.emit(hub.LOG, 'error', error);
+                    hub.emit(hub.LOG, hub.ERROR, error);
                     if (test.sendOutput) {
                         res.write(error);
                     }
@@ -55,7 +55,7 @@ module.exports = {
 
             if (testURL) {
                 res.end(JSON.stringify({ testLocation: testURL }));
-                hub.emit(hub.LOG, 'info', "Sending test url: " + testURL);
+                hub.emit(hub.LOG, hub.INFO, "Sending test url: " + testURL);
             } else {
                 // find all local tests
                 var prefix           = hub.config.testDir,

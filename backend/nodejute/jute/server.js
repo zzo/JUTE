@@ -11,8 +11,8 @@ Create:  function(hub) {
             path     = require('path'),
             uuid     = require('node-uuid');
 
-        hub.emit(hub.LOG, 'info', "Running as " + process.getuid() + '/' + process.getgid());
-        hub.emit(hub.LOG, 'info', "Connect at http://" + os.hostname() + '/jute/');
+        hub.emit(hub.LOG, hub.INFO, "Running as " + process.getuid() + '/' + process.getgid());
+        hub.emit(hub.LOG, hub.INFO, "Connect at http://" + os.hostname() + '/jute/');
 //        hub.emit(hub.LOG, 'debug', sys.inspect(hub.config));
 //
 
@@ -85,7 +85,7 @@ Create:  function(hub) {
         // Coverage this bad boy!
         if (req.query.coverage && req.headers.referer.match('do_coverage=1')) {
             var tempFile = p.join('/tmp', p.basename(path));
-            hub.emit(hub.LOG, 'info', "Generating coverage file " + tempFile + " for " + path);
+            hub.emit(hub.LOG, hub.INFO, "Generating coverage file " + tempFile + " for " + path);
             exec(hub.config.java + ' -jar ' + p.join(__dirname, "yuitest-coverage.jar") + " -o " + tempFile + " " + path, function(err) {
                 if (err) {
                     hub.emit(hub.LOG, 'error', "Error coverage'ing " + path + ": " + err);

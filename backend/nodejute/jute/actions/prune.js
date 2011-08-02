@@ -31,7 +31,7 @@ module.exports = {
                 if (timeStarted) {
                     if (now - timeStarted > TEST_TIME_THRESHOLD) {
                         // This test has been running for too long!!
-                        hub.emit(hub.LOG, 'error', "Test running for too long - killing it");
+                        hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
                         cache.tests_to_run.splice(i, 1);
                         if (test.sendOutput) {
                             hub.emit('sendOutput', test.sendOutput, test.url + ' timed out - javascript error?');
@@ -48,7 +48,7 @@ module.exports = {
                         err = err.replace('URL', test.url);
                         var params  = { results: err, name: name };
 
-                        hub.emit(hub.log, 'error',  "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")");
+                        hub.emit(hub.log, hub.ERROR,  "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")");
                         common.dumpFile(params, 'results', names[0] + '-test.xml', name);
 
                         if (cache.browsers[browser]) {
@@ -62,7 +62,7 @@ module.exports = {
                    if (cache.browsers[browser]) {
                         var last_got_test = cache.browsers[browser].get_test;
                         if (doing_what != '_get_test' && (now - last_got_test > TEST_TIME_THRESHOLD)) {
-                            hub.emit(hub.LOG, 'error', "Been too long since you've requested a test: " + browser + " - Kicking iframe...");
+                            hub.emit(hub.LOG, hub.ERROR, "Been too long since you've requested a test: " + browser + " - Kicking iframe...");
                             return 1;  // Redirect!!
                         }
                    }
@@ -79,7 +79,7 @@ module.exports = {
 
                     var b_time = cache.browsers[browser].heart_beat;
                     if (now - b_time > BROWSER_TIME_THRESHOLD) {
-                        hub.emit(hub.LOG, 'error',  "We lost browser " + cache.browsers[browser].name);
+                        hub.emit(hub.LOG, hub.ERROR,  "We lost browser " + cache.browsers[browser].name);
                         delete cache.browsers[browser];
                         // take it out of ay tests it's supposed to be running
                         for (var i = 0; i < cache.tests_to_run.length; i++) {

@@ -38,7 +38,7 @@ module.exports = {
                 end(function(err) {
                     if (err) {
                         var msg = 'Error starting/waiting for Selenium page to load: ' + err;
-                        hub.emit(hub.LOG, 'error', msg);
+                        hub.emit(hub.LOG, hub.ERROR, msg);
                         res.end(msg);
                         hub.removeListener('seleniumTestsFinished', cb);
                     }

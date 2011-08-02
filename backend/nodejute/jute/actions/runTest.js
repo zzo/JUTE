@@ -111,7 +111,7 @@ module.exports = {
                         // Start up Selenium & Listen for results
                         hub.once('action:seleniumDone', function(err) {
                             if (err) {
-                                hub.emit(hub.LOG, 'error', 'ERROR running Selenium tests: ' + err);
+                                hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests: ' + err);
                                 res.end(err);
                             } else {
                                 hub.once('action:checkedResults', function(results) {
@@ -134,7 +134,7 @@ module.exports = {
                         }
                     }
                 } else {
-                    hub.emit(hub.LOG, 'error',  "No browsers listening!");
+                    hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
                     response.statusCode = 412; // Ye Olde Failed Precondition
                     res.end('No browsers listening!!  Test(s) not added!');
                 }

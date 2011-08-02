@@ -32,7 +32,7 @@ module.exports = {
                     fs            = require('fs')
                 ;
 
-                hub.emit(hub.LOG, 'info', "Dumping " + fullFile);
+                hub.emit(hub.LOG, hub.INFO, "Dumping " + fullFile);
 
                 // Any one of these can toss cookies!!!
                 try {
@@ -47,7 +47,7 @@ module.exports = {
                     fs.closeSync(fd)
                     return [ fullFile, dir ];
                 } catch(e) {
-                    hub.emit(hub.LOG, 'error', "Error dumping file: " + e);
+                    hub.emit(hub.LOG, hub.ERROR, "Error dumping file: " + e);
                 }
             },
 

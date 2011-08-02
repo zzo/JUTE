@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
-var opt  = require( "optimist" ),
+var config = (require('./getConfig'))(),
+    opt  = require( "optimist" ),
+    os   = require('os'),
     args = opt
         .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ]')
         .demand(['test'])
-        .default('host', 'localhost')
-        .default('port', 80)
+        .default('host', os.hostname())
+        .default('port', config.port || 80)
         .default('send_output', false)
         .default('wait', false)
         .default('v8', false)

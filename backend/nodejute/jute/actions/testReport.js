@@ -32,7 +32,7 @@ module.exports = {
                     if (common.failedTests(names[0])) {
                         succeeded = false;
                     }
-                    hub.emit(hub.LONG, 'info', "Test Report for " + obj.name);
+                    hub.emit(hub.LONG, hub.INFO, "Test Report for " + obj.name);
                 }
 
                 if (obj.coverage && obj.coverage !== 'null') {
@@ -45,7 +45,7 @@ module.exports = {
                     obj.coverage = JSON.stringify(cover_obj);
                     names = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
                     exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + names[1] + " --format lcov " + names[0]);
-                    hub.emit(hub.LONG, 'info', "Coverage Report for " + obj.name);
+                    hub.emit(hub.LONG, hub.INFO, "Coverage Report for " + obj.name);
                 }
 
                 var totalTests = cache.tests_to_run.length;

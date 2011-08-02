@@ -11,8 +11,7 @@
   },
   "scripts" : { 
     "start" : "node ./jute_backend.js",
-    "stop"  : "kill `cat /tmp/jute.pid` && unlink /tmp/jute.pid",
-    "install": "npm install glob"
+    "stop"  : "kill `cat /tmp/jute.pid` && unlink /tmp/jute.pid"
   },
   "engines": { "node": ">= 0.4.0" },
   "repository": {

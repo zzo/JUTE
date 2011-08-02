@@ -1,5 +1,6 @@
 <!-- The code below creates a default page header by spacing out the topic name -->
 
+
 JUTE
 ====================
 
@@ -11,29 +12,73 @@ Javascript Unit Testing Environment (JUTE)
 Abstract
 =========
 
-JUTE allows unobtrusive [JavaScript](JavaScript.html) YUI3 unit testing, code coverage, and yslow. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture Mode, and V8.
+JUTE allows unobtrusive [JavaScript](JavaScript.html) YUI3 unit testing with code coverage. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture, and V8.
 
 Requirements
 
+[NodeJS](http://nodejs.org) .4 compiled with SSL support
+--------------------------------------------------------
 
 3.1.1+ of YUI3
 ---------------
 
-
-yapache 1.x (maybe 2.x works - have not tested) for Selenium and Capture modes
--------------------------------------------------------------------------------
-
-[NodeJS](http://nodejs.org) .4 for v8 mode
--------------------------------------
-
-
 Super Quick Start
 ==================
 
+Theory
+-----
+
+JUTE is a standalone HTTP server that serves your test files to a JUTE backend   Two of the three backends (Selenium and Capture) serve files to a browser, the third backend (V8) will run your tests directly in V8.  'Serving files' simply means serving your test and source files and any other files necessary for your tests (e.g. CSS, images, &c).
+JUTE then collects and stores test output in JUnit XML format and code coverage information in 'lcov' format and generates pretty HTML to view your coverage results.  That is  it!
 
 Variable Setup
 ---------------
 
+To do its magic JUTE need some information from you.  All configuration variables are provided by 'npm' using npm config variables.  See 
+
+<verbatim>
+% npm help config
+</verbatim>
+
+For gory details.  But simply:
+
+<verbatim>
+% npm config set jute:port 80
+</verbatim>
+
+Will set the port the JUTE webserver listens on to 80.
+
+Here are some important JUTE configuration variables and their defaults:
+
+<verbatim>
+                uid:            process.getuid(),
+                gid:            process.getgid(),
+                port:           8080,
+                docRoot:        '/var/www/',
+                jutebase:       'jutebase/',
+                testDir:        'test/',
+                outputDir:      'output/',
+                java:           '/usr/bin/java',
+                logFile:        '/tmp/jute.log',
+                logFormat:      '',
+                testRegex:      '*.htm*'
+</verbatim>
+
+To set any of these do:
+
+<verbatim>
+% npm config set jute:<variable> <value>/var/www
+</verbatim>
+
+Like:
+
+<verbatim>
+% npm config set jute:docRoot /var/htmlroot/foobie
+</verbatim>
+
+
+JUTE is a standalone HTTP server - it needs to know where your document root is to serve your files
+JUTE uses npm config varaibles for its configuration (for gory details: % npm config help)
 JUTE assumes a symlink named '/home/y/share/htdocs/jutebase' to your real DOCUMENT_ROOT. For [Mail/Neo](Mail/Neo.html) that symlink points back into our home directories but that doesn't have to be the case. However whichever user JUTE runs as (which you specify, I'll show you how in a moment) needs to be able to write files in a sub-directory under your DOCUMENT_ROOT - by default in directory named %BLUE%<u>'</u>%ENDCOLOR%output'. Note all of this can be changed via yinst variables but the simplest case is:
 
 * symlink /home/y/share/htdocs/jutebase to your DOCUMENT_ROOT (can/should? be somewhere in your home directory where you've checked out your subversion tree)
@@ -949,4 +994,4 @@ make_total_lcov:
 
 Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to 'trunk/output/lcov.info' depending on where your output_dir is relative to your SVN root.
 
-
+This software is licensed under the BSD license available at http://developer.yahoo.com/yui/license.html

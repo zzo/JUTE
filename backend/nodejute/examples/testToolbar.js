@@ -12,10 +12,10 @@ YUI({
         testIsObject : function () {
             Y.log('testIsObject');
             Y.Assert.isObject(this.tb);
-        }
+        },
         testMessage : function () {
             Y.log('testIsObject');
-            Y.Assert.isSame(this.message, "I am a toolbar!");
+            Y.Assert.areEqual(this.tb.message, "I am a toolbar!");
         }
 
     }));

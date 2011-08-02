@@ -332,7 +332,7 @@ sub startSelenium {
     );
 
     $selenium->start;
-    $selenium->open($url);
+    $selenium->open('/jute/');
 
     $selenium->wait_for_page_to_load(60000); # 60 seconds
     my $max_wait_time = $TEST_TIME_THRESHOLD * $num_tests; # give test time to run once the page loads - so stick around

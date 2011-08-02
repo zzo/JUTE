@@ -1,3 +1,39 @@
+/*
+Copyright (c) 2011, Yahoo! Inc.
+All rights reserved.
+
+Redistribution and use of this software in source and binary forms, 
+with or without modification, are permitted provided that the following 
+conditions are met:
+
+* Redistributions of source code must retain the above
+  copyright notice, this list of conditions and the
+  following disclaimer.
+
+* Redistributions in binary form must reproduce the above
+  copyright notice, this list of conditions and the
+  following disclaimer in the documentation and/or other
+  materials provided with the distribution.
+
+* Neither the name of Yahoo! Inc. nor the names of its
+  contributors may be used to endorse or promote products
+  derived from this software without specific prior
+  written permission of Yahoo! Inc.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+
 module.exports = {
 Create:  function(hub) {
     path = require('path');
@@ -29,6 +65,17 @@ Create:  function(hub) {
             }
         }
 
+        try {
+            var stat = fs.statSync(config.docRoot);
+                if (!stat.isDirectory()) {
+                    throw 'foobie';
+                }
+        } catch(e) {
+            hub.emit(hub.LOG, hub.ERROR, "** " + config.docRoot + " does not exist or is not a directory!! **");
+            hub.emit(hub.LOG, hub.ERROR, "Set it properly: npm config set jute:docRoot <directory>");
+            process.exit(0);
+        }
+
         // Web paths and full paths...
         config.outputDirWeb = config.outputDir;
         config.outputDir    = path.join(config.docRoot, config.outputDir);
@@ -41,8 +88,11 @@ Create:  function(hub) {
             process.setgid(config.gid);
             process.setuid(config.uid);
         } catch(e) {
-            hub.emit(hub.LOG, hub.ERROR, "** Unable to set uid/gid: " + e + " **");
-            process.exit(1);
+            hub.emit(hub.LOG, hub.ERROR, "** Unable to set uid/gid for JUTE process: " + e + " **");
+            hub.emit(hub.LOG, hub.ERROR, "Change these values (or run with 'sudo') using: ");
+            hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:user <user>");
+            hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:grouop <grouop>");
+            process.exit(0);
         }
 
         // Find Java executable
@@ -50,11 +100,9 @@ Create:  function(hub) {
             config.java = path.join(process.env.JAVA_HOME, 'bin', 'java');
         } else if (!config.java) {
             exec('which java', function (error, stdout, stderr) {
-                if (error !== null) {
-                    hub.log(hub.LOG, hub.ERROR, 'Cannot find "java" executable - you will not be able to get code coverage - make sure "java" is in your PATH');
-                    process.exit(1);
+                if (!error) {
+                    config.java = stdout.trim();
                 }
-                config.java = stdout.trim();
             });
         }
 
@@ -66,15 +114,20 @@ Create:  function(hub) {
         } catch(e) {
             hub.emit(hub.LOG, hub.ERROR, '** Cannot find "java" executable **');
             hub.emit(hub.LOG, hub.ERROR, 'Set $JAVA_HOME OR set the "java" configuration variable (% npm config set jute:java <path>)');
-            process.exit(1);
+            hub.emit(hub.LOG, hub.ERROR, 'Or add the "java" executable to your PATH');
+            process.exit(0);
         }
 
         // Make sure output directory is writable for grins...
         var testDir = path.join(config.outputDir, 'foo');
         fs.mkdir(testDir, 0777, function(err) {
             if (err) {
-                hub.emit(hub.LOG, hub.ERROR, "** Output directory '" + config.outputDir + "' not writable!! **");
-                process.exit(1);
+                hub.emit(hub.LOG, hub.ERROR, "** Output directory '" + config.outputDir + "' not writable or does not exist!! **");
+                hub.emit(hub.LOG, hub.ERROR, "Note outputDir is RELATIVE to docRoot!!");
+                hub.emit(hub.LOG, hub.ERROR, "Change output dir using: % npm conifg set jute:outputDir <dir>");
+                hub.emit(hub.LOG, hub.ERROR, "Or make " + config.outputDir + ' writable by user ' + config.user);
+                hub.emit(hub.LOG, hub.ERROR, "Or change the user JUTE runs as: % npm config set jute:user <user>");
+                process.exit(0);
             }
             fs.rmdirSync(testDir);
 

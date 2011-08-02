@@ -1,14 +1,39 @@
 #!/usr/bin/env node
-;
-
 /*
- * Copyright (c) 2011, Yahoo! Inc. All rights reserved.
- * Code licensed under the BSD License:
- * http://developer.yahoo.com/yui/license.html
- * version: 1.0
- *
- * JUTE for V8
- */
+Copyright (c) 2011, Yahoo! Inc.
+All rights reserved.
+
+Redistribution and use of this software in source and binary forms, 
+with or without modification, are permitted provided that the following 
+conditions are met:
+
+* Redistributions of source code must retain the above
+  copyright notice, this list of conditions and the
+  following disclaimer.
+
+* Redistributions in binary form must reproduce the above
+  copyright notice, this list of conditions and the
+  following disclaimer in the documentation and/or other
+  materials provided with the distribution.
+
+* Neither the name of Yahoo! Inc. nor the names of its
+  contributors may be used to endorse or promote products
+  derived from this software without specific prior
+  written permission of Yahoo! Inc.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 var  fs         = require('fs')
     ,sys        = require('sys')
     ,YUI        = require("yui3").YUI
@@ -18,7 +43,7 @@ var  fs         = require('fs')
     ,exec       = require('child_process').exec
     ,url        = require('url')
     ,events     = require("events")
-    ,config     = (require('./getConfig'))(),
+    ,config     = (require('./getConfig'))()
     ,jsdom      = require('jsdom').jsdom
     ,xmlhttp    = require("xmlhttprequest").XMLHttpRequest
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
@@ -26,9 +51,6 @@ var  fs         = require('fs')
     ,EXIT       = false
     ,coverageReportJar = PATH.join(__dirname, 'jute', 'actions', 'yuitest-coverage-report.jar')
     ,coverageJar       = PATH.join(__dirname, 'jute', 'yuitest-coverage.jar')
-    ,DOC_ROOT
-    ,TEST_ROOT
-    ,OUTPUT_DIR
     ,TEST_FILE
     ,DO_COVERAGE
     ;
@@ -38,12 +60,7 @@ if (!process.argv[2]) {
     process.exit(1);
 }
 
-
-DOC_ROOT   = config.docRoot;
-TEST_ROOT  = PATH.join(DOC_ROOT, config.testDir);
-OUTPUT_DIR = PATH.join(DOC_ROOT, config.outputDir);
-TEST_FILE  = PATH.join(TEST_ROOT, process.argv[2]);
-
+TEST_FILE  = PATH.join(config.testDir, process.argv[2]);
 DO_COVERAGE = TEST_FILE.match(/do_coverage=1/);
 TEST_FILE   = TEST_FILE.replace(/\?.*/,''); // get rid of any query string
 
@@ -75,7 +92,7 @@ fs.readFile(TEST_FILE, 'utf8', function (err, data) {
  * This gets called when the unit tests are finished
  */
 function tests_done(data, report_data, cover_object, cover_out) {
-    var dirname = PATH.join(OUTPUT_DIR, data.results.name),
+    var dirname = PATH.join(config.outputDir, data.results.name),
         test_output_file = PATH.join(dirname, 'v8-test.xml'),
         cover_out_file = PATH.join(dirname, 'cover.json'), coverage, cover,
         total_lines, total_functions, line_coverage = 0, func_coverage = 0;

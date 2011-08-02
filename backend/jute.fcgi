@@ -1,8 +1,6 @@
 #!/usr/bin/perl
 
 my $VERSION = '1.0';
-$FASTCGI = $0 =~ /\.fcgi/ ? 1 : 0;
-my $FASTCGI = 0;
 
 use 5.008;
 use strict;
@@ -78,77 +76,30 @@ my $share = IPC::ShareLite->new(
 $share->store(to_json({ tests_to_run => [] }));
 
 my($socket, $request, $daemon, $proc_manager);
-if ($FASTCGI) {
-    require FCGI;
-    require FCGI::ProcManager;
+require FCGI;
+require FCGI::ProcManager;
 
-    # Start FCGI party
-    umask(0);
-    $socket = FCGI::OpenSocket("/tmp/jute.socket", 5);
-    $request = FCGI::Request(\*STDIN, \*STDOUT, \*STDERR, \%ENV, $socket, &FCGI::FAIL_ACCEPT_ON_INTR);
+# Start FCGI party
+umask(0);
+$socket = FCGI::OpenSocket("/tmp/jute.socket", 5);
+$request = FCGI::Request(\*STDIN, \*STDOUT, \*STDERR, \%ENV, $socket, &FCGI::FAIL_ACCEPT_ON_INTR);
 
-    daemon_fork();
-    $proc_manager = FCGI::ProcManager->new(
-        {
-            n_processes => $Yahoo::JUTE::Settings::fcgi_processes || 5,
-            pid_fname   => '/tmp/jute.pid',
-        }
-    );
-
-    # detach *before* the ProcManager inits
-    daemon_detach();
-
-    $proc_manager->pm_manage();
-
-    # Give each child its own RNG state.
-    srand;
-    do_fcgi_request_loop();
-} else {
-    require HTTP::Daemon;
-    $daemon = HTTP::Daemon->new(
-        LocalPort => $Yahoo::JUTE::Settings::port || 8080,
-        ReuseAddr => 1,
-    );
-    do_server_request_loop();
-}
-
-sub do_server_request_loop() {
-    while (my($c, $remote_addr) = $daemon->accept) {
-        
-            warn "GOT ACCEPT\n";
-        while (my $r = $c->get_request) {
-            warn "GOT REQUEST\n";
-            my $path = $r->uri->path;
-            $path =~  s#^/jute/##;
-            $path ||= '_capture.html';
-            $r->uri->path($path);
-
-            warn "GOT REQUEST FOR $path\n";
-
-            $ENV{CONTENT_TYPE} = join('; ', $r->content_type) || '';
-
-            my ($port,$iaddr) =  unpack_sockaddr_in($remote_addr);
-            $ENV{REMOTE_ADDR}  = inet_ntoa($iaddr);
-
-            $ENV{USER_AGENT} = $r->header('User-Agent');
-
-            $ENV{SESSION_COOKIE} = (split /=/, $r->header('Cookie'))[1];
-
-            local *main::STDIN = $c;
-            my $q = CGI->new();
-
-            local *main::STDOUT = $c;
-            my $response = handleConnection($path, $q, \%ENV);
-            $c->send_response($response);
-            warn "SENT RESPONSE\n";
-#            my $output_buffer = handle_response($response);
-#            warn "SENDING: \n$output_buffer\n";
-#            $c->syswrite($output_buffer);
-        }
-        $c->close;
-        undef($c);
+daemon_fork();
+$proc_manager = FCGI::ProcManager->new(
+    {
+        n_processes => $Yahoo::JUTE::Settings::fcgi_processes || 5,
+        pid_fname   => '/tmp/jute.pid',
     }
-}
+);
+
+# detach *before* the ProcManager inits
+daemon_detach();
+
+$proc_manager->pm_manage();
+
+# Give each child its own RNG state.
+srand;
+do_fcgi_request_loop();
 
 sub do_fcgi_request_loop() {
     while( $request->Accept() >= 0 ) {
@@ -180,9 +131,7 @@ sub handle_response {
         $output_buffer = 'Location: ' . $response->content() . "\n\n";
     } else {
         unless ($response->{already_sent_header}) {
-#            warn "b4 content type: " . $response->content_type . "\n";
             $response->content_type ? 1 : $response->content_type("text/html");
-#            warn "content type: " . $response->content_type . "\n";
 
             $output_buffer = "Status: " . $response->code() . "\n";
             $output_buffer .= $response->{_headers}->as_string() . "\n";
@@ -289,27 +238,6 @@ sub fetch {
         $full_path_file =  $Yahoo::JUTE::Settings::doc_root . $url;
     }
 
-    if ($url =~ s#/jute_loader/##) {
-        warn "MOCK: $url\n";
-        # is it a standard YUI3 module??
-        my $yui3_base = 'http://yui.yahooapis.com/3.3.0/build/';
-        my $ua = LWP::UserAgent->new;
-        warn "Getting $yui3_base$url\n";
-        my $yui3_response = $ua->get($yui3_base . $url);
-
-        if ($yui3_response->is_success) {
-            # A core yui3 object!
-            $response->content($yui3_response->content);
-            $response->header(Content_Type => $yui3_response->content_type);
-            $response->header(Content_Length => $yui3_response->content_length);
-            $response->code(200);
-            return $response;
-        } else {
-            die $yui3_response->status_line . "\n";
-        }
-    }
-
-
     warn "URL: $url\n";
 
     my $local_file = $full_path_file || "${root}$url";
@@ -325,32 +253,30 @@ sub fetch {
             $response->content_type('application/javascript');
         }
 
-#        my $size = -s $file;
-#
-#        my ($startrange, $endrange) = (0,$size-1);
-#        if (defined $env->{HTTP_RANGE}
-#                and $env->{HTTP_RANGE} =~ /bytes\s*=\s*(\d+)-(\d+)?/) {
-#            $response->code(206);
-#            ($startrange,$endrange) = ($1,$2 || $endrange);
-#        };
-#        $file->seek($startrange,0);
-#
-#        $response->header(Content_Length => $endrange-$startrange);
-#        $response->header(Content_Range => "bytes $startrange-$endrange/$size");
-#        $response->content(
-#            sub {
-#                sysread($file, my ($buf), 16*1024); # No error checking ???
-#                return $buf;
-#            }
-#        );
+        my $size = -s $file;
+
+        my ($startrange, $endrange) = (0,$size-1);
+        if (defined $env->{HTTP_RANGE}
+                and $env->{HTTP_RANGE} =~ /bytes\s*=\s*(\d+)-(\d+)?/) {
+            $response->code(206);
+            ($startrange,$endrange) = ($1,$2 || $endrange);
+        };
+        $file->seek($startrange,0);
+
+        $response->header(Content_Length => $endrange-$startrange);
+        $response->header(Content_Range => "bytes $startrange-$endrange/$size");
+        $response->content(
+            sub {
+                sysread($file, my ($buf), 16*1024); # No error checking ???
+                return $buf;
+            }
+        );
     }
 
     return $response;
 }
 
-if ($FASTCGI) {
-    FCGI::CloseSocket( $socket );
-}
+FCGI::CloseSocket( $socket );
 
 sub daemon_fork {
     fork && exit;

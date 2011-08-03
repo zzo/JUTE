@@ -37,21 +37,16 @@ Variable Setup
 
 To do its magic JUTE need some information from you.  All configuration variables are provided by 'npm' using npm config variables.  See 
 
-<verbatim>
     % npm help config
-</verbatim>
 
 For gory details.  But simply:
 
-<verbatim>
     % npm config set jute:port 80
-</verbatim>
 
 Will set the port the JUTE webserver listens on to 80.
 
 Here are some important JUTE configuration variables and their defaults:
 
-<verbatim>
                 uid:            process.getuid(),
                 gid:            process.getgid(),
                 port:           8080,
@@ -60,19 +55,14 @@ Here are some important JUTE configuration variables and their defaults:
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
                 logFile:        '/tmp/jute.log',
-</verbatim>
 
 To set any of these do:
 
-<verbatim>
     % npm config set jute:<variable> <value>
-</verbatim>
 
 Like:
 
-<verbatim>
     % npm config set jute:docRoot /var/htmlroot
-</verbatim>
 
 What the variables mean:
 
@@ -88,16 +78,12 @@ What the variables mean:
 Install JUTE
 -------------
 
-<verbatim>
     % npm install jute -g
-</verbatim>
 
 Start JUTE
 ----------
 
-<verbatim>
     % npm start jute
-</verbatim>
 
 Connect to JUTE
 ---------------
@@ -116,45 +102,35 @@ JUTE output directory
 
 JUTE writes unit test results and optionally coverage information into an output directory. By default this output directory is docRoot/output. Ensure the user JUTE runs as can write to this directory! You can change the directory name by:
 
-<verbatim>
     % npm config set:outputDir juteOutput
-</verbatim>
 
 Now it will put output files into docRoot/juteOutput
 
 You must restart JUTE after changing this setting:
 
-<verbatim>
     % npm restart jute
-</verbatim>
 
 JUTE test directory
 --------------------
 
 By default JUTE looks in docRoot/test for test HTML files. This can be changed:
 
-<verbatim>
     % npm config set:testDir juteTests
-</verbatim>
 
 Now it will look for test files in docRoot/juteTests
 
 You must restart JUTE after changing this setting:
 
-<verbatim>
     % npm restart jute
-</verbatim>
 
 Starting and Stopping JUTE
 ---------------------------
 
 JUTE is a standalone HTTP server. You control when JUTE is running
 
-<verbatim>
     % npm start jute
     % npm stop jute
     % npm restart jute
-</verbatim>
 
 JUTE Backends
 ==============
@@ -165,9 +141,7 @@ Capture
 
 This is the default mode for the JUTE UI.  Any captured browsers (see 'Browsers' below) will run any submitted unit tests in parallel.  To capture a browser point it to:
 
-<verbatim>
     http://<JUTE_HOST>/
-</verbatim>
 
 The browser is now 'captured'.  Any submitted unit tests will be run in parallel through all currently captured browsers.
 
@@ -201,9 +175,7 @@ JUTE WebUI
 
 Now that JUTE is up and running you can contact it here:
 
-<verbatim>
     http://<JUTE_HOST>/
-</verbatim>
 
 This browser is now 'captured' and is ready to run unit tests.
 
@@ -267,9 +239,7 @@ Command Line
 
 The script
 
-<verbatim>
-    &lt;bin>/jute_submit_test
-</verbatim>
+    <bin>/jute_submit_test
 
 Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in capture or Selenium mode.
 
@@ -282,9 +252,7 @@ There are several ways to submit unit tests.  You must specify ONLY relative pat
 
 ##### One Test
 
-<verbatim>
     jute_submit_test --test path/to/my/test/index.html
-</verbatim>
 
 Note the docRoot/testDir will be prepended to the specified file.
 
@@ -293,9 +261,7 @@ Note the docRoot/testDir will be prepended to the specified file.
 
 On command line:
 
-<verbatim>
     jute_submit_test --test path/to/my/test/index.html --test path/to/other/test/index.html --test path/to/other/other/test.html
-</verbatim>
 
 
 If you have a filename with one test file per line:
@@ -305,9 +271,7 @@ If you have a filename with one test file per line:
 
 Specify -sel_host to run the submitted tests through Selenium.  You can optionally also supply -sel_browser to give a Selenium browser specification.  -sel_browser defaults to '*firefox'.
 
-<verbatim>
     jute_submit_test --sel_host 10.3.4.45 [--sel_browser '*ieexplore'] --test path/to/test/index.html
-</verbatim>
 
 Of course -sel_host can either point to an individual Selenium RC host or a Selenium grid host.
 
@@ -318,9 +282,7 @@ Note the docRoot/testDir prepended to the specified test files.
 
 Specify '--v8' on the command line and all of the specified tests will be run through V8.
 
-<verbatim>
     % jute_submit_test.pl --v8 --test path/to/test/index.html
-</verbatim>
 
 OR any other permutation of test specification as outlined above.
 
@@ -329,21 +291,15 @@ OR any other permutation of test specification as outlined above.
 
 If you'd like your test(s) to run with code coverage enabled add the querystring '?do_coverage=1' to each test you want code coverage enabled for:
 
-<verbatim>
     % jute_submit_test --test path/to/my/test/index.html?do_coverage=1
-</verbatim>
 
 OR
 
-<verbatim>
     % jute_submit_test --sel_host 10.3.4.45 --test path/to/test/index.html?do_coverage=1
-</verbatim>
 
 OR
 
-<verbatim>
     % jute_submit_test --test path/to/my/test/index.html?do_coverage=1 --test path/to/other/test/index.html --test path/to/other/other/test.html
-</verbatim>
 
 
 !! NOTE docRoot/testDir will be prepended to the specified test files. !!
@@ -362,9 +318,7 @@ Test Results
 
 For each browser an XML file will be created.  The name of the XML file is a modified version of the USER AGENT string of that browser.  An example:
 
-<verbatim>
     Mozilla5_0__Macintosh_U_Intel_Mac_OS_X_10_5_8_en-US__AppleWebKit534_16__KHTML__like_Gecko__Chrome10_0_648_127_Safari534_16-test.xml
-</verbatim>
 
 This unit test was run in the Chrome browser an Intel Mac OS version 10.5.8.
 
@@ -372,7 +326,6 @@ The format of this file is JUnit XML style test output recognizable by most tool
 
 This looks like:
 
-<verbatim>
    <?xml version="1.0" encoding="UTF-8"?>
    <testsuites>
        <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
@@ -387,7 +340,6 @@ This looks like:
            <testcase name="testAddAppenderToLogger" time="0.001"></testcase>
        </testsuite>
    </testsuites>
-</verbatim>
 
 
 Coverage Output
@@ -418,12 +370,10 @@ To utilize JUTE you need only to make 1 small addition to your test Javascript f
 
 Your Javascript test file must 'use' the 'gallery-jute' module:
 
-<verbatim>
     YUI({
         logInclude: { TestRunner: true },
         gallery:    'gallery-2011.06.22-20-13'
     }).use('gallery-jute', 'toolbar', function(Y) {
-</verbatim>
 
 
 V8 Caveats
@@ -437,9 +387,7 @@ Debugging
 
 If you set the JUTE_DEBUG environment variable:
 
-<verbatim>
     % export JUTE_DEBUG=1
-</verbatim>
 
 You'll see even more gory debug output.
 
@@ -480,10 +428,8 @@ You can of course also select all checkboxes in the webui and the result is the 
 
 ### V8
 
-<verbatim>
     run_v8_unit_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/jute_v8.js {} $(DO_COVERAGE) \\;
-</verbatim>
 
 All output will go to STDOUT.
 
@@ -493,10 +439,8 @@ Hudson Build Environment
 
 All of your tests can be run thru Selenium - they all need to submitted at once to run as one job:
 
-<verbatim>
     submit_selenium_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | jute_submit_test.pl --test - --sel_host $(SEL_HOST) --sel_browser $(SEL_BROWSER) --send_output
-</verbatim>
 
 This will return once all tests have run.  Ensure Hudson is configured correctly to look in the output directory for test results and code coverage.  If a unit test fails Hudson will label the build 'Unstable'.  Clicking thru the "Test Results" will reveal the failed test(s).
 
@@ -525,26 +469,20 @@ Running JUTE/browser tests locally is a simple Makefile rule.
 
 #### Captured Browser(s)
 
-<verbatim>
     submit_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --test {}?do_coverage=$(DO_COVERAGE} --wait \\; -print
-</verbatim>
 
 
 #### Selenium
 
-<verbatim>
     submit_selenium_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | jute_submit_test --test - --sel_host $(SEL_HOST) --sel_browser $(SEL_BROWSER) --send_output 
-</verbatim>
 
 
 #### V8
 
-<verbatim>
     submit_v8_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --v8 --test {}?$(DO_COVERAGE} \\; 
-</verbatim>
 
 
 Viewing Test Results
@@ -558,9 +496,7 @@ All results are stored in output_dir - you can look at the *.xml files to view t
 
 ### Browser
 
-<verbatim>
     http://<jute host>/
-</verbatim>
 
 & click on links in the 'Results' column - this will show results for captured, Selenium, and V8 tests.
 
@@ -571,9 +507,8 @@ Running individual tests will generate a directory hierarchy rooted at your outp
 
 This can be accomplished by a simple Makefile rule:
 
-<verbatim>
     LCOV_GENHTML = /home/y/bin/genhtml # Freely available - probably already installed!
-    OUTPUT_DIR = &lt;outputDir>
+    OUTPUT_DIR = <outputDir>
     TOTAL_LCOV_FILE = $(OUTPUT_DIR)/lcov.info
     make_total_lcov:
         /bin/rm -f /tmp/lcov.total
@@ -584,7 +519,6 @@ This can be accomplished by a simple Makefile rule:
         @ls ${OUTPUT_DIR}
         /bin/rm -rf $(OUTPUT_DIR)/lcov-report
         $(LCOV_GENHTML) -o $(OUTPUT_DIR)/lcov-report $(TOTAL_LCOV_FILE)
-</verbatim>
 
 Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to 'trunk/output/lcov.info' depending on where your output_dir is relative to your workspace root.
 

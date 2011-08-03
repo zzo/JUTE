@@ -161,7 +161,7 @@ This mode can currently only be accessed via the command line tool 'jute_submit_
 V8/NodeJS
 ----------
 
-This mode can currently only be accessed via the command line tool 'jute_submit_test' or 'jute_v8'
+This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.
 
 Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.  Note NOT all of your unit tests are guaranteed to run in the V8 backend!!  Tests which require browser-y features like event simulation will not run as mouseclicks and keyevents and the like do not exist in nodejs.
 
@@ -241,7 +241,11 @@ The script
 
     <bin>/jute_submit_test
 
-Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in capture or Selenium mode.
+Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in capture or Selenium mode.  Do:
+
+    % jute_submit_test --help
+
+For help.
 
 ### jute_submit_test
 
@@ -264,16 +268,19 @@ On command line:
     jute_submit_test --test path/to/my/test/index.html --test path/to/other/test/index.html --test path/to/other/other/test.html
 
 
-If you have a filename with one test file per line:
+##### Via STDIN
 
+    jute_submit_test --test -
+
+jute_submit_test accept a test filename per line until EOF
 
 #### Running tests through Selenium
 
-Specify -sel_host to run the submitted tests through Selenium.  You can optionally also supply -sel_browser to give a Selenium browser specification.  -sel_browser defaults to '*firefox'.
+Specify --sel_host to run the submitted tests through Selenium.  You can optionally also supply -sel_browser to give a Selenium browser specification.  -sel_browser defaults to '*firefox'.
 
-    jute_submit_test --sel_host 10.3.4.45 [--sel_browser '*ieexplore'] --test path/to/test/index.html
+    jute_submit_test --sel_host 10.3.4.45 [ --sel_browser '*ieexplore' ] --test path/to/test/index.html
 
-Of course -sel_host can either point to an individual Selenium RC host or a Selenium grid host.
+Of course --sel_host can either point to an individual Selenium RC host or a Selenium grid host.
 
 Note the docRoot/testDir prepended to the specified test files.
 
@@ -398,16 +405,13 @@ Best Practices
 By default JUTE assumes a 'best practices' setup.  Using the JUTE yinst set variable outlined above this behavior can be changed.
 
 
-
 Developer Environment
 ----------------------
 
-Your local svn directory should be symlinked into /home/y/share/htdocs somewhere for local testing.  Your test files can be served from yapache or thru a file URL.  You can also run individual tests using the JUTE command line.
-
+Point jute.docRoot to your development environment - ideally your tests are set up in a separate directory tree that mirrors your source directory tree.  Regardless any *.html file will be picked up by JUTE under docRoot/testDir.
 
 Developer Build Environment
 ----------------------------
-
 
 ### A Captured Browser
 
@@ -425,11 +429,10 @@ Note this assumes you have at least 1 captured browser.  This will run all of yo
 
 You can of course also select all checkboxes in the webui and the result is the same.
 
-
 ### V8
 
     run_v8_unit_tests:
-        cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/jute_v8.js {} $(DO_COVERAGE) \\;
+        cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --v8 --test {}?$(DO_COVERAGE) \\;
 
 All output will go to STDOUT.
 
@@ -491,8 +494,7 @@ Viewing Test Results
 
 ### Output Directory
 
-All results are stored in output_dir - you can look at the *.xml files to view the raw JUnit XML output.  
-
+All results are stored in outputDir - you can look at the *.xml files to view the raw JUnit XML output.  
 
 ### Browser
 
@@ -507,7 +509,7 @@ Running individual tests will generate a directory hierarchy rooted at your outp
 
 This can be accomplished by a simple Makefile rule:
 
-    LCOV_GENHTML = /home/y/bin/genhtml # Freely available - probably already installed!
+    LCOV_GENHTML = /usr/local/bin/genhtml # Freely available - probably already installed!
     OUTPUT_DIR = <outputDir>
     TOTAL_LCOV_FILE = $(OUTPUT_DIR)/lcov.info
     make_total_lcov:
@@ -520,8 +522,10 @@ This can be accomplished by a simple Makefile rule:
         /bin/rm -rf $(OUTPUT_DIR)/lcov-report
         $(LCOV_GENHTML) -o $(OUTPUT_DIR)/lcov-report $(TOTAL_LCOV_FILE)
 
-Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to 'trunk/output/lcov.info' depending on where your output_dir is relative to your workspace root.
+Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to '&lt;outputDir>/lcov.info' depending on where your outputDir is relative to your workspace root.
 
 
+License
+=======
 
 This software is licensed under the BSD license available at http://developer.yahoo.com/yui/license.html

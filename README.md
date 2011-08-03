@@ -330,6 +330,7 @@ The format of this file is JUnit XML style test output recognizable by most tool
 
 This looks like:
 
+<code><pre>
    <testsuites>
        <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
            <testcase name="testLoggerNotInitialized" time="0.001"></testcase>
@@ -343,6 +344,7 @@ This looks like:
            <testcase name="testAddAppenderToLogger" time="0.001"></testcase>
        </testsuite>
    </testsuites>
+</pre></code>
 
 
 Coverage Output

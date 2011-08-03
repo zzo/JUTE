@@ -331,19 +331,19 @@ The format of this file is JUnit XML style test output recognizable by most tool
 This looks like:
 
 <pre><code>
-   <testsuites>
-       <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
-           <testcase name="testLoggerNotInitialized" time="0.001"></testcase>
-           <testcase name="testInitRocketStats" time="0.001"></testcase>
-           <testcase name="testLoggerInititialized" time="0"> </testcase>
-       </testsuite>
-       <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.logger" tests="4" failures="0" time="0.025">
-           <testcase name="testGetTheInitializedLoggerObject" time="0"> </testcase>
-           <testcase name="testLoggerHasCorrectLogLevels" time="0.001"> </testcase>                                                                                                                      
-           <testcase name="testLoggerHasRightNumberOfAppenders" time="0.001"></testcase>
-           <testcase name="testAddAppenderToLogger" time="0.001"></testcase>
-       </testsuite>
-   </testsuites>
+   &lt;testsuites>
+       &lt;testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
+           &lt;testcase name="testLoggerNotInitialized" time="0.001">&lt;testcase>
+           &lt;testcase name="testInitRocketStats" time="0.001">&lt;testcase>
+           &lt;testcase name="testLoggerInititialized" time="0"> &lt;testcase>
+       &lt;testsuite>
+       &lt;testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.logger" tests="4" failures="0" time="0.025">
+           &lt;testcase name="testGetTheInitializedLoggerObject" time="0"> &lt;testcase>
+           &lt;testcase name="testLoggerHasCorrectLogLevels" time="0.001"> &lt;testcase>                                                                                                                      
+           &lt;testcase name="testLoggerHasRightNumberOfAppenders" time="0.001">&lt;testcase>
+           &lt;testcase name="testAddAppenderToLogger" time="0.001">&lt;testcase>
+       &lt;testsuite>
+   &lt;testsuites>
 </code></pre>
 
 

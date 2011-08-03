@@ -454,13 +454,10 @@ Running Tests
 
 Where:
 
-LOCAL_TEST_DIR is the root of where your test files live on the build or local host (testDir)
-
-SEL_HOST is the hostname/IP of your Selenium box or grid
-
-SEL_BROWSER is '*firefox' or '*iexplore' or whatever browser specification you want to use
-
-DO_COVERAGE is 1 or 0 depending on if you want coverage (you probably do)
+* LOCAL_TEST_DIR is the root of where your test files live on the build or local host (testDir)
+* SEL_HOST is the hostname/IP of your Selenium box or grid
+* SEL_BROWSER is '*firefox' or '*iexplore' or whatever browser specification you want to use
+* DO_COVERAGE is 1 or 0 depending on if you want coverage (you probably do)
 
 ### Local
 

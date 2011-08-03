@@ -2,8 +2,9 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
+  "preferGlobal": true,
   "bin" : { 
     "jute" :            "./jute_backend.js",
     "jute_submit_test": "./submit_test.js",

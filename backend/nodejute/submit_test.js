@@ -38,9 +38,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var config = (require('./getConfig'))(),
     opt  = require( "optimist" ),
     os   = require('os'),
+    events    = require("events"),
+    eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
         .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ]')
         .demand(['test'])
+        .alias('t', 'test')
+        .alias('h', 'host')
+        .alias('p', 'port')
+        .alias('sh', 'sel_host')
+        .alias('sb', 'sel_browser')
+        .alias('c', 'clear_results')
+        .alias('w', 'wait')
         .default('host', os.hostname())
         .default('port', config.port || 80)
         .default('send_output', false)
@@ -48,7 +57,7 @@ var config = (require('./getConfig'))(),
         .default('v8', false)
         .default('clear_results', false)
         .default('sel_browser', '*firefox')
-        .describe('test', 'Test file to run - relative to your docoument root (npm set jute.docRoot) - can specify multiple of these')
+        .describe('test', 'Test file to run - relative to docRoot/testDir (npm set jute.testDir) - can specify multiple of these')
         .describe('host', 'Hostname of JUTE server')
         .describe('port', 'Port of JUTE server')
         .describe('sel_host', 'Hostname of Selenium RC or Grid Server (if not specified test(s) will run in all CURRENTLY captured browsers)')
@@ -81,9 +90,32 @@ if (args.v8 && args.sel_host) {
     process.exit(1);
 }
 
-// Make sure we have an array of test(s)
-if (typeof args.test != 'object') {
-    args.test = [ args.test ];
+sys.inherits(eventHubF, events.EventEmitter);
+var eventHub = new eventHubF();
+
+console.log('argv test: ' + args.test);
+console.log('argv port: ' + args.port);
+// Read test from STDIN?
+if (args.test === true) {
+    var stests = '';
+
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+
+    process.stdin.on('data', function(chunk) {
+        stests += chunk;
+    });
+
+    process.stdin.on('end', function() {
+        eventHub.emit('tests', stests.trim().split('\n'));
+    });
+} else {
+    // Make sure we have an array of test(s)
+    if (typeof args.test != 'object') {
+        args.test = [ args.test ];
+
+        eventHub.emit('tests', args.test);
+    }
 }
 
 var options = {
@@ -97,71 +129,73 @@ if (args.clear_results) {
     http.get(options, function(res) { });
 }
 
-if (args.v8) {
-    var exec = require('child_process').exec,
-        path = require('path');
+eventHub.on('tests', function(tests) {
+    if (args.v8) {
+        var exec = require('child_process').exec,
+            path = require('path');
 
-    for (var i = 0; i < args.test.length; i++) {
-        var test = args.test[i];
-        exec(path.join(__dirname, 'jute_v8.js') + ' ' + test, function(error, stdout, stderr) {
-            if (error) {
-                console.error("Error running jute_v8: " + error);
-            } else {
-                console.error(stderr);
-                console.log(stdout);
-            }
-
-            if (i == args.length) {
-                process.exit(0);
-            }
+        for (var i = 0; i < tests.length; i++) {
+            var test = tests[i];
+            exec(path.join(__dirname, 'jute_v8.js') + ' ' + test, function(error, stdout, stderr) {
+                if (error) {
+                    console.error("Error running jute_v8: " + error);
+                } else {
+                    console.error(stderr);
+                    console.log(stdout);
+                }
+    
+                if (i == args.length) {
+                    process.exit(0);
+                }
+            });
+        }
+    } else {
+        // POST space separated list of tests
+        juteArgs.tests = tests.join(' ');
+    
+        // Toss in Selenium stuff
+        if (args.sel_host) {
+            juteArgs.sel_host = args.sel_host;
+            juteArgs.sel_browser = args.sel_browser;
+        }
+    
+        // Whether to stream output back
+        if (args.send_output) {
+            juteArgs.send_output = 1;
+        }
+        
+       
+        options.path = '/jute/_run_test';
+        options.method = 'POST';
+        // See what we got
+        console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
+        
+        // POST AWAY!
+        var req = http.request(options, function(res) {
+            console.log('Status Response from JUTE: ' + res.statusCode);
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) {
+                console.log(chunk);
+            });
+            res.on('end', function() {
+            });
         });
-    }
-} else {
-    // POST space separated list of tests
-    juteArgs.tests = args.test.join(' ');
-
-    // Toss in Selenium stuff
-    if (args.sel_host) {
-        juteArgs.sel_host = args.sel_host;
-        juteArgs.sel_browser = args.sel_browser;
-    }
-
-    // Whether to stream output back
-    if (args.send_output) {
-        juteArgs.send_output = 1;
-    }
-    
-   
-    options.path = '/jute/_run_test';
-    options.method = 'POST';
-    // See what we got
-    console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
-    
-    // POST AWAY!
-    var req = http.request(options, function(res) {
-        console.log('Status Response from JUTE: ' + res.statusCode);
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log(chunk);
+        
+        // Not Good
+        req.on('error', function(e) {
+            console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
+            console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
+            process.exit(1);
         });
-        res.on('end', function() {
-        });
-    });
-    
-    // Not Good
-    req.on('error', function(e) {
-        console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
-        console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
-        process.exit(1);
-    });
-    
-    req.end(qs.stringify(juteArgs));
-    
-    if (!args.sel_host && args.wait) {
-        options.path = '/jute/_status';
-        setInterval(wait, 5000, options);
+        
+        req.end(qs.stringify(juteArgs));
+        
+        if (!args.sel_host && args.wait) {
+            options.path = '/jute/_status';
+            setInterval(wait, 5000, options);
+        }
     }
-    }
+});
 
 function wait(options) {
     http.get(options, function(res) {
@@ -197,4 +231,3 @@ function wait(options) {
         process.exit(1);
     });
 }
-

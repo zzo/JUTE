@@ -4,8 +4,6 @@
 JUTE
 ====================
 
-<!-- %TOC% -->
-
 Javascript Unit Testing Environment (JUTE)
 
 
@@ -19,8 +17,11 @@ Requirements
 [NodeJS](http://nodejs.org) .4 compiled with SSL support
 --------------------------------------------------------
 
-3.1.1+ of YUI3
----------------
+[npm](http://http://npmjs.org) 1.x
+--------------------------------------------------------
+
+java (any modern version should do)
+-----------------------------------
 
 Super Quick Start
 ==================
@@ -28,8 +29,8 @@ Super Quick Start
 Theory
 -----
 
-JUTE is a standalone HTTP server that serves your test files to a JUTE backend   Two of the three backends (Selenium and Capture) serve files to a browser, the third backend (V8) will run your tests directly in V8.  'Serving files' simply means serving your test and source files and any other files necessary for your tests (e.g. CSS, images, &c).
-JUTE then collects and stores test output in JUnit XML format and code coverage information in 'lcov' format and generates pretty HTML to view your coverage results.  That is  it!
+JUTE is a standalone HTTP server that serves your test files to a JUTE backend for testing.  Two of the three backends (Selenium and Capture) serve files to a browser, the third backend (V8) will run your tests directly in V8.
+JUTE then collects and stores test output in JUnit XML format and code coverage information in 'lcov' format and generates pretty HTML to view your coverage results.  That is it!
 
 Variable Setup
 ---------------
@@ -55,80 +56,53 @@ Here are some important JUTE configuration variables and their defaults:
                 gid:            process.getgid(),
                 port:           8080,
                 docRoot:        '/var/www/',
-                jutebase:       'jutebase/',
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
                 logFile:        '/tmp/jute.log',
-                logFormat:      '',
-                testRegex:      '*.htm*'
 </verbatim>
 
 To set any of these do:
 
 <verbatim>
-% npm config set jute:<variable> <value>/var/www
+% npm config set jute:<variable> <value>
 </verbatim>
 
 Like:
 
 <verbatim>
-% npm config set jute:docRoot /var/htmlroot/foobie
+% npm config set jute:docRoot /var/htmlroot
 </verbatim>
 
+What the variables mean:
 
-JUTE is a standalone HTTP server - it needs to know where your document root is to serve your files
-JUTE uses npm config varaibles for its configuration (for gory details: % npm config help)
-JUTE assumes a symlink named '/home/y/share/htdocs/jutebase' to your real DOCUMENT_ROOT. For [Mail/Neo](Mail/Neo.html) that symlink points back into our home directories but that doesn't have to be the case. However whichever user JUTE runs as (which you specify, I'll show you how in a moment) needs to be able to write files in a sub-directory under your DOCUMENT_ROOT - by default in directory named %BLUE%<u>'</u>%ENDCOLOR%output'. Note all of this can be changed via yinst variables but the simplest case is:
-
-* symlink /home/y/share/htdocs/jutebase to your DOCUMENT_ROOT (can/should? be somewhere in your home directory where you've checked out your subversion tree)
-
-* All of your test files live in DOCUMENT_ROOT/test
-
-* All of JUTE's output will go into DOCUMENT_ROOT/output
-
+* uid: UID/Username JUTE process should run as
+* gid: GID/Groupname JUTE process should run as
+* port: Port JUTE should listen on
+* docRoot: Your document root
+* testDir: A directory RELATIVE to docRoot where all your Javascript test files live
+* outputDir: A directory REALTIVE to docRoot where JUTE will dump output (test results and code coverage information)
+* java: Location of 'java' executable
+* logFile: Where to dump logging info
 
 Install JUTE
 -------------
 
-% yinst install -b test jute
-
-
-Include JUTE in your HTML
---------------------------
-
-In your HTML files that you load into your browser to run your unit tests add another script tag BEFORE you load in your [JavaScript](JavaScript.html) file that contains your tests:
-
-<script src="/jute/jute.js"></script>
-
-
-Require JUTE module in your TEST Javascript
---------------------------------------------
-
-Along with YUI3's 'test' module you must include the 'jute' module like:
-
 <verbatim>
-YUI({
-     logInclude: { [TestRunner](TestRunner.html): true }
-}).use('test', 'jute', ..., function(Y) {
- ....
-});
+% npm install jute -g
 </verbatim>
 
+Start JUTE
+----------
+
+<verbatim>
+% npm start jute
+</verbatim>
 
 Connect to JUTE
-----------------
- First, if you haven't done so, start JUTE:
+---------------
 
-% yinst start jute
-
-Then point your browser to:
-
-http://&lt;host where jute is running>/jute/
-
-**Note:** In case jute has problems starting, try
-<verbatim>sudo rm -rf /tmp/jute.socket</verbatim>
-
+Point your browser to the host your started JUTE on - make sure the port is correct (port 8080 by default)!
 
 Click on a test & run it!
 --------------------------
@@ -137,100 +111,50 @@ Click on a test & run it!
 In-Depth Start
 ===============
 
-The JUTE User
---------------
-
-JUTE by default run as the user who yinst installs the JUTE package. JUTE needs to run as a 'real' user to write files (unit test results and optionally coverage information). For developers this real user is YOU. For Hudson this user should be the same user that Hudson runs as when doing your build. This will all be handled automatically when that user installs the 'jute' package.
-
-If that doesn't work for you, you can force the user JUTE runs as using a yinst variable:
-
-<verbatim>
-% yinst set jute.as_user=<user you want JUTE to run as>
-% yinst restart jute 
-</verbatim>
-
-
-The jutebase symlink
----------------------
-
-JUTE expects your PROJECT ROOT to be available to it at /home/y/share/htdocs/jutebase. This path is typically a symlink to your real PROJECT ROOT. For developers this is typically somewhere in their home directory. For Hudson build this typically is either in the Hudson user's home directory or somewhere in /home/y/share/htdocs/&lt;SOMEWHERE&gt;
-
-Regardless create a symlink to that spot:
-
-<verbatim>
-% ln -s PROJECT_ROOT /home/y/share/htdocs/jutebase
-</verbatim>
-
-If for whatever zany reason you do not like the directory name 'jutebase' or your PROJECT ROOT is already in /home/y/share/htdocs and you don't want to symlink you can change it:
-
-<verbatim>
-% yinst set jute.html_root=<SOMETHING_ELSE>
-</verbatim>
-
-Now JUTE will use /home/y/share/htdocs/&lt;SOMETHING_ELSE&gt; as your PROJECT ROOT. Note this PROJECT ROOT directory is used as the BASE directory for the OUTPUT and TEST directories explained below.
-
-You must restart JUTE after changing this setting.
-
-
 JUTE output directory
 ----------------------
 
-JUTE writes unit test results and optionally coverage information into an output directory. By default this output directory is BASE/output. Ensure the user JUTE runs as can write to this directory! You can change the directory name by:
+JUTE writes unit test results and optionally coverage information into an output directory. By default this output directory is docRoot/output. Ensure the user JUTE runs as can write to this directory! You can change the directory name by:
 
 <verbatim>
-% yinst set jute.output_dir=&lt;SOMETHING_ELSE&gt;
+% npm config set:outputDir juteOutput
 </verbatim>
 
-Now it will put output files into BASE/&lt;SOMETHING_ELSE&gt;
+Now it will put output files into docRoot/juteOutput
 
-You must restart JUTE after changing this setting.
+You must restart JUTE after changing this setting:
 
+<verbatim>
+% npm restart jute
+</verbatim>
 
 JUTE test directory
 --------------------
 
-By default JUTE looks in BASE/test for test HTML files. This can be changed:
+By default JUTE looks in docRoot/test for test HTML files. This can be changed:
 
 <verbatim>
-% yinst set jute.test_dir=<SOMETHING_ELSE>
+% npm config set:testDir juteTests
 </verbatim>
 
-Now JUTE will look for tests in BASE/&lt;SOMETHING_ELSE&gt;
+Now it will look for test files in docRoot/juteTests
 
-You must restart JUTE after changing this setting.
+You must restart JUTE after changing this setting:
 
+<verbatim>
+% npm restart jute
+</verbatim>
 
 Starting and Stopping JUTE
 ---------------------------
 
-JUTE is a standalone ('external' in FCGI parlance) fastcgi server that listens on a UNIX socket. By default JUTE will automatically start itself when installed. It can be started, stopped, and restarted:
+JUTE is a standalone HTTP server. You control when JUTE is running
 
 <verbatim>
-% yinst start jute
-% yinst stop jute
-% yinst restart jute
+% npm start jute
+% npm stop jute
+% npm restart jute
 </verbatim>
-
-The UNIX socket is located at:
-
-<verbatim>
-srwxrwxrwx  1 trostler users 0 Mar 10 13:05 /tmp/jute.socket
-</verbatim>
-
-Ensure this socket is owned by who you expect JUTE to be running as. If it's owned by root or someone else unexpected and you're having trouble with JUTE you can manually delete this file and try to restart JUTE:
-
-<verbatim>
-% sudo rm /tmp/jute.socket
-% yinst restart jute
-</verbatim>
-
-
-yapache
---------
-
-JUTE requires yapache 1.x - it is expected to be installed and running (note if you ONLY want to run unit tests on V8 you do not need yapache - just install the 'jute_v8' package and NOT the 'jute' package).
-
-
 
 JUTE Backends
 ==============
@@ -242,7 +166,7 @@ Capture
 This is the default mode for the JUTE UI.  Any captured browsers (see 'Browsers' below) will run any submitted unit tests in parallel.  To capture a browser point it to:
 
 <verbatim>
-http://<JUTE_HOST>/jute/
+http://<JUTE_HOST>/
 </verbatim>
 
 The browser is now 'captured'.  Any submitted unit tests will be run in parallel through all currently captured browsers.
@@ -257,37 +181,29 @@ When you click to run (a) unit test(s) in the JUTE UI the test(s) will be run in
 Selenium
 ---------
 
-This mode can currently only be accessed via the command line.  Tests can be run serially or in parallel.
+This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.
 
 
 V8/NodeJS
 ----------
 
-This is essentially a standalone backend as it does NOT require yapache running.  Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.  Note not all of your unit tests are guaranteed to run in the V8 backend!!  Tests which require browser-y features like event simulation will not run as mouseclicks and keyevents and the like do not exist in [NodeJS](NodeJS.html).
+This mode can currently only be accessed via the command line tool 'jute_submit_test' or 'jute_v8'
 
-Note to use V8 as a backend you MUST ALSO INSTALL THE jute_v8 PACKAGE.  
-
-If you ONLY want to run unit tests on V8 you do not need the 'jute' package - just install the 'jute_v8' package and NOT the 'jute' package.
+Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.  Note NOT all of your unit tests are guaranteed to run in the V8 backend!!  Tests which require browser-y features like event simulation will not run as mouseclicks and keyevents and the like do not exist in nodejs.
 
 
 Using JUTE
 ===========
 
 
-[WebUI](WebUI.html)
+JUTE WebUI
 --------------------
 
 Now that JUTE is up and running you can contact it here:
 
 <verbatim>
-http://<JUTE_HOST>/jute/
+http://<JUTE_HOST>/
 </verbatim>
-
-THE SLASH ON THE END IS REQUIRED!!!!
-
-You should see the JUTE UI:
-
-<img src="%ATTACHURLPATH%/jute.jpg" alt="JUTE UI" />
 
 This browser is now 'captured' and is ready to run unit tests.
 
@@ -307,7 +223,7 @@ These are list of currently running/queued tests.  A highlighted row means that 
 
 ### Test Files
 
-The middle panel is the list of all the test files JUTE knows about.  If you do not see any files here JUTE is misconfigured.  Look above at the 'html_dir' and 'test_dir' directory setting and ensure they're set properly.
+The middle panel is the list of all the test files JUTE knows about.  If you do not see any files here JUTE is misconfigured.  Look above at the 'docRoot' and 'testDir' setting and ensure they are set properly.
 
 
 #### Running a Single Test
@@ -352,35 +268,25 @@ Command Line
 The script
 
 <verbatim>
-/home/y/bin/submit_test.pl
+&lt;bin>/jute_submit_test
 </verbatim>
 
-Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in capture or Selenium mode.  After all of your tests are submitted you can wait around for them using:
+Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in capture or Selenium mode.
 
-<verbatim>
-/home/y/bin/wait_for_tests.pl
-</verbatim>
-
-This script will exit when all unit tests have finished.
-
-NOTE submit_test.pl will exit immediately after submitted the unit test(s)!  If you want to wait until all submitted tests are complete, after running submit_test.pl (which you can do multiple times) use wait_for_tests.pl.
-
-
-### /home/y/bin/submit_test.pl
+### jute_submit_test
 
 
 #### Submitting Tests
 
-There are several ways to submit unit tests.  You must specify ONLY relative path from the TEST directory you defined above.
-
+There are several ways to submit unit tests.  You must specify ONLY relative path from the testDir directory you defined above.
 
 ##### One Test
 
 <verbatim>
-/home/y/bin/submit_test.pl path/to/my/test/index.html
+jute_submit_test --test path/to/my/test/index.html
 </verbatim>
 
-Note the PROJECT_ROOT/TEST_DIR will be prepended to the specified file.
+Note the docRoot/testDir will be prepended to the specified file.
 
 
 ##### Multiple Tests
@@ -388,18 +294,11 @@ Note the PROJECT_ROOT/TEST_DIR will be prepended to the specified file.
 On command line:
 
 <verbatim>
-/home/y/bin/submit_test.pl -test path/to/my/test/index.html -test path/to/other/test/index.html -test path/to/other/other/test.html
+jute_submit_test --test path/to/my/test/index.html --test path/to/other/test/index.html --test path/to/other/other/test.html
 </verbatim>
 
-OR
 
 If you have a filename with one test file per line:
-
-<verbatim>
-cat LIST_OF_TEST_FILES | /home/y/bin/submit_test.pl -
-</verbatim>
-
-Note the PROJECT_ROOT/TEST_DIR will be prepended to the specified test files.
 
 
 #### Running tests through Selenium
@@ -407,29 +306,23 @@ Note the PROJECT_ROOT/TEST_DIR will be prepended to the specified test files.
 Specify -sel_host to run the submitted tests through Selenium.  You can optionally also supply -sel_browser to give a Selenium browser specification.  -sel_browser defaults to '*firefox'.
 
 <verbatim>
-/home/y/bin/submit_test.pl -sel_host 10.3.4.45 [-sel_browser '*ieexplore'] path/to/test/index.html
+jute_submit_test --sel_host 10.3.4.45 [--sel_browser '*ieexplore'] --test path/to/test/index.html
 </verbatim>
 
-Of course -sel_host can either point to an individual Selenium host or a Selenium grid host.
+Of course -sel_host can either point to an individual Selenium RC host or a Selenium grid host.
 
-Note the PROJECT_ROOT/TEST_DIR will be prepended to the specified test files.
-
-
-##### Parallelization
-
-Specifying the '-browsers' option.  This is '1' by default.  Specifying a larger number will spawn off that many Selenium browsers (as specified by '-sel_host' and '-sel_browser') in parallel to run all submitted tests in parallel.
+Note the docRoot/testDir prepended to the specified test files.
 
 
 #### Running tests through V8
 
-IF you also have the 'jute_v8' package installed you can use /home/y/bin/submit_test.pl to also run tests thru the [NodeJS/V8](NodeJS/V8.html) backend.  Simply specify '-v8' on the command line and all of the specified tests given will be run through V8.
+Specify '--v8' on the command line and all of the specified tests will be run through V8.
 
 <verbatim>
-/home/y/bin/submit_test.pl -v8 path/to/test/index.html
+jute_submit_test.pl --v8 --test path/to/test/index.html
 </verbatim>
 
 OR any other permutation of test specification as outlined above.
-
 
 
 #### Specifying code coverage
@@ -437,46 +330,31 @@ OR any other permutation of test specification as outlined above.
 If you'd like your test(s) to run with code coverage enabled add the querystring '?do_coverage=1' to each test you want code coverage enabled for:
 
 <verbatim>
-/home/y/bin/submit_test.pl path/to/my/test/index.html?do_coverage=1
+jute_submit_test --test path/to/my/test/index.html?do_coverage=1
 </verbatim>
 
 OR
 
 <verbatim>
-/home/y/bin/submit_test.pl -sel_host 10.3.4.45 path/to/test/index.html?do_coverage=1
+jute_submit_test --sel_host 10.3.4.45 --test path/to/test/index.html?do_coverage=1
 </verbatim>
 
 OR
 
 <verbatim>
-/home/y/bin/submit_test.pl -test path/to/my/test/index.html?do_coverage=1 -test path/to/other/test/index.html -test path/to/other/other/test.html
+jute_submit_test --test path/to/my/test/index.html?do_coverage=1 --test path/to/other/test/index.html --test path/to/other/other/test.html
 </verbatim>
 
-OR IF you have the 'jute_v8' package also installed:
 
-<verbatim>
-/home/y/bin/submit_test.pl -v8 path/to/my/test/index.html?do_coverage=1
-</verbatim>
-
-&c
-
-Note that last example code coverage will ONLY be generated for that first test since it's the only one with the '?do_coverage=1' querystring.
-
-Note the PROJECT_ROOT/TEST_DIR will be prepended to the specified test files.
-
-
-wait_for_tests.pl
-------------------
-
-This script will exit once all currently submitted unit tests have finished running
+!! NOTE docRoot/testDir will be prepended to the specified test files. !!
 
 
 JUTE Output
 ============
 
-JUTE output all goes into the OUTPUT DIRECTORY as specified above.  Within that directory will be a directory for each unit test.  The name of the directory is the NAME OF THE TEST SUITE as specified in your javascript test file.  This will be explained in more detail below.
+JUTE output all goes into the outputDir as specified above.  Within that directory will be a directory for each unit test.  The name of the directory is the NAME OF THE TEST SUITE as specified in your javascript test file.  This will be explained in more detail below.
 
-Note both test results and coverage information are available for easy viewing via the JUTE [WebUI](WebUI.html).
+Note both test results and coverage information are available for easy viewing via the JUTE WebUI
 
 
 Test Results
@@ -527,249 +405,25 @@ JUTE requires VERY LITTLE from the developer to have their unit tests incorporat
 YUI3 'test' module
 -------------------
 
-The main requirement is using the YUI3 [TestRunner](TestRunner.html) and Assertion Framework for running and creating your Unit Tests.  [Look here](http://developer.yahoo.com/yui/3/test/) for detailed information about getting started with YUI3 test module, including running, asserting, and potentially mocking objects for your unit tests.
+The main requirement is using the YUI3 Test and Assertion Framework for running and creating your Unit Tests.  [Look here](http://developer.yahoo.com/yui/3/test/) for detailed information about getting started with YUI3 test module, including running, asserting, and potentially mocking objects for your unit tests.
 
 Note you must use YUI3 version 3.1.1+.
-
 
 Code Requirements
 ------------------
 
-To utilize JUTE you need only to make small additions to your current HTML file and 1 small addition to your test Javascript file.
-
-
-### HTML requirements
-
-You must include '/jute_docs/jute.js' in a script tag BEFORE you load your test Javascript file.
-
-Here is a standard test HTML file - we will examine all the important bits below.
-
-<verbatim>
-  1 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 [Transitional//EN](Transitional//EN.html)">
-  2 <html lang="en">
-  3 
-  4 <head>
-  5   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-  6 </head>
-  7 
-  8 <body class="yui3-skin-sam">
-  9     <div id="log"></div>
- 10 
- 11     <div id="pagetoolbar">
- 12         <span class="btn left right" >
- 13             <a id="deleteLink" href="http://dont.go.here.com" title="{{str|replace_me}}" data-action="delete">Delete</a>
- 14         </span>
- 15         <span class="btn menu" id="btn-move" data-action="menu">
- 16             <a id="moveLink" href="http://dont.go.here.com" title="{{str|replace_me}}">Move<b></b></a>
- 17         </span>
- 18     </div>
- 19 
- 20     <script src="http://yui.yahooapis.com/3.3.0/build/yui/yui.js"></script>
- 21     <script src="/jute_docs/jute.js"></script>
- 22     <script src="../../../../src/common/utils/utils.js"></script>
- 23     <script src="../../../../src/common/ui/toolbar/toolbar.js?coverage=1"></script>
- 24     <script src="../../../../src/mods/neo.js"></script>
- 25     <script src="../../../../src/templates/js/minty/module/toolbar/inbox.js"></script>
- 26     <script src="testToolbar.js"></script>
- 27 </body>
- 28 </html>   
-</verbatim>
-
-Line 8 - the class on the body tag tell YUI3 which skin we want to use.
-
-Line 9 - we make a &lt;div&gt; for the console logger.
-
-Lines 11-18 are the markup for out tests - you could also create this dynamically in your test Javascript file.
-
-Lines 20-26 - Javascript files necessary to run the test suite(s)
-
-Line 20 - we include the YUI3 seed
-
-Line 21 - we include the required jute.js script.  JUTE will also put this file there so you can copy this line exactly.
-
-Line 23 - the querystring appended to toolbar.js - '?coverage=1' tells JUTE we want code coverage information for this file when we run with code coverage enabled.  You can append this to more than one Javascript file you load if you'd like coverage information generated for more than file during this unit test run.  Note you still MUST run the tests with coverage enabled for coverage information to be generated.  JUTE will automatically instrument files with '?coverage=1' with coverage data.
-
-Line 26 - the test Javascript file is loaded.  We'll look at that next.
-
+To utilize JUTE you need only to make 1 small addition to your test Javascript file.
 
 ### Javascript Requirements
 
-Your Javascript test file must 'use' the 'jute' module.
-
-Below is the corresponding test file to the above HTML file - I'll point out the interesting lines below:
+Your Javascript test file must 'use' the 'gallery-jute' module:
 
 <verbatim>
-  1 YUI({
-  2     logInclude: { [TestRunner](TestRunner.html): true }
-  3 }).use('test', 'io-base', 'node-event-simulate', 'common-ui-toolbar-base', 'jute', 'minty_module_toolbar_inbox', function(Y) {
-  4 
-  5 // Setup dummy strings object
-  6 window.strings = {}
-  7 
-  8 var suite = new Y.Test.Suite('toolbar');
-  9 
- 10 suite.add(new Y.Test.Case({
- 11 
- 12     name:'tool zot bar',
- 13 
- 14     setUp: function() {
- 15         Y.Node.prototype.simulate = function(type, options) {
- 16             Y.Event.simulate(Y.Node.getDOMNode(this), type, options);
- 17         };
- 18     },
- 19 
- 20     testNewToolbar_noParams : function() {
- 21         var tb = new Y.mail.ui.Toolbar();
- 22     },
- 23     testNewToolbar_template : function() {
- 24         var tb = new Y.mail.ui.Toolbar({ template: Y.ui.Templates.minty_module_toolbar_inbox.base });
- 25     },
- 26     testNewToolbar_root : function() {
- 27         var tb = new Y.mail.ui.Toolbar({ root: Y.one("#pagetoolbar") });
- 28     },
- 29     testGetContent : function () {
- 30         var tb = new Y.mail.ui.Toolbar({ template: Y.ui.Templates.minty_module_toolbar_inbox.base });                                                                                                 
- 31         var node = tb.get('content');
- 32         Y.Assert.isObject(node);
- 33     },
- 34
- 35     testSelectButton : function() {
- 36         var tb = new Y.mail.ui.Toolbar({ root: Y.one("#pagetoolbar") });
- 37 
- 38         tb.on('itemSelected', function(e) {
- 39             Y.Assert.areEqual(e.dataAction, 'delete', "Click on toolbar link");
- 40             tb.detach('itemSelected');
- 41         });
- 42 
- 43         // Click the link!
- 44         Y.one("#deleteLink").simulate("click");
- 45     },
- 46 
- 47     testSelectMenu : function() {
- 48         var tb = new Y.mail.ui.Toolbar({ root: Y.one("#pagetoolbar") });
- 49 
- 50         tb.on('itemSelected', function(e) {
- 51             Y.Assert.areEqual(e.dataAction, 'menu', "Click on menu item");
- 52             tb.detach('itemSelected');
- 53         });
- 54 
- 55         // Click the link!
- 56         Y.one("#moveLink").simulate("click");
- 57     }
- 58 }));
- 59 
- 60 Y.Test.Runner.add(suite);
- 61 Y.UnitTest.go();
- 62                                                                                                                                                                                                       
- 63 });
+YUI({
+    logInclude: { TestRunner: true },
+    gallery:    'gallery-2011.06.22-20-13'
+}).use('gallery-jute', 'toolbar', function(Y) {
 </verbatim>
-
-Line 2 - Tell the logger to output [TestRunner](TestRunner.html) output
-
-Line 3 - Ensure we use BOTH the 'test' and 'jute' modules.  And of course the actual modules you're testing and anything else you need.
-
-Line 8 - We give a name to our Suite - this name is later used as the directory name under the OUTPUT DIRECTORY where test results and code coverage will live.
-
-Lines 10-58 - Our test functions and a setUp function - standard test stuff
-
-Line 60 - We add our suite to the YUI3 [TestRunner](TestRunner.html)
-
-Line 61 - We start our tests!  This is a convenience function provided by JUTE to initialize the console and start our tests.  If you want to handle that stuff yourself you can just call the standard 'Y.Test.Runner.run()' yourself.
-
-That's IT!!  The only changes you needed to make from a standard YUI3 test Javascript file was including the 'jute' module (which you loaded in your HTML file) and optionally calling Y.UnitTest.go() instead of Y.Test.Runner.run().
-
-With this setup you can run your test thru any JUTE backend.
-
-
-JUTE V8
-========
-
-V8 support in JUTE is available in a separate yinst package:
-
-<verbatim>
-% yinst i -b test jute_v8
-</verbatim>
-
-This package mainly provides the /home/y/bin/jute_v8.js file used to run your unit test(s) thru V8.
-
-You do NOT need to install the 'jute' package to install and use 'jute_v8'.
-
-
-Installation
--------------
-
-Even if you already have the 'jute' package installed you still need to:
-
-<verbatim>
-% yinst install -b test jute_v8
-</verbatim>
-
-Note you do NOT have to have the 'jute' package installed if you only want to run V8 unit tests.  If you want the [WebUI](WebUI.html) and the ability to use Selenium and Captured browsers then you must also install the 'jute' package'  See above for gory details.
-
-
-Configuration
---------------
-
-There are 3 yinst variables that must be set correctly:
-
-
-### HTML_ROOT
-
-This is the HTML_ROOT of your app:
-
-<verbatim>
-% yinst set jute_v8.HTML_ROOT=/home/y/share/htdocs/jutebase/src/
-</verbatim>
-
-
-### TEST_ROOT
-
-This is the full path to the base of your test directory:
-
-<verbatim>
-% yinst set jute_v8.TEST_ROOT=/home/y/share/htdocs/jutebase/test/
-</verbatim>
-
-
-### OUTPUT_ROOT
-
-This is the full path to the base of where your output files will live:
-
-<verbatim>
-% yinst set jute_v8.OUTPUT_ROOT=/home/y/share/htdocs/jutebase/output/
-</verbatim>
-
-
-Running
---------
-
-IF you also have the 'jute' package installed you can use /home/y/bin/submit_test.pl to run V8 tests as outline above.
-
-IF you do NOT have the 'jute' package installed or want to do something else you can use the [NodeJS](NodeJS.html) script in /home/y/bin/jute_v8.js
-
-<verbatim>
-/home/y/bin/jute_v8.js path/to/test/index.html [1]
-</verbatim>
-
-The script takes 2 arguments - the path to the test HTML file relative to TEST_ROOT and an optional boolean second argument for code coverage.  SO without code coverage:
-
-<verbatim>
-/home/y/bin/jute_v8.js path/to/test/index.html
-</verbatim>
-
-With code coverage:
-
-<verbatim>
-/home/y/bin/jute_v8.js path/to/test/index.html 1
-</verbatim>
-
-
-Results
---------
-
-Results in JUnit XML format are stored in the OUTPUT_ROOT just like in the regular jute case.  Code coverage will be put there too as jute does.  If you have the [WebUI](WebUI.html) installed (in the 'jute' package) you can now see the V8 results.
-
-Test run information, total test statistics and code coverage statistics are also available via STDOUT.
 
 
 V8 Caveats
@@ -796,17 +450,6 @@ Best Practices
 By default JUTE assumes a 'best practices' setup.  Using the JUTE yinst set variable outlined above this behavior can be changed.
 
 
-Directory Setup
-----------------
-
-Your PROJECT ROOT should be the parent directory of a 'src', 'test', and 'output' directory.  The 'test' directory should be a mirror of the 'src' directory hierarchy.  This eases the setup and keeps the directory structure simple and clean.
-
-
-Test File Setup
-----------------
-
-You should use relative paths in your HTML test files pointing to project files over in the 'src' tree that you're testing.
-
 
 Developer Environment
 ----------------------
@@ -823,10 +466,9 @@ Developer Build Environment
 a local dev build can run all available unit tests - if they're all in a 'test' directory the command to run the tests can be as easy as:
 
 <verbatim>
-LOCAL_TEST_DIR = ../test                                                                                                                                                                              
+LOCAL_TEST_DIR = testDir
 run_unit_tests:
-       cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/submit_test.pl {} do_coverage=$(DO_COVERAGE) \\; -print
-       /home/y/bin/wait_for_tests.pl 1
+       cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --test {}?do_coverage=$(DO_COVERAGE) --wait \\; -print
 </verbatim>
 
 DO_COVERAGE can be set to '1' to generate coverage reports:
@@ -856,42 +498,29 @@ Hudson Build Environment
 All of your tests can be run thru Selenium - they all need to submitted at once to run as one job:
 
 <verbatim>
-submit_selenium_tests:                                                                                                                                                                                
-     cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | /home/y/bin/submit_test.pl -test - -sel_host $(SEL_HOST) -sel_browser $(SEL_BROWSER) -send_output  
+submit_selenium_tests:
+     cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | jute_submit_test.pl --test - --sel_host $(SEL_HOST) --sel_browser $(SEL_BROWSER) --send_output
 </verbatim>
 
-This will return once all tests have run.  Ensure Hudson is configured correctly to look in the output directory for test results and cover coverage.  If a unit test fails Hudson will label the build 'Unstable'.  Clicking thru the "Test Results" will reveal the failed test(s).
+This will return once all tests have run.  Ensure Hudson is configured correctly to look in the output directory for test results and code coverage.  If a unit test fails Hudson will label the build 'Unstable'.  Clicking thru the "Test Results" will reveal the failed test(s).
 
-Note you are not allowed to run a web server on your Hudson build machine.  You can use Stagecoach to run the unit tests remotely and return the results back to your Hudson build machine.  Alternatively you can use the V8 backend IF all of your unit tests can run under V8.
-
-
-[Yahoo Continuous Integration Standards](http://twiki.corp.yahoo.com/view/ContinuousIntegration/WebHome)
-=========================================================================================================
-
-
-[Yahoo CI Unit Test Standards](http://twiki.corp.yahoo.com/view/ContinuousIntegration/UnitTesting)
-===================================================================================================
-
-
-[Build/Hudson](Build/Hudson.html) Integration
-==============================================
+Build/Hudson integration
+========================
 
 Running tests and result and code coverage information are easily integrated into your builds and Hudson.
-
 
 Running Tests
 --------------
 
 Where:
 
-LOCAL_TEST_DIR is the root of where your test files live on the build or local host
+LOCAL_TEST_DIR is the root of where your test files live on the build or local host (testDir)
 
 SEL_HOST is the hostname/IP of your Selenium box or grid
 
 SEL_BROWSER is '*firefox' or '*iexplore' or whatever browser specification you want to use
 
 DO_COVERAGE is 1 or 0 depending on if you want coverage (you probably do)
-
 
 ### Local
 
@@ -901,9 +530,8 @@ Running JUTE/browser tests locally is a simple Makefile rule.
 #### Captured Browser(s)
 
 <verbatim>
-submit_tests:                                                                                                                                                         
-    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/submit_test.pl {} do_coverage=$(DO_COVERAGE} \\; -print
-    /home/y/bin/wait_for_tests.pl 1
+submit_tests:
+    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --test {}?do_coverage=$(DO_COVERAGE} --wait \\; -print
 </verbatim>
 
 
@@ -911,7 +539,7 @@ submit_tests:
 
 <verbatim>
 submit_selenium_tests:
-    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | /home/y/bin/submit.pl -test - -sel_host $(SEL_HOST) -sel_browser $(SEL_BROWSER) -send_output 
+    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | jute_submit_test --test - --sel_host $(SEL_HOST) --sel_browser $(SEL_BROWSER) --send_output 
 </verbatim>
 
 
@@ -919,25 +547,8 @@ submit_selenium_tests:
 
 <verbatim>
 submit_v8_tests:
-    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec /home/y/bin/jute_v8.js {} $(DO_COVERAGE} \\; 
+    cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --v8 --test {}?$(DO_COVERAGE} \\; 
 </verbatim>
-
-
-### Hudson
-
-
-#### Captured Browsers and Selenium
-
-Running browser-based tests in Hudson is a little goofy due mainly to the restriction of not running a webserver on your Hudson slave.  One solution is to use Stagecoach to tar up your source tree (including tests) and scp it all over to another machine that will host your tests - which of course is running yapache.
-
-On that remote box you install all necessary package for running your tests (jute & possibly others) and using Stagecoach run one of the captured or Selenium test Makefile rules.
-
-After all tests are finished you need to tar up the results and scp them back to the Hudson host.  Just drop the results where ever output_dir is pointing to.
-
-
-#### V8
-
-Just call the 'submit_v8_tests' Makefile target!  There's no webserver or remote captured or Selenium host to run the tests so you're good to go!!
 
 
 Viewing Test Results
@@ -951,47 +562,36 @@ All results are stored in output_dir - you can look at the *.xml files to view t
 
 ### Browser
 
-If the 'jute' package is installed you can visit:
-
 <verbatim>
-http://<jute host>/jute/
+http://<jute host>/
 </verbatim>
 
 & click on links in the 'Results' column - this will show results for captured, Selenium, and V8 tests.
 
 
-### Hudson
-
-
-#### Test Results
-
-You need to configure your Hudson project to find the *.xml files the tests generated.
-
-Check the 'Publish Test Results in Labeled Groups (recommended by Yahoo!)' and use 'trunk/output/**/*-test.xml' as your Result File Mask.  Note you may have to change this path to point to where under your svn root your output_dir lies.
-
-Be sure to set 'Report Format' to 'JUnit Parser'
-
-
-#### Code Coverage
+#### Hudson Code Coverage
 
 Running individual tests will generate a directory hierarchy rooted at your output_dir.  The first thing you need to do is to aggregate all the individual coverage output into one mongo output files containing all the the individual output files.
 
 This can be accomplished by a simple Makefile rule:
 
 <verbatim>
-LCOV_GENHTML = /home/y/bin/genhtml # from the 'lcov' yinst package   
-TOTAL_LCOV_FILE = $(OUTPUT_DIR)/lcov.info  
-OUTPUT_DIR = <jute.output_dir or jute_v8.OUTPUT_DIR>                                                                                                                                                                                                                                                           
+LCOV_GENHTML = /home/y/bin/genhtml # Freely available - probably already installed!
+OUTPUT_DIR = &lt;outputDir>
+TOTAL_LCOV_FILE = $(OUTPUT_DIR)/lcov.info
 make_total_lcov:
-  /bin/rm -f $(TOTAL_LCOV_FILE)
+  /bin/rm -f /tmp/lcov.total
   @echo "OUTPUT DIR: ${OUTPUT_DIR}"
   @echo "TOTAL LCOV FILE: ${TOTAL_LCOV_FILE}"
-  find $(OUTPUT_DIR) -name lcov.info -exec cat {} >> $(TOTAL_LCOV_FILE) \\;
+  find $(OUTPUT_DIR) -name lcov.info -exec cat {} >> /tmp/lcov.total \\;
+  @cp /tmp/lcov.total $(TOTAL_LCOV_FILE)
   @ls ${OUTPUT_DIR}
   /bin/rm -rf $(OUTPUT_DIR)/lcov-report
   $(LCOV_GENHTML) -o $(OUTPUT_DIR)/lcov-report $(TOTAL_LCOV_FILE)
 </verbatim>
 
-Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to 'trunk/output/lcov.info' depending on where your output_dir is relative to your SVN root.
+Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to 'trunk/output/lcov.info' depending on where your output_dir is relative to your workspace root.
+
+
 
 This software is licensed under the BSD license available at http://developer.yahoo.com/yui/license.html

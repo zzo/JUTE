@@ -1,6 +1,3 @@
-<!-- The code below creates a default page header by spacing out the topic name -->
-
-
 JUTE
 ====================
 

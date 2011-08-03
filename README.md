@@ -330,7 +330,6 @@ The format of this file is JUnit XML style test output recognizable by most tool
 
 This looks like:
 
-   <?xml version="1.0" encoding="UTF-8"?>
    <testsuites>
        <testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.initialization" tests="3" failures="0" time="0.021">
            <testcase name="testLoggerNotInitialized" time="0.001"></testcase>

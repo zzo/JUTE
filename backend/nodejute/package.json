@@ -29,6 +29,7 @@
       , "yui3": ">= 0.5.33"
       , "xmlhttprequest" : ">= 1.2.2"
       , "jsdom": ""
+      , "sync": ""
       , "mime" : ""
       , "daemon" : ""
       , "optimist" : ""

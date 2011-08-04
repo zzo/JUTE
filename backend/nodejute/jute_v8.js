@@ -66,7 +66,7 @@ if (!process.argv[2]) {
     process.exit(1);
 }
 
-TEST_FILE  = PATH.join(config.testDir, process.argv[2]);
+TEST_FILE   = PATH.join(config.testDir, process.argv[2]);
 DO_COVERAGE = TEST_FILE.match(/do_coverage=1/);
 TEST_FILE   = TEST_FILE.replace(/\?.*/,''); // get rid of any query string
 
@@ -99,13 +99,26 @@ YUI().add('jute', function(Y) {
      );
 }, '1.0', { requires: [ 'test' ] });
 
+// START PARTY!!!
+if (DO_COVERAGE) {
+    if (TEST_FILE.match(/\.js$/)) {
+        var tf = fs.readFileSync(TEST_FILE, 'utf8');
+        var reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g;
+        var covers = reqMatch.exec(tf);
+
+        console.log('COVERAGE: ' + covers[0]);
+        console.log('COVERAGE: ' + covers[1]);
+
+    }
+
+    doit('<script src="' + TEST_FILE + '"></script>');
+}
 fs.readFile(TEST_FILE, 'utf8', function (err, data) {
     if (err) {
         console.error("Cannot read " + TEST_FILE + ": " + err); 
         process.exit(1); 
     }
-    var d = jsdom(''), w = d.createWindow();
-    doit(data, d, w);
+    doit(data);
 });
 
 /**
@@ -157,7 +170,10 @@ function testsDone(data, report_data, cover_out) {
     }
 }
 
-function doit(data, d, w) {
+function doit(data) {
+
+    var d = jsdom(''), w = d.createWindow();
+
     YUI({
 //        filter: 'DEBUG',
         logExclude: {
@@ -207,8 +223,11 @@ function doit(data, d, w) {
                             if (err) {
                                 console.error("Cannot coveage " + path + ".js");
                             }  else {
-                            covered[file]= true;
-                                origArgs[origArgs.length - 1]();
+                                covered[file]= true;
+                                if (i == origArgs.length - 1) {
+                                    // We're done - call callback
+                                    origArgs[i]();
+                                }
                             }
                         });
                     }
@@ -228,7 +247,7 @@ function doit(data, d, w) {
                     return REQUIRE(file);
                 }
             };
-            
+
         requireCover.cache = REQUIRE.cache;
 
         document.innerHTML = data;
@@ -259,7 +278,7 @@ function doit(data, d, w) {
                 ,__NODE: true
                 ,module: module     // SOO sneaky!
                 ,require: requireCover   // Test nodejs stuff
-                ,__do_coverage: nodeDoCoverage   // Test nodejs stuff
+                ,jute_coverage: nodeDoCoverage   // Test nodejs stuff
 
             }
         );

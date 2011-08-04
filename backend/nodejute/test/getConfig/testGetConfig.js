@@ -1,12 +1,11 @@
-__do_coverage('./getConfig', function() {
-
 YUI({
     logInclude: { TestRunner: true },
 }).use('jute', function(Y) {
 
-    var suite = new Y.Test.Suite('getConfig'),
-        getConfig = require('./getConfig'),
-        fs = require('fs');
+    var suite     = new Y.Test.Suite('getConfig'),
+        getConfig = require('./getConfig', true),
+        zot = require('./zob', true),
+        fs         = require('fs');
 
     suite.add(new Y.Test.Case({
         setUp: function() {
@@ -22,7 +21,7 @@ YUI({
                 logFormat: '',
                 testRegex: '*.htm*',
                 outputDirWeb: '/tmp',
-                testDirWeb: 'test' 
+                testDirWeb: 'test'
             };
         },
         testIsFunction : function () {
@@ -45,4 +44,4 @@ YUI({
     Y.Test.Runner.add(suite);
     Y.UnitTest.go();
 });
-});
+

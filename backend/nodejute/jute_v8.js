@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /*
 Copyright (c) 2011, Yahoo! Inc.
 All rights reserved.
@@ -47,6 +48,7 @@ var  fs         = require('fs')
     ,jsdom      = require('jsdom').jsdom
     ,xmlhttp    = require("xmlhttprequest").XMLHttpRequest
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
+    ,REQUIRE    = require
     ,DONE       = false
     ,EXIT       = false
     ,coverageReportJar = PATH.join(__dirname, 'jute', 'actions', 'yuitest-coverage-report.jar')
@@ -54,6 +56,10 @@ var  fs         = require('fs')
     ,TEST_FILE
     ,DO_COVERAGE
     ;
+
+if (!config) {
+    process.exit(0);
+}
 
 if (!process.argv[2]) {
     console.log('You must specify a test to run!  This file is relative to testDir');
@@ -110,25 +116,36 @@ function tests_done(data, report_data, cover_object, cover_out) {
 
         fs.writeFileSync(cover_out_file, cover_out);
 
-        coverage = spawn(config.java, [ '-jar', coverageReportJar, '--format', 'lcov', '-o', PATH.join(dirname, 'lcov-report'), cover_out_file ]);
+        coverage = spawn(config.java, [ '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ]);
         coverage.on('exit', function(code) {
-            for (file in cover_object) {
-                cover = cover_object[file];
-                total_lines = cover.coveredLines;
-                total_functions = cover.coveredFunctions;
 
-                if (total_lines) {
-                    line_coverage = Math.round((cover.calledLines / total_lines) * 100);
-                }
-                console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
+            // THIS IS A ZANY HACK
+            //  someone smarter than me need to help figure it out someday....
+            var exec = REQUIRE('child_process').exec;
+            exec('/bin/rm -rf ' + PATH.join(dirname, 'lcov-report', 'base'), function(err) {
+                if (!err) {
+                    fs.renameSync(PATH.join(dirname, 'lcov-report', 'null'), PATH.join(dirname, 'lcov-report', 'base'));
 
-                if (total_functions) {
-                    func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
+                    for (file in cover_object) {
+                        cover = cover_object[file];
+                        total_lines = cover.coveredLines;
+                        total_functions = cover.coveredFunctions;
+
+                        if (total_lines) {
+                            line_coverage = Math.round((cover.calledLines / total_lines) * 100);
+                        }
+                        console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
+
+                        if (total_functions) {
+                            func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
+                        }
+                        console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
+                        DEBUG(cover_out);
+                    }
+                    process.exit(data.results.failed);
+
                 }
-                console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
-                DEBUG(cover_out);
-            }
-            process.exit(data.results.failed);
+            });
         });
     } else {
         process.exit(data.results.failed);
@@ -169,7 +186,40 @@ function doit(data, d, w) {
                     e.sheet.addRule    = function(sel, css,i) { cssRules[i] = { selectorText: sel, style: { cssText: css } }; }
                 }
                 return e;
+            },
+            covered = {},
+            nodeDoCoverage = function() {
+                   var path = REQUIRE('path'),
+                        exec = REQUIRE('child_process').exec,
+                        origArgs = arguments;
+
+                for (var i = 0; i < arguments.length - 1; i++) {
+                        var file = arguments[i],
+                            tempFile = path.join('/tmp', path.basename(file))
+                        ;
+
+                        exec(config.java + ' -jar ' + path.join(__dirname, 'jute', "yuitest-coverage.jar") + " -o " + tempFile + " " + path.join(__dirname, file) + '.js', function(err) {
+                            if (err) {
+                                console.error("Cannot coveage " + path + ".js");
+                            }  else {
+                                (origArgs[origArgs.length - 1])();
+                            }
+                        });
+                }
+
+            },
+            requireCover = function(file) {
+                if (covered[file]) {
+                    var path = REQUIRE('path'),
+                        tempFile = path.join('/tmp', path.basename(file));
+
+                    return REQUIRE(tempFile);
+                } else {
+                    return REQUIRE(file);
+                }
             };
+            
+        requireCover.cache = require.cache;
 
         document.innerHTML = data;
         document.createElement = createElement;
@@ -197,6 +247,10 @@ function doit(data, d, w) {
                 ,Image: function(){}
                 ,alert: Y.log
                 ,__NODE: true
+                ,module: module     // SOO sneaky!
+                ,require: requireCover   // Test nodejs stuff
+                ,__do_coverage: nodeDoCoverage   // Test nodejs stuff
+
             }
         );
 

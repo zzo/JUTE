@@ -41,17 +41,17 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ]')
-        .demand(['test'])
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
         .alias('sh', 'sel_host')
         .alias('sb', 'sel_browser')
+        .alias('s', 'status')
         .alias('c', 'clear_results')
         .alias('w', 'wait')
         .default('host', os.hostname())
-        .default('port', config.port || 80)
+        .default('port', (config && config.port) || 80)
         .default('send_output', false)
         .default('wait', false)
         .default('v8', false)
@@ -66,11 +66,16 @@ var config = (require('./getConfig'))(),
         .describe('wait', 'Wait for captured tests to finish')
         .describe('clear_results', 'Clear ALL previous test results before running specified test(s)')
         .describe('v8', 'Run these test(s) using the V8 backend')
+        .describe('status', 'Just get status')
         .argv,
     sys  = require('sys'),
     qs   = require('querystring'),
     http = require('http'),
     juteArgs = {};
+
+if (!config) {
+    process.exit(0);
+}
 
 if (args.help) {
     console.log(opt.help());
@@ -93,106 +98,72 @@ if (args.v8 && args.sel_host) {
 sys.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
-console.log('argv test: ' + args.test);
-console.log('argv port: ' + args.port);
-// Read test from STDIN?
-if (args.test === true) {
-    var stests = '';
-
-    process.stdin.resume();
-    process.stdin.setEncoding('utf8');
-
-    process.stdin.on('data', function(chunk) {
-        stests += chunk;
-    });
-
-    process.stdin.on('end', function() {
-        eventHub.emit('tests', stests.trim().split('\n'));
-    });
-} else {
-    // Make sure we have an array of test(s)
-    if (typeof args.test != 'object') {
-        args.test = [ args.test ];
-
-        eventHub.emit('tests', args.test);
-    }
-}
-
-var options = {
-    host: args.host,
-    port: args.port
-};
-
-if (args.clear_results) {
-    console.log('Clearing all previous results...');
-    options.path = '/jute/_clear_results';
-    http.get(options, function(res) { });
-}
-
 eventHub.on('tests', function(tests) {
-    if (args.v8) {
-        var exec = require('child_process').exec,
-            path = require('path');
-
-        for (var i = 0; i < tests.length; i++) {
-            var test = tests[i];
-            exec(path.join(__dirname, 'jute_v8.js') + ' ' + test, function(error, stdout, stderr) {
-                if (error) {
-                    console.error("Error running jute_v8: " + error);
-                } else {
-                    console.error(stderr);
-                    console.log(stdout);
-                }
+    if (tests) {
+        if (args.v8) {
+            var exec = require('child_process').exec,
+                path = require('path');
     
-                if (i == args.length) {
-                    process.exit(0);
-                }
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                exec(path.join(__dirname, 'jute_v8.js') + ' ' + test, function(error, stdout, stderr) {
+                    if (error) {
+                        console.error("Error running jute_v8: " + error);
+                    } else {
+                        console.error(stderr);
+                        console.log(stdout);
+                    }
+        
+                    if (i == args.length) {
+                        process.exit(0);
+                    }
+                });
+            }
+        } else {
+            // POST space separated list of tests
+            juteArgs.tests = tests.join(' ');
+        
+            // Toss in Selenium stuff
+            if (args.sel_host) {
+                juteArgs.sel_host = args.sel_host;
+                juteArgs.sel_browser = args.sel_browser;
+            }
+        
+            // Whether to stream output back
+            if (args.send_output) {
+                juteArgs.send_output = 1;
+            }
+            
+           
+            options.path = '/jute/_run_test';
+            options.method = 'POST';
+            // See what we got
+            console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
+            
+            // POST AWAY!
+            var req = http.request(options, function(res) {
+                console.log('Status Response from JUTE: ' + res.statusCode);
+                res.setEncoding('utf8');
+                res.on('data', function (chunk) {
+                    console.log(chunk);
+                });
+                res.on('end', function() {
+                });
             });
-        }
-    } else {
-        // POST space separated list of tests
-        juteArgs.tests = tests.join(' ');
-    
-        // Toss in Selenium stuff
-        if (args.sel_host) {
-            juteArgs.sel_host = args.sel_host;
-            juteArgs.sel_browser = args.sel_browser;
-        }
-    
-        // Whether to stream output back
-        if (args.send_output) {
-            juteArgs.send_output = 1;
-        }
-        
-       
-        options.path = '/jute/_run_test';
-        options.method = 'POST';
-        // See what we got
-        console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
-        
-        // POST AWAY!
-        var req = http.request(options, function(res) {
-            console.log('Status Response from JUTE: ' + res.statusCode);
-            res.setEncoding('utf8');
-            res.on('data', function (chunk) {
-                console.log(chunk);
+            
+            // Not Good
+            req.on('error', function(e) {
+                console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
+                console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
+                process.exit(1);
             });
-            res.on('end', function() {
-            });
-        });
-        
-        // Not Good
-        req.on('error', function(e) {
-            console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
-            console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
-            process.exit(1);
-        });
-        
-        req.end(qs.stringify(juteArgs));
-        
-        if (!args.sel_host && args.wait) {
-            options.path = '/jute/_status';
-            setInterval(wait, 5000, options);
+            
+            req.end(qs.stringify(juteArgs));
+            
+            if (!args.sel_host && args.wait) {
+                options.path = '/jute/_status';
+                setInterval(wait, 5000, options);
+            }
         }
     }
 });
@@ -231,3 +202,55 @@ function wait(options) {
         process.exit(1);
     });
 }
+
+// Read test from STDIN?
+if (args.test === true) {
+    var stests = '';
+
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+
+    process.stdin.on('data', function(chunk) {
+        stests += chunk;
+    });
+
+    process.stdin.on('end', function() {
+        eventHub.emit('tests', stests.trim().split('\n'));
+    });
+} else {
+    // Make sure we have an array of test(s)
+    if (args.test && typeof args.test != 'object') {
+        args.test = [ args.test ];
+    }
+
+    eventHub.emit('tests', args.test);
+}
+
+var options = {
+    host: args.host,
+    port: args.port
+};
+
+if (args.clear_results) {
+    console.log('Clearing all previous results...');
+    options.path = '/jute/_clear_results';
+    http.get(options, function(res) { });
+}
+
+
+if (args.status) {
+    options.path = '/jute/_status';
+    http.get(options, function(res) { 
+        var status = '';
+        res.on('data', function (chunk) {
+            status += chunk;
+        });
+
+        res.on('end', function () {
+            console.log(status);
+        });
+    });
+}
+
+
+

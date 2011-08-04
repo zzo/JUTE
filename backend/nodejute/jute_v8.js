@@ -83,7 +83,21 @@ if (DO_COVERAGE) {
             }
         });
     }
+
 }
+
+// Inject mini-jute into YUI
+YUI().add('jute', function(Y) {
+     Y.namespace('UnitTest').go = function() { Y.Test.Runner.run(); };
+     Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT,
+         function(data) {
+             var cover_out   = Y.Test.Runner.getCoverage(Y.Coverage.Format.JSON),
+                 report_data = Y.Test.Format.JUnitXML(data.results);
+
+             testsDone(data, report_data, cover_out);
+         }
+     );
+}, '1.0', { requires: [ 'test' ] });
 
 fs.readFile(TEST_FILE, 'utf8', function (err, data) {
     if (err) {
@@ -97,9 +111,9 @@ fs.readFile(TEST_FILE, 'utf8', function (err, data) {
 /**
  * This gets called when the unit tests are finished
  */
-function tests_done(data, report_data, cover_object, cover_out) {
+function testsDone(data, report_data, cover_out) {
     var dirname = PATH.join(config.outputDir, data.results.name),
-        test_output_file = PATH.join(dirname, 'v8-test.xml'),
+        test_output_file = PATH.join(dirname, 'v8-test.xml'), cover_object,
         cover_out_file = PATH.join(dirname, 'cover.json'), coverage, cover,
         total_lines, total_functions, line_coverage = 0, func_coverage = 0;
 
@@ -112,40 +126,31 @@ function tests_done(data, report_data, cover_object, cover_out) {
 
     DONE = true;
 
-    if (cover_object) {
+    if (cover_out) {
 
+        cover_object = JSON.parse(cover_out);
         fs.writeFileSync(cover_out_file, cover_out);
 
         coverage = spawn(config.java, [ '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ]);
         coverage.on('exit', function(code) {
 
-            // THIS IS A ZANY HACK
-            //  someone smarter than me need to help figure it out someday....
-            var exec = REQUIRE('child_process').exec;
-            exec('/bin/rm -rf ' + PATH.join(dirname, 'lcov-report', 'base'), function(err) {
-                if (!err) {
-                    fs.renameSync(PATH.join(dirname, 'lcov-report', 'null'), PATH.join(dirname, 'lcov-report', 'base'));
-
-                    for (file in cover_object) {
-                        cover = cover_object[file];
-                        total_lines = cover.coveredLines;
-                        total_functions = cover.coveredFunctions;
-
-                        if (total_lines) {
-                            line_coverage = Math.round((cover.calledLines / total_lines) * 100);
-                        }
-                        console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
-
-                        if (total_functions) {
-                            func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
-                        }
-                        console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
-                        DEBUG(cover_out);
-                    }
-                    process.exit(data.results.failed);
-
+            for (file in cover_object) {
+                cover = cover_object[file];
+                total_lines = cover.coveredLines;
+                total_functions = cover.coveredFunctions;
+    
+                if (total_lines) {
+                    line_coverage = Math.round((cover.calledLines / total_lines) * 100);
                 }
-            });
+                console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
+    
+                if (total_functions) {
+                    func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
+                }
+                console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
+                DEBUG(cover_out);
+            }
+            process.exit(data.results.failed);
         });
     } else {
         process.exit(data.results.failed);
@@ -189,22 +194,27 @@ function doit(data, d, w) {
             },
             covered = {},
             nodeDoCoverage = function() {
-                   var path = REQUIRE('path'),
+                if (DO_COVERAGE) {
+                    var path = REQUIRE('path'),
                         exec = REQUIRE('child_process').exec,
                         origArgs = arguments;
 
-                for (var i = 0; i < arguments.length - 1; i++) {
+                    for (var i = 0; i < arguments.length - 1; i++) {
                         var file = arguments[i],
-                            tempFile = path.join('/tmp', path.basename(file))
-                        ;
+                            tempFile = path.join('/tmp', path.basename(file));
 
                         exec(config.java + ' -jar ' + path.join(__dirname, 'jute', "yuitest-coverage.jar") + " -o " + tempFile + " " + path.join(__dirname, file) + '.js', function(err) {
                             if (err) {
                                 console.error("Cannot coveage " + path + ".js");
                             }  else {
-                                (origArgs[origArgs.length - 1])();
+                            covered[file]= true;
+                                origArgs[origArgs.length - 1]();
                             }
                         });
+                    }
+                } else {
+                    // No coverage just call back
+                    arguments[arguments.length - 1]();
                 }
 
             },
@@ -219,14 +229,13 @@ function doit(data, d, w) {
                 }
             };
             
-        requireCover.cache = require.cache;
+        requireCover.cache = REQUIRE.cache;
 
         document.innerHTML = data;
         document.createElement = createElement;
 
         // Work around some eval goo - eval in global context otherwise webkit complains
         window.eval = eval = function(goo) { return orig_eval.call(null, goo); }
-        window.__done       =  tests_done;
         document.location   = { href: '' };
         window.location     = { search: '' };
         document.write      = document.open = document.close = function() {};
@@ -246,6 +255,7 @@ function doit(data, d, w) {
                 ,location: { href: '' }
                 ,Image: function(){}
                 ,alert: Y.log
+                ,YUI: YUI
                 ,__NODE: true
                 ,module: module     // SOO sneaky!
                 ,require: requireCover   // Test nodejs stuff

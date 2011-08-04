@@ -1,8 +1,8 @@
 __do_coverage('./getConfig', function() {
+
 YUI({
     logInclude: { TestRunner: true },
-    gallery:    'gallery-2011.06.22-20-13'
-}).use('gallery-jute', function(Y) {
+}).use('jute', function(Y) {
 
     var suite = new Y.Test.Suite('getConfig'),
         getConfig = require('./getConfig'),

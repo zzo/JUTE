@@ -252,6 +252,7 @@ function doit(data) {
                 ,YUI: YUI
                 ,__NODE: true
                 ,module: module     // SOO sneaky!
+                ,process: process     // SOO sneaky!
                 ,require: requireCover   // Test nodejs stuff - maybe get coverage'd version
             }
         );

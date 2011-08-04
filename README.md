@@ -308,60 +308,6 @@ OR
 
 !! NOTE docRoot/testDir will be prepended to the specified test files. !!
 
-Testing NodeJS Code
-===================
-
-So far we have primarily been talking about testing client-side code - FEAR NOT!!  You can also easily test NodeJS server-side code jute as easily!!  Of course you can only test NodeJS code using the V8 backend.  But you can use the YUI test framework and generate code coverage no problem!  Let's see what that looks like:
-
-Here is a sample NodeJS module called 'spiffy.js':
-
-    module.exports = (function() {
-        var spiffy = 'SPIF!';
-        return function() { return spiffy };
-    })();
-
-Here is a Javascript test file for that module using JUTE:
-
-    YUI({
-        logInclude: { TestRunner: true },
-    }).use('jute', function(Y) {
-
-        var suite  = new Y.Test.Suite('spiffy'),
-            spiffy = require('./spiffy', true), // 'true' here means do code coverae on it!
-            fs      = require('fs');
-
-        suite.add(new Y.Test.Case({
-            name: 'spiffy test!',
-            testSpiff: function() {
-                Y.Assert.areEqual(spiffy(), 'SPIF!');
-            }
-        }));
-
-        Y.Test.Runner.add(suite);
-        Y.UnitTest.go();
-    });
-
-SNAZZY!!!  Run it like this:
-
-    % jute_submit_test --v8 --test ./testSpiffy.js
-
-To run with code coveage for spiffy.js:
-
-    % jute_submit_test --v8 --test ./testSpiffy.js?do_coverage=1
-
-This will, like for client-side code, generate coverage information for all modules with require('', true) EXECPT NATIVE MODULES like 'fs' or 'sys', &c.  You CAN however generate code coverage for other npm modules your code may use if you are curious.
-
-Things to Note
---------------
-
-* We told 'jute_submit_test' to load a JAVASCRIPT file, NOT an HTML one
-* YUI3 was automatically imported for us
-* YUI3 'test' module  was automatically loaded and imported for us
-* YUI3 'jute' module  was automatically loaded for us BUT WE HAVE to 'use' it!
-* Look at the the 'require' statement where we imported our 'spiffy' module - note it has an extra parameter!!!!  If this parameter is 'true' then JUTE will generate code coverage for it - exactly similar to adding the '?do_coverage=1' query string in your client-side HTML file.
-
-Writing unit tests for NodeJS with code coverage has never been easier!!!
-
 JUTE Output
 ============
 
@@ -438,6 +384,60 @@ V8 Caveats
 -----------
 
 Not all unit tests will run in the V8 backend!!  Event simulation is not supported.  Crazy iframe stuff can be problematic.  Anything expecting a real browser will be disappointed.  All the basic DOM manipulation is available, UI events are not.  No mouse events, No key events, No focus events.  So be safe out there!
+
+Testing NodeJS Code
+===================
+
+So far we have primarily been talking about testing client-side code - FEAR NOT!!  You can also easily test NodeJS server-side code jute as easily!!  Of course you can only test NodeJS code using the V8 backend.  But you can use the YUI test framework and generate code coverage no problem!  Let's see what that looks like:
+
+Here is a sample NodeJS module called 'spiffy.js':
+
+    module.exports = (function() {
+        var spiffy = 'SPIF!';
+        return function() { return spiffy };
+    })();
+
+Here is a Javascript test file for that module using JUTE:
+
+    YUI({
+        logInclude: { TestRunner: true },
+    }).use('jute', function(Y) {
+
+        var suite  = new Y.Test.Suite('spiffy'),
+            spiffy = require('./spiffy', true), // 'true' here means do code coverae on it!
+            fs      = require('fs');
+
+        suite.add(new Y.Test.Case({
+            name: 'spiffy test!',
+            testSpiff: function() {
+                Y.Assert.areEqual(spiffy(), 'SPIF!');
+            }
+        }));
+
+        Y.Test.Runner.add(suite);
+        Y.UnitTest.go();
+    });
+
+SNAZZY!!!  Run it like this:
+
+    % jute_submit_test --v8 --test ./testSpiffy.js
+
+To run with code coveage for spiffy.js:
+
+    % jute_submit_test --v8 --test ./testSpiffy.js?do_coverage=1
+
+This will, like for client-side code, generate coverage information for all modules with require('', true) EXECPT NATIVE MODULES like 'fs' or 'sys', &c.  You CAN however generate code coverage for other npm modules your code may use if you are curious.
+
+Things to Note
+--------------
+
+* We told 'jute_submit_test' to load a JAVASCRIPT file, NOT an HTML one
+* YUI3 was automatically imported for us
+* YUI3 'test' module  was automatically loaded and imported for us
+* YUI3 'jute' module  was automatically loaded for us BUT WE HAVE to 'use' it!
+* Look at the the 'require' statement where we imported our 'spiffy' module - note it has an extra parameter!!!!  If this parameter is 'true' then JUTE will generate code coverage for it - exactly similar to adding the '?coverage=1' query string in your client-side HTML file.
+
+Writing unit tests for NodeJS with code coverage has never been easier!!!
 
 
 Debugging

@@ -3,10 +3,9 @@ var getConfig = require('./getConfig'),
 
 YUI({
     logInclude: { TestRunner: true },
-    gallery:    'gallery-2011.06.22-20-13'
-}).use('gallery-jute', function(Y) {
+}).use('jute', function(Y) {
 
-    var suite = new Y.Test.Suite('getConfig');
+    var suite = new Y.Test.Suite('backend');
     suite.add(new Y.Test.Case({
         name:'simple test',
         setUp: function() {

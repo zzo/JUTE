@@ -7,6 +7,6 @@ module.exports = (function() {
     sys.inherits(eventHubF, events.EventEmitter);
 
     return {
-        getNewHub: function() { return new eventHubF(); }
+        getNewHub: function() {console.log('NEW HUB');  return new eventHubF(); }
     };
 })();

@@ -4,7 +4,7 @@ YUI({
 
     var suite     = new Y.Test.Suite('getConfig'),
         getConfig = require('./getConfig', true), // 'true' here means do code coverae on it!
-        fs         = require('fs', true);
+        fs         = require('fs');
 
     suite.add(new Y.Test.Case({
         setUp: function() {

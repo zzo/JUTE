@@ -405,7 +405,7 @@ function generateCoverage(file, cb, files, index) {
 
     if (realFile == file) {
         // A native module!!  Who know where the heck these are - skip it
-        console.log('Cannot get coverage for a native module!');
+        console.log('Cannot get coverage for a native module: ' + file);
         cb(files, index);
     } else {
         exec(config.java + ' -jar ' + coverageJar + " -o " + tempFile + " " + realFile, function(err) {

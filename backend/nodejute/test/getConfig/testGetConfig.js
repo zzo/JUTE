@@ -3,9 +3,8 @@ YUI({
 }).use('jute', function(Y) {
 
     var suite     = new Y.Test.Suite('getConfig'),
-        getConfig = require('./getConfig', true),
-        zob = require('./zob', true),
-        fs         = require('fs');
+        getConfig = require('./getConfig', true), // 'true' here means do code coverae on it!
+        fs         = require('fs', true);
 
     suite.add(new Y.Test.Case({
         setUp: function() {

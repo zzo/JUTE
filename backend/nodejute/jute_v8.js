@@ -169,7 +169,6 @@ function testsDone(data, report_data, cover_out) {
                     func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
                 }
                 console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
-                DEBUG(cover_out);
             }
             process.exit(data.results.failed);
         });
@@ -217,7 +216,7 @@ function doit(data) {
                 return e;
             },
             requireCover = function(file, coverage) {
-                if (DO_COVERAGE && coverage) {
+                if (DO_COVERAGE && coverage && (file !== require.resolve(file))) {
                     var tempFile = PATH.join('/tmp', PATH.basename(file));
 
                     return REQUIRE(tempFile);
@@ -401,15 +400,21 @@ process.on('exit', function () {
 
 
 function generateCoverage(file, cb, files, index) {
-    var tempFile = PATH.join('/tmp', PATH.basename(file));
+    var tempFile = PATH.join('/tmp', PATH.basename(file)),
+        realFile = require.resolve(file);
 
-    console.log('Generating coverage version of ' + file);
-    exec(config.java + ' -jar ' + coverageJar + " -o " + tempFile + " " + PATH.join(__dirname, file) + '.js', function(err) {
-        if (err) {
-            console.error("Cannot coveage " + file + ".js: " + err);
-            process.exit(1);
-        }  else {
-            cb(files, index);
-        }
-    });
+    if (realFile == file) {
+        // A native module!!  Who know where the heck these are - skip it
+        console.log('Cannot get coverage for a native module!');
+        cb(files, index);
+    } else {
+        exec(config.java + ' -jar ' + coverageJar + " -o " + tempFile + " " + realFile, function(err) {
+            if (err) {
+                console.error("Cannot coveage " + realFile + ': ' + err);
+                process.exit(1);
+            }  else {
+                cb(files, index);
+            }
+        });
+    }
 }

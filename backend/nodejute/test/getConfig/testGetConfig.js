@@ -4,7 +4,7 @@ YUI({
 
     var suite     = new Y.Test.Suite('getConfig'),
         getConfig = require('./getConfig', true),
-        zot = require('./zob', true),
+        zob = require('./zob', true),
         fs         = require('fs');
 
     suite.add(new Y.Test.Case({

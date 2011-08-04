@@ -42,7 +42,7 @@ if (window.__done) {
             var cover_out   = Y.Test.Runner.getCoverage(Y.Coverage.Format.JSON),
                 report_data = Y.Test.Format.JUnitXML(data.results);
 
-            window.__done(data, report_data, typeof(_yuitest_coverage) == 'object' ? _yuitest_coverage : null, cover_out);
+            window.__done(data, report_data, cover_out);
         }
     );
 } else {

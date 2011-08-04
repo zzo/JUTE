@@ -99,19 +99,28 @@ YUI().add('jute', function(Y) {
      );
 }, '1.0', { requires: [ 'test' ] });
 
-// START PARTY!!!
-if (DO_COVERAGE) {
-    if (TEST_FILE.match(/\.js$/)) {
-        var tf = fs.readFileSync(TEST_FILE, 'utf8');
+function getOneCoverage(files, index) {
+    if (files[index]) {
         var reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g;
-        var covers = reqMatch.exec(tf);
-
-        console.log('COVERAGE: ' + covers[0]);
-        console.log('COVERAGE: ' + covers[1]);
-
+        var covers = reqMatch.exec(files[index]);
+        generateCoverage(covers[1], getOneCoverage, files, ++index);
+    } else {
+        // All done
+        doit('<script src="' + TEST_FILE + '"></script>');
     }
+}
 
-    doit('<script src="' + TEST_FILE + '"></script>');
+// START PARTY!!!
+if (TEST_FILE.match(/\.js$/)) {
+    if (DO_COVERAGE) {
+        var tf = fs.readFileSync(TEST_FILE, 'utf8');
+            reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g,
+            cc = tf.match(reqMatch);
+
+        getOneCoverage(cc, 0);
+    } else {
+        doit('<script src="' + TEST_FILE + '"></script>');
+    }
 }
 fs.readFile(TEST_FILE, 'utf8', function (err, data) {
     if (err) {
@@ -127,7 +136,7 @@ fs.readFile(TEST_FILE, 'utf8', function (err, data) {
 function testsDone(data, report_data, cover_out) {
     var dirname = PATH.join(config.outputDir, data.results.name),
         test_output_file = PATH.join(dirname, 'v8-test.xml'), cover_object,
-        cover_out_file = PATH.join(dirname, 'cover.json'), coverage, cover,
+        cover_out_file = PATH.join(dirname, 'cover.json'), cover,
         total_lines, total_functions, line_coverage = 0, func_coverage = 0;
 
     try {
@@ -144,19 +153,18 @@ function testsDone(data, report_data, cover_out) {
         cover_object = JSON.parse(cover_out);
         fs.writeFileSync(cover_out_file, cover_out);
 
-        coverage = spawn(config.java, [ '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ]);
-        coverage.on('exit', function(code) {
-
+        DEBUG([ config.java, '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ].join(' '));
+        exec([ config.java, '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ].join(' '), function(err, stdout, stderr) {
             for (file in cover_object) {
                 cover = cover_object[file];
                 total_lines = cover.coveredLines;
                 total_functions = cover.coveredFunctions;
-    
+
                 if (total_lines) {
                     line_coverage = Math.round((cover.calledLines / total_lines) * 100);
                 }
                 console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
-    
+
                 if (total_functions) {
                     func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
                 }
@@ -208,47 +216,15 @@ function doit(data) {
                 }
                 return e;
             },
-            covered = {},
-            nodeDoCoverage = function() {
-                if (DO_COVERAGE) {
-                    var path = REQUIRE('path'),
-                        exec = REQUIRE('child_process').exec,
-                        origArgs = arguments;
-
-                    for (var i = 0; i < arguments.length - 1; i++) {
-                        var file = arguments[i],
-                            tempFile = path.join('/tmp', path.basename(file));
-
-                        exec(config.java + ' -jar ' + path.join(__dirname, 'jute', "yuitest-coverage.jar") + " -o " + tempFile + " " + path.join(__dirname, file) + '.js', function(err) {
-                            if (err) {
-                                console.error("Cannot coveage " + path + ".js");
-                            }  else {
-                                covered[file]= true;
-                                if (i == origArgs.length - 1) {
-                                    // We're done - call callback
-                                    origArgs[i]();
-                                }
-                            }
-                        });
-                    }
-                } else {
-                    // No coverage just call back
-                    arguments[arguments.length - 1]();
-                }
-
-            },
-            requireCover = function(file) {
-                if (covered[file]) {
-                    var path = REQUIRE('path'),
-                        tempFile = path.join('/tmp', path.basename(file));
+            requireCover = function(file, coverage) {
+                if (DO_COVERAGE && coverage) {
+                    var tempFile = PATH.join('/tmp', PATH.basename(file));
 
                     return REQUIRE(tempFile);
                 } else {
                     return REQUIRE(file);
                 }
             };
-
-        requireCover.cache = REQUIRE.cache;
 
         document.innerHTML = data;
         document.createElement = createElement;
@@ -277,9 +253,7 @@ function doit(data) {
                 ,YUI: YUI
                 ,__NODE: true
                 ,module: module     // SOO sneaky!
-                ,require: requireCover   // Test nodejs stuff
-                ,jute_coverage: nodeDoCoverage   // Test nodejs stuff
-
+                ,require: requireCover   // Test nodejs stuff - maybe get coverage'd version
             }
         );
 
@@ -387,8 +361,7 @@ function doit(data) {
                         // Get coveraged version of this file
                         DEBUG('Doing coverage for ' + ssrc[0]);
                         full_path_file = PATH.join('/tmp/', PATH.basename(ssrc[0]));
-                        coverage = spawn(config.java, [ '-jar', coverageJar, '-o', full_path_file, ssrc[0] ]);
-                        coverage.on('exit', function(code) {
+                        exec([ config.java, '-jar', coverageJar, '-o', full_path_file, ssrc[0] ].join(' '), function(error) {
                             fs.readFile(full_path_file, 'utf8', function (err, data) {
                                 if (err) throw err;
                                 tag.setData('javascript', data || 1);
@@ -426,3 +399,17 @@ process.on('exit', function () {
     }
 });
 
+
+function generateCoverage(file, cb, files, index) {
+    var tempFile = PATH.join('/tmp', PATH.basename(file));
+
+    console.log('Generating coverage version of ' + file);
+    exec(config.java + ' -jar ' + coverageJar + " -o " + tempFile + " " + PATH.join(__dirname, file) + '.js', function(err) {
+        if (err) {
+            console.error("Cannot coveage " + file + ".js: " + err);
+            process.exit(1);
+        }  else {
+            cb(files, index);
+        }
+    });
+}

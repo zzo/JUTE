@@ -19,7 +19,7 @@ YUI({
         setUp: function() {
             this.expectedKeys = { 
                 port: '8080',
-                docRoot: '/var/www',
+                docRoot: '/tmp',
                 testDir: 'test',
                 outputDir: 'output',
                 java: '/usr/bin/java',
@@ -40,6 +40,12 @@ YUI({
             }
 
             for (var k in this.expectedKeys) {
+                if (!clone[k]) {
+                    clone[k] = this.expectedKeys[k];
+                }
+            }
+
+            for (var k in clone) {
                 process.env['npm_package_config_' + k] = clone[k];
             }
 
@@ -80,19 +86,103 @@ YUI({
         ,testTestDirFail : function () {
             var test = this;
 
-            hub.on('configureDone', function() {
-                Y.Assert.fail("testDir supposed to be invalid!!");
+            hub.on('configureDone', function(obj) {
+                Y.Assert.areEqual(path.join('/tmp', test.badVal), obj.testDir,  "testDir value should be " + test.badVal);
+                fs.rmdirSync('/tmp/output');
             });
 
             hub.on('configureError', function(obj) {
-            console.log(util.inspect(obj));
+                console.log(obj);
                 Y.Assert.areEqual('testDir', obj.name,  "testDir value should be wrong");
                 Y.Assert.areEqual(path.join('/tmp', test.badVal), obj.value,  "testDir value should be " + test.badVal);
+                fs.rmdirSync('/tmp/output');
             });
 
-            fs.mkdirSync('/tmp/output');
+            try {
+            fs.mkdirSync('/tmp/output', 0777);
+            } catch(e) {}
+
             this.testVals( { docRoot: '/tmp', outputDir: 'output', testDir: this.badVal } );
-            fs.rmdirSync('/tmp/output');
+        }
+        ,testJavaFail : function () {
+
+            hub.on('configureDone', function(obj) {
+                Y.Assert.fail("java supposed to be invalid!!");
+            });
+
+            hub.on('configureError', function(obj) {
+                Y.Assert.areEqual('java', obj.name,  "java value should be wrong");
+                Y.Assert.areEqual('/zany', obj.value,  "java value should be /zany");
+            });
+
+            this.testVals( { java: '/zany' } );
+        }
+        ,testUIDFail : function () {
+
+            hub.on('configureDone', function(obj) {
+                    console.log(util.inspect(obj));
+                Y.Assert.fail("uid supposed to be invalid!!");
+                fs.rmdirSync('/tmp/output');
+            });
+
+            hub.on('configureError', function(obj) {
+                Y.Assert.areEqual('uid/gid', obj.name,  "uid/gid value should be wrong");
+                Y.Assert.areEqual('zany', obj.value[1],  "java value should be zany");
+                fs.rmdirSync('/tmp/output');
+                process.env.npm_package_config_uid = '';
+            });
+
+            try {
+                fs.mkdirSync('/tmp/output', 0777);
+            } catch(e) {}
+
+            this.testVals( { uid: 'zany' } );
+        }
+        ,testGIDFail : function () {
+
+            hub.on('configureDone', function(obj) {
+                Y.Assert.fail("gid supposed to be invalid!!");
+                fs.rmdirSync('/tmp/output');
+            });
+
+            hub.on('configureError', function(obj) {
+                Y.Assert.areEqual('uid/gid', obj.name,  "uid/gid value should be wrong");
+                Y.Assert.areEqual('zany', obj.value[0],  "java value should be zany");
+                fs.rmdirSync('/tmp/output');
+                process.env.npm_package_config_gid = '';
+            });
+
+
+            try {
+                fs.mkdirSync('/tmp/output', 0777);
+            } catch(e) {}
+
+            this.testVals( { gid: 'zany' } );
+        }
+        ,testHubConfig : function () {
+            var test = this;
+
+            hub.on('configureDone', function(obj) {
+                for (var k in obj) {
+                    if (k == 'uid' || k == 'gid') continue;
+                    if (k == 'outputDir' || k == 'testDir') {
+                        test.expectedKeys[k] = path.join(test.expectedKeys.docRoot, test.expectedKeys.testDir);
+                    }
+                    Y.Assert.areEqual(test.expectedKeys[k], obj[k],  test.expectedKeys[k] + ' should be ' + obj[k]);
+                }
+                fs.rmdirSync('/tmp/output');
+            });
+
+            hub.on('configureError', function(obj) {
+                Y.Assert.fail("config should have worked!!");
+                fs.rmdirSync('/tmp/output');
+            });
+
+            try {
+                fs.mkdirSync('/tmp/output', 0777);
+            } catch(e) {}
+
+            this.testVals( { } );
         }
     }));
 

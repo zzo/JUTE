@@ -42,11 +42,12 @@ Create:  function(hub) {
     hub.addListener('configure', configure);
 
     function configure() {
+
         var config = {
                 uid:            process.getuid(),
                 gid:            process.getgid(),
                 port:           8080,
-                docRoot:        '/var/www/',
+                docRoot:        '/var/www',
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '',
@@ -73,7 +74,8 @@ Create:  function(hub) {
         } catch(e) {
             hub.emit(hub.LOG, hub.ERROR, "** " + config.docRoot + " does not exist or is not a directory!! **");
             hub.emit(hub.LOG, hub.ERROR, "Set it properly: npm config set jute:docRoot <directory>");
-            process.exit(0);
+            hub.emit('configureError', { name: 'docRoot', value: config.docRoot, error: e } );
+            return;
         }
 
         // Web paths and full paths...
@@ -92,7 +94,8 @@ Create:  function(hub) {
             hub.emit(hub.LOG, hub.ERROR, "Change these values (or run with 'sudo') using: ");
             hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:user <user>");
             hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:grouop <grouop>");
-            process.exit(0);
+            hub.emit('configureError', { name: 'uid/gid', value: [ config.gid, config.uid ], error: e } );
+            return;
         }
 
         // Find Java executable
@@ -115,7 +118,8 @@ Create:  function(hub) {
             hub.emit(hub.LOG, hub.ERROR, '** Cannot find "java" executable **');
             hub.emit(hub.LOG, hub.ERROR, 'Set $JAVA_HOME OR set the "java" configuration variable (% npm config set jute:java <path>)');
             hub.emit(hub.LOG, hub.ERROR, 'Or add the "java" executable to your PATH');
-            process.exit(0);
+            hub.emit('configureError', { name: 'java', value: config.java, error: e } );
+            return;
         }
 
         // Make sure output directory is writable for grins...
@@ -127,7 +131,8 @@ Create:  function(hub) {
                 hub.emit(hub.LOG, hub.ERROR, "Change output dir using: % npm conifg set jute:outputDir <dir>");
                 hub.emit(hub.LOG, hub.ERROR, "Or make " + config.outputDir + ' writable by user ' + config.user);
                 hub.emit(hub.LOG, hub.ERROR, "Or change the user JUTE runs as: % npm config set jute:user <user>");
-                process.exit(0);
+                hub.emit('configureError', { name: 'outputDir', value: config.outputDir, error: err } );
+                return;
             }
             fs.rmdirSync(testDir);
 

@@ -2,11 +2,13 @@ module.exports = (function() {
 
     var events    = require("events"),
         sys       = require("sys"),
-        eventHubF = function() { events.EventEmitter.call(this); };
+        eventHubF = function() { events.EventEmitter.call(this); },
+        hub;
 
     sys.inherits(eventHubF, events.EventEmitter);
+    hub = new eventHubF();
 
     return {
-        getNewHub: function() {console.log('NEW HUB');  return new eventHubF(); }
+        getNewHub: function() { return hub; }
     };
 })();

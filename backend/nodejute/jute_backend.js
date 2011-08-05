@@ -91,6 +91,12 @@ try {
 }
 
 // Get Party Started
+eventHub.on('configureError', function(obj) {
+    eventHub.emit(eventHub.LOG, eventHub.ERROR, "Configuration error for " + obj.name + ': ' + obj.error);
+    eventHub.emit(eventHub.LOG, eventHub.ERROR, "Fix and restart jute!");
+    process.exit(0);
+});
+
 eventHub.on('configureDone', function() {
     // Note config gets stashed in eventHub (eventHub.config)
     fs.open(eventHub.config.logFile, 'w+', function (err, fd) {

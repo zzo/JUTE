@@ -56,6 +56,7 @@ Create:  function(hub) {
         , connect.favicon()
         , connect.query()
         , function(req, res, next) {
+            // Make sure we have a session UUID
             var sess = req.session;
             if (!sess.uuid) {
                 sess.uuid = uuid();
@@ -65,6 +66,8 @@ Create:  function(hub) {
         }
         , connect.logger(hub.config.logFormat)
         , function(req, res, next) {
+            // This is a Selenium browser - set that fact in its session so it will
+            //  grab the right test(s)
             if (req.query.selenium) {
                 req.session.seleniumUUID = req.query.selenium;
             }
@@ -72,42 +75,35 @@ Create:  function(hub) {
         }
         , connect.router(function(app){
             app.get('/jute_docs/:file', function(req, res, next){
+                // Just one of JUTE's static files
                 sendFullFile(path.join(__dirname, req.url), req, res, next);
             });
             app.get(/\/jute\/_([^\?]+)/, function(req, res, next){
+                // A JUTE action - GET
                 hub.emit('action', req.params[0], req, res);
             });
             app.post(/\/jute\/_([^\?]+)/, function(req, res, next){
+                // A JUTE action - POST
                 hub.emit('action', req.params[0], req, res);
             });
             app.get('/', function(req, res, next){
+                // Serve from '/'
                 res.writeHead(301, { Location: '/jute_docs/capture.html' });
                 res.end();
             });
-            /*
-            app.get(/\/([^\?]+)/, function(req, res, next){
-                // Fetching a TEST or SRC file!!
-                // If this file has do_coverage=1 on it we may need to do
-                //  something - otherwise it's just a static file
-                //  lop off query string & send it
-                sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
-            });
-            */
         })
         , function(req, res, next) {
-                sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
-                /*
-                res.writeHead(301, { Location: '/jute_docs/capture.html' });
-                res.end();
-                */
+            // Anything else is a regular file - a test or a file being tested
+            sendFullFile(path.join(hub.config.docRoot, req.url), req, res, next);
         }
         ).listen(hub.config.port);
 
+        // Let anyone know the server has been started
         hub.emit('serverStarted');
     }
 
     /*
-     * Sucked mostly from connection/middleware/static
+     * Check if static file needs to be coverage'd before sending it
      */
     function sendFullFile(path, req, res, next) {
 
@@ -132,7 +128,10 @@ Create:  function(hub) {
             _doSend(path, req, res, next);
         }
     }
-
+    /*
+     * Sucked mostly from connection/middleware/static
+     *  just send a static file
+     */
     function _doSend(path, req, res, next) {
 
         var fs = require('fs'),

@@ -164,9 +164,10 @@ YUI({
 
             hub.on('configureDone', function(obj) {
                 for (var k in obj) {
+                    if (!test.expectedKeys[k]) continue;
                     if (k == 'uid' || k == 'gid') continue;
                     if (k == 'outputDir' || k == 'testDir') {
-                        test.expectedKeys[k] = path.join(test.expectedKeys.docRoot, test.expectedKeys.testDir);
+                        test.expectedKeys[k] = path.join(test.expectedKeys.docRoot, test.expectedKeys[k]);
                     }
                     Y.Assert.areEqual(test.expectedKeys[k], obj[k],  test.expectedKeys[k] + ' should be ' + obj[k]);
                 }
@@ -183,6 +184,21 @@ YUI({
             } catch(e) {}
 
             this.testVals( { } );
+        }
+        ,testJavaEnv : function () {
+
+            hub.on('configureDone', function(obj) {
+                Y.Assert.fail("java supposed to be invalid!!");
+            });
+
+            hub.on('configureError', function(obj) {
+                Y.Assert.areEqual('java', obj.name,  "uid/gid value should be wrong");
+                Y.Assert.areEqual('/not/here/bin/java', obj.value,  "java value should be zany");
+            });
+
+            process.env.JAVA_HOME = '/not/here';
+            this.testVals( { } );
+            process.env.JAVA_HOME = '';
         }
     }));
 

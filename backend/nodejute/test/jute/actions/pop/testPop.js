@@ -5,7 +5,7 @@ YUI({
     var suite     = new Y.Test.Suite('pop'),
         util      = require('util'),
         hub       = require('./test/mock/hub').getNewHub(),
-        getTest   = require('./jute/actions/pop', true).Create(hub); // 'true' here means do code coverae on it!
+        pop       = require('./jute/actions/pop', true).Create(hub); // 'true' here means do code coverae on it!
 
     suite.add(new Y.Test.Case({
         name: 'pop'

@@ -96,7 +96,7 @@ module.exports = {
                     // make sure browser is still requesting tests
                    if (cache.browsers[browser]) {
                         var last_got_test = cache.browsers[browser].get_test;
-                        if (doing_what != '_get_test' && (now - last_got_test > TEST_TIME_THRESHOLD)) {
+                        if (doing_what != 'get_test' && (now - last_got_test > TEST_TIME_THRESHOLD)) {
                             hub.emit(hub.LOG, hub.ERROR, "Been too long since you've requested a test: " + browser + " - Kicking iframe...");
                             return 1;  // Redirect!!
                         }

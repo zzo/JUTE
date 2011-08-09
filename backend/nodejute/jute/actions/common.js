@@ -86,7 +86,6 @@ module.exports = {
                     hub.emit(hub.LOG, hub.ERROR, "Error dumping file: " + e);
                 }
             },
-
             failedTests: function(filename) {
                 var fs = require('fs'),
                     file = fs.readFileSync(filename, 'utf8');

@@ -41,6 +41,7 @@ var sys       = require('sys'),
     configure = require('./jute/configure'),
     server    = require('./jute/server'),
     actions   = require('./jute/actions'),
+    common    = require('./jute/actions/common'),
     eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; this.INFO = 'info' },
     pidFile   = '/tmp/jute.pid'
     ;
@@ -68,7 +69,7 @@ var eventHub = new eventHubF();
 // Start up base modules
 configure.Create(eventHub);
 server.Create(eventHub);
-actions.Create(eventHub);
+actions.Create(eventHub, common.create(eventHub));
 
 // Some app-wide helpers
 eventHub.addListener(eventHub.LOG, function(sev, str) {

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 module.exports = {
 
-    Create: function(hub) {
+    Create: function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var cache = { browsers: {}, tests_to_run: [] };
             glob = require('glob'),
@@ -46,7 +46,7 @@ module.exports = {
         // Suck in all available actions
         actions.forEach(function(action) {
             var act = require(action);
-            act.Create && act.Create(hub);
+            act.Create && act.Create(hub, common);
         });
 
         hub.addListener('action', function(action, req, res) {

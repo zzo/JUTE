@@ -38,8 +38,7 @@ module.exports = {
     Create:  function(hub) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path'),
-            sys = require('sys'),
-            common = require(path.join(__dirname, 'common')).Create(hub)
+            sys = require('sys')
         ;
 
         // Events I care about

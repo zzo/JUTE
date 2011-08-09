@@ -37,9 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path'),
-            common = require(path.join(__dirname, 'common')).Create(hub)
-        ;
+        var path = require('path');
 
         // Events I care about
         hub.addListener('action:run_test', runTest);

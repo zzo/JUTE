@@ -34,12 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+// Should just clear tests for THIS browser (or all tests if from cli?)
 module.exports = {
     Create:  function(hub) {
-        // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path'),
-            common = require(path.join(__dirname, 'common')).Create(hub)
-        ;
 
         // Events I care about
         hub.addListener('action:clear_tests', clearTests);

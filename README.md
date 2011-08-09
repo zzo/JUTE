@@ -138,7 +138,7 @@ Capture
 
 This is the default mode for the JUTE UI.  Any captured browsers (see 'Browsers' below) will run any submitted unit tests in parallel.  To capture a browser point it to:
 
-    http://<JUTE_HOST>/
+    http://<JUTE_HOST>:<JUTE_PORT>/
 
 The browser is now 'captured'.  Any submitted unit tests will be run in parallel through all currently captured browsers.
 
@@ -152,15 +152,16 @@ When you click to run (a) unit test(s) in the JUTE UI the test(s) will be run in
 Selenium
 ---------
 
-This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.
+This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.  Basically you submit tests from the command line too 'jute_submit_test' along with your Selenium RC or Grid host (and an optional Selenium browser specification)
 
+Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.
 
 V8/NodeJS
 ----------
 
-This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.
+This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.  Basically you submit tests from the command line too 'jute_submit_test' along with the '--v8' command line option.
 
-Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.  Note NOT all of your unit tests are guaranteed to run in the V8 backend!!  Tests which require browser-y features like event simulation will not run as mouseclicks and keyevents and the like do not exist in nodejs.
+Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.  Note NOT all client-side javascript unit tests are guaranteed to run in the V8 backend!!  Tests which require browser-y features like event simulation will not run as mouseclicks and keyevents and the like do not exist in nodejs.  HOWEVER DOM manipulation DOES work thanks to [jsdom](https://github.com/tmpvar/jsdom) - which is provided by the nodejs-ized [YUI3](https://github.com/davglass/nodejs-yui3) - which JUTE automatically installs for you.
 
 
 Using JUTE
@@ -172,9 +173,9 @@ JUTE WebUI
 
 Now that JUTE is up and running you can contact it here:
 
-    http://<JUTE_HOST>/
+    http://<JUTE_HOST>:<JUTE_PORT>/
 
-This browser is now 'captured' and is ready to run unit tests.
+This browser is now 'captured' and is ready to run unit tests.  Here is what you are seeing:
 
 
 ### JUTE UI Status
@@ -213,7 +214,7 @@ After running multiple tests the middle panel will return to the list of unit te
 
 #### Kick Lower Frame
 
-This button reloads the list of unit tests in the center panel
+This button reloads the list of unit tests in the center panel.  Espeically handy after running a single unit test.
 
 
 #### Clear Tests
@@ -228,7 +229,7 @@ This will clear all results - both unit test results and coverage information
 
 ### Results
 
-This column allows you to see the unit test results and code coverage information.  For each browser there will be unit test output.  Note this output is XML and the file contents may NOT be visible in your browser.  'View Source' if this is the case.  A green link means all tests passed successfully and red link means at least one test failed.
+This column allows you to see the unit test results and code coverage information.  For each browser there will be unit test output.  Note this output is XML and the file contents may NOT be visible in your browser.  'View Source' if this is the case.  A green link means all tests passed successfully and red link means at least one test failed.  If you requested code coverage it will also show up here.  Note results are shown for Capture, Selenium, and V8 tests even though you can only kick off Capture tests from the WebUI.
 
 
 Command Line
@@ -238,7 +239,7 @@ The script
 
     <bin>/jute_submit_test
 
-Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in capture or Selenium mode.  Do:
+Is the main command line interface to JUTE.  This script allows you to submit unit tests to JUTE to run either in Capture, Selenium, or V8 mode.  Do:
 
     % jute_submit_test --help
 
@@ -311,7 +312,7 @@ OR
 JUTE Output
 ============
 
-JUTE output all goes into the outputDir as specified above.  Within that directory will be a directory for each unit test.  The name of the directory is the NAME OF THE TEST SUITE as specified in your javascript test file.  This will be explained in more detail below.
+JUTE output all goes into the outputDir as specified above.  outputDir is RELATIVE to docRoot so actual test output will be in docRoot/outputDir.  Within that directory will be a directory for each unit test.  The name of the directory is the NAME OF THE TEST SUITE as specified in your javascript test file.  This will be explained in more detail below.
 
 Note both test results and coverage information are available for easy viewing via the JUTE WebUI
 
@@ -338,7 +339,7 @@ This looks like:
        &lt;testsuite>
        &lt;testsuite name="Mozilla5.0.Macintosh.U.Intel.Mac.OS.X.10.5.8.en-US.AppleWebKit534.16.KHTML.like.Gecko.Chrome10.0.648.127.Safari534.16.logger" tests="4" failures="0" time="0.025">
            &lt;testcase name="testGetTheInitializedLoggerObject" time="0"> &lt;testcase>
-           &lt;testcase name="testLoggerHasCorrectLogLevels" time="0.001"> &lt;testcase>                                                                                                                      
+           &lt;testcase name="testLoggerHasCorrectLogLevels" time="0.001"> &lt;testcase>
            &lt;testcase name="testLoggerHasRightNumberOfAppenders" time="0.001">&lt;testcase>
            &lt;testcase name="testAddAppenderToLogger" time="0.001">&lt;testcase>
        &lt;testsuite>
@@ -351,6 +352,8 @@ Coverage Output
 
 The the same directory as the test result output will be a directory named 'lcov-report'.  In that directory will be an index.html file you can load into your browser to see coverage results.  JUTE uses yuitest_coverage to instrument and exact coverage information form the requested Javascript files.  See below for how to tell JUTE to instrument selected Javascript files for code coverage.
 
+Also in the same directory is a 'lcov.info' file - which has your code coverage information in the standardized 'lcov' format if you want to run any other tools on it.
+
 
 Writing Unit Tests for JUTE
 ============================
@@ -358,7 +361,7 @@ Writing Unit Tests for JUTE
 JUTE requires VERY LITTLE from the developer to have their unit tests incorporated into the JUTE framework.  Any new or already-written Unit Tests can easily be added to the JUTE framework.
 
 
-YUI3 'test' module
+The YUI3 test module
 -------------------
 
 The main requirement is using the YUI3 Test and Assertion Framework for running and creating your Unit Tests.  [Look here](http://developer.yahoo.com/yui/3/test/) for detailed information about getting started with YUI3 test module, including running, asserting, and potentially mocking objects for your unit tests.
@@ -368,9 +371,11 @@ Note you must use YUI3 version 3.1.1+.
 Code Requirements
 ------------------
 
-To utilize JUTE you need only to make 1 small addition to your test Javascript file.
+To utilize JUTE you need only to make 1 small addition to your test Javascript file.  Look [at the client-side examples](https://github.com/zzo/JUTE/tree/master/backend/nodejute/examples/clientSide) for a more thorough treatment.
 
 ### Javascript Requirements
+
+#### Add the 'gallery-jute' module
 
 Your Javascript test file must 'use' the 'gallery-jute' module:
 
@@ -380,10 +385,16 @@ Your Javascript test file must 'use' the 'gallery-jute' module:
     }).use('gallery-jute', 'toolbar', function(Y) {
 
 
+#### Require the YUI3 seed in your test HTML file
+
+    &lt;script src="http://yui.yahooapis.com/3.3.0/build/yui/yui-min.js" charset="utf-8">&lt;/script>
+
+#### Write your unit tests!
+
 V8 Caveats
 -----------
 
-Not all unit tests will run in the V8 backend!!  Event simulation is not supported.  Crazy iframe stuff can be problematic.  Anything expecting a real browser will be disappointed.  All the basic DOM manipulation is available, UI events are not.  No mouse events, No key events, No focus events.  So be safe out there!
+Not all client-side unit tests will run in the V8 backend!!  Event simulation is not supported.  Crazy iframe stuff can be problematic.  Anything expecting a real browser will be disappointed.  All the basic DOM manipulation is available, UI events are not.  No mouse events, No key events, No focus events.  So be safe out there!
 
 Testing NodeJS Code
 ===================
@@ -448,12 +459,6 @@ If you set the JUTE_DEBUG environment variable:
     % export JUTE_DEBUG=1
 
 You'll see even more gory debug output.
-
-
-Best Practices
-===============
-
-By default JUTE assumes a 'best practices' setup.  Using the JUTE yinst set variable outlined above this behavior can be changed.
 
 
 Developer Environment

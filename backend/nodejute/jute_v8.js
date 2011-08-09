@@ -163,12 +163,12 @@ function testsDone(data, report_data, cover_out) {
                     cover = cover_object[file];
                     total_lines = cover.coveredLines;
                     total_functions = cover.coveredFunctions;
-    
+
                     if (total_lines) {
                         line_coverage = Math.round((cover.calledLines / total_lines) * 100);
                     }
                     console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
-    
+
                     if (total_functions) {
                         func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
                     }
@@ -203,7 +203,8 @@ function doit(data) {
     }).use('node', 'nodejs-dom', function(Y) {
 
         var document = Y.Browser.document, window = document.parentWindow,
-            Script = process.binding('evals').Script, orig_eval = eval, sandbox,
+            //Script = process.binding('evals').Script,
+            orig_eval = eval, sandbox,
             createElementOrig = document.createElement,
             createElement = function(str) {
                 var e = createElementOrig.call(this, str), d;
@@ -239,7 +240,8 @@ function doit(data) {
         window.location     = { search: '' };
         document.write      = document.open = document.close = function() {};
 
-        sandbox = Script.createContext(
+        //sandbox = Script.createContext(
+        sandbox = 
             {
                 window: window
                 ,console: console
@@ -259,8 +261,7 @@ function doit(data) {
                 ,module: module     // SOO sneaky!
                 ,process: process     // SOO sneaky!
                 ,require: requireCover   // Test nodejs stuff - maybe get coverage'd version
-            }
-        );
+            };
 
         process.chdir(PATH.dirname(TEST_FILE));
 
@@ -298,7 +299,9 @@ function doit(data) {
         }
 
         function executeScript(tag) {
-            var domtag = Y.Node.getDOMNode(tag), data, style;
+            var domtag = Y.Node.getDOMNode(tag), data, style,
+                vm = require('vm');
+
             try {
                 data = tag.getData('javascript');
                 if (domtag.nodeName === 'LINK') {
@@ -307,7 +310,7 @@ function doit(data) {
                     document.head.appendChild(style);
                 } else {
                     DEBUG("RUNNING SCRIPT: " + tag.getAttribute('src'));
-                    new Script(data).runInContext(sandbox);
+                    vm.runInNewContext(data, sandbox, tag.getAttribute('src'));
                     DEBUG("BACK SCRIPT: " + tag.getAttribute('src'));
                 }
                 if (typeof(domtag.onload) === 'function') {

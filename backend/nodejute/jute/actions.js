@@ -46,7 +46,7 @@ module.exports = {
         // Suck in all available actions
         actions.forEach(function(action) {
             var act = require(action);
-            act.Create && act.Create(hub, common);
+            act.Create && act.Create(hub, common, glob);
         });
 
         hub.addListener('action', function(action, req, res) {

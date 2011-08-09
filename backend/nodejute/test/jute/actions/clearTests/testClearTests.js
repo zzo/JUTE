@@ -12,6 +12,9 @@ YUI({
         ,setUp: function() {
             this.cache = { tests_to_run: [ 'foobie', 'doobie', 'doo' ] };
         }
+        ,testHookedUp : function(vals) {
+            Y.Assert.areEqual(hub.listeners('action:clear_tests').length, 1);
+        }
         ,testVals : function(vals) {
             var res = Y.Mock();
 

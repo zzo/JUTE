@@ -155,22 +155,27 @@ function testsDone(data, report_data, cover_out) {
 
         DEBUG([ config.java, '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ].join(' '));
         exec([ config.java, '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ].join(' '), function(err, stdout, stderr) {
-            for (file in cover_object) {
-                cover = cover_object[file];
-                total_lines = cover.coveredLines;
-                total_functions = cover.coveredFunctions;
-
-                if (total_lines) {
-                    line_coverage = Math.round((cover.calledLines / total_lines) * 100);
+            if (err) {
+                console.error('Error creating coverage report: ' + err);
+                process.exit(1);
+            } else {
+                for (file in cover_object) {
+                    cover = cover_object[file];
+                    total_lines = cover.coveredLines;
+                    total_functions = cover.coveredFunctions;
+    
+                    if (total_lines) {
+                        line_coverage = Math.round((cover.calledLines / total_lines) * 100);
+                    }
+                    console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
+    
+                    if (total_functions) {
+                        func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
+                    }
+                    console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
                 }
-                console.log('Line coverage for ' + file + ': ' + line_coverage + '%');
-
-                if (total_functions) {
-                    func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
-                }
-                console.log('Function coverage for ' + file + ': ' + func_coverage + '%');
+                process.exit(data.results.failed);
             }
-            process.exit(data.results.failed);
         });
     } else {
         process.exit(data.results.failed);

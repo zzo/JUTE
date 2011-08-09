@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub, common) {
+    Create:  function(hub, common, glob) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path');
 
@@ -71,8 +71,8 @@ module.exports = {
                     continue;
                 }
 
-                // If this test doesn't have a specific browser for it
-                //  then it is a Selenium test - which means give it to anyone
+                // Check if this is a Selenium test for this Selenium browser
+                //  if so then assign it to this browser
                 if (test.browser == req.session.seleniumUUID) {
                     // The Selenium host
                     test.browser = browser;

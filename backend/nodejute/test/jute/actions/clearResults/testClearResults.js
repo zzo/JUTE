@@ -18,6 +18,9 @@ YUI({
             try { fs.unlinkSync(this.testFile); } catch(e) {}
             try { fs.rmdirSync(path.dirname(this.testFile)); } catch(e) {}
         }
+        ,testHookedUp : function(vals) {
+            Y.Assert.areEqual(hub.listeners('action:clear_results').length, 1);
+        }
         ,testVals : function(vals) {
             var res = Y.Mock();
 

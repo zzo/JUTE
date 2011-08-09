@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub, common) {
+    Create:  function(hub, common, glob) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path');
 
@@ -54,7 +54,6 @@ module.exports = {
         function checkResults() {
             var baseDir = hub.config.outputDir,
                 fs      = require('fs'),
-                glob    = require('glob'),
                 path    = require('path');
 
             // Find & parse all results

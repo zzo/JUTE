@@ -69,7 +69,7 @@ var eventHub = new eventHubF();
 // Start up base modules
 configure.Create(eventHub);
 server.Create(eventHub);
-actions.Create(eventHub, common.create(eventHub));
+actions.Create(eventHub, common.Create(eventHub));
 
 // Some app-wide helpers
 eventHub.addListener(eventHub.LOG, function(sev, str) {

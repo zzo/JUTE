@@ -76,7 +76,7 @@ module.exports = {
                     tests = obj.tests.split(/\s+/);
                 }
 
-                // FIRST make sure all thesee alleged test files exist
+                // FIRST make sure all these alleged test files exist
                 for (var i = 0; i < tests.length; i++) {
                     var realFullFile = path.join(hub.config.testDir, tests[i].replace(/\?.*/, ''));
 

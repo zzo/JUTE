@@ -96,7 +96,10 @@ module.exports = {
                     webPrefix        = hub.config.testDirWeb,
                     local_test_files = hub.config.testRegex,
                     full_find        = path.join(prefix, '**', local_test_files),
-                    matches          = glob.globSync(full_find),
+                    full_find_js     = path.join(prefix, '**', 'test*.js'),
+                    matches_html     = glob.globSync(full_find),
+                    matches_js       = glob.globSync(full_find_js),
+                    matches          = matches_html.concat(matches_js),
                     data             = [];
                 ;
 

@@ -42,6 +42,7 @@ Create:  function(hub) {
     function startServer() {
 
         var connect  = require('connect'),
+            sessions = require('cookie-sessions'),
             os       = require('os'),
             sys      = require('sys'),
             path     = require('path'),
@@ -51,17 +52,14 @@ Create:  function(hub) {
         hub.emit(hub.LOG, hub.INFO, "Connect at http://" + os.hostname() + ':' + hub.config.port + '/');
 
         connect(
-          connect.cookieParser()
-        , connect.session({ secret: 'jute rox' })
+          sessions({secret: 'jute rox', timeout: 365 * 1000 * 60 * 60 * 24 })
         , connect.favicon()
         , connect.query()
         , function(req, res, next) {
             // Make sure we have a session UUID
             var sess = req.session;
-            if (!sess.uuid) {
-                sess.uuid = uuid();
-                sess.cookie.expires = false;
-            }
+            if (!sess) sess = req.session = {};
+            if (!sess.uuid) sess.uuid = uuid();
             next();
         }
         , connect.logger(hub.config.logFormat)
@@ -108,12 +106,24 @@ Create:  function(hub) {
     function sendFullFile(path, req, res, next) {
 
         var p = require('path'),
-            exec = require('child_process').exec;
+            exec = require('child_process').exec,
+            url = req.url;
 
         path = path.replace(/\?.*/,''); // get rid of any query string
+        url = url.replace(/\?.*/,''); // get rid of any query string
+        url = url.replace(hub.config.testDirWeb,''); // get rid of any query string
 
-        // Coverage this bad boy!
-        if (req.query.coverage && req.headers.referer.match('do_coverage=1')) {
+        if (req.query._one_shot && path.match(/\.js$/)) {
+            // A V8 test!!
+            exec('JUTE_DEBUG=1 ' + p.join(__dirname, '..', 'jute_v8.js') + ' ' + url + '?do_coverage=' + req.query.do_coverage, function(error, stdout, stderr) {
+                if (error) {
+                    res.end('V8 ERROR: ' + error);
+                } else {
+                    res.end(stdout);
+                }
+            });
+        } else if (req.query.coverage && req.headers.referer.match('do_coverage=1')) {
+            // Coverage this bad boy!
             var tempFile = p.join('/tmp', p.basename(path));
             hub.emit(hub.LOG, hub.INFO, "Generating coverage file " + tempFile + " for " + path);
             exec(hub.config.java + ' -jar ' + p.join(__dirname, "yuitest-coverage.jar") + " -o " + tempFile + " " + path, function(err) {

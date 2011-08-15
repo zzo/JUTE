@@ -51,34 +51,37 @@ module.exports = {
             });
 
             req.on('end', function() {
-                var qs = require('querystring'),
-                    path = require('path'),
-                    fs = require('fs'),
-                    obj = qs.parse(report),
-                    sys = require('sys'),
+                var qs      = require('querystring'),
+                    path    = require('path'),
+                    fs      = require('fs'),
+                    obj     = qs.parse(report),
+                    sys     = require('sys'),
                     tests, multipleFromUI = false,
-                    errors = []
+                    capture = false,
+                    exec    = require('child_process').exec,
+                    errors  = []
                 ;
 
+                console.log(sys.inspect(obj));
                 if (obj.test) {
                     // 'run multiple' from UI
                     if (typeof obj.test == 'object') {
                         multipleFromUI = true;
-                        // take off lame ';' at end of each test
-                        tests = [];
-                        obj.test.forEach(function(test) {
-                            tests.push(test.replace(/;$/, ''));
-                        });
+                        tests = obj.test
                     } else {
                         tests = [ obj.test ];
                     }
                 } else if (obj.tests) {
+                    // From CLI
                     tests = obj.tests.split(/\s+/);
                 }
 
                 // FIRST make sure all these alleged test files exist
                 for (var i = 0; i < tests.length; i++) {
                     var realFullFile = path.join(hub.config.testDir, tests[i].replace(/\?.*/, ''));
+                    if (realFullFile.match(/\.html$/)) {
+                        capture = true;
+                    }
 
                     try {
                         fs.statSync(realFullFile);
@@ -93,13 +96,13 @@ module.exports = {
                     return;
                 }
 
-                if (!Object.keys(cache.browsers).length && !obj.sel_host) {
+                if (!Object.keys(cache.browsers).length && !obj.sel_host && capture) {
                     res.writeHead(412);
                     res.end("There are no currently captured browsers!");
                     return;
                 }
 
-                var pushed = false;
+                var pushed = false, v8Tests = '';
                 for (var i = 0; i < tests.length; i++) {
                     var test = tests[i],
                         test_obj = {
@@ -107,7 +110,17 @@ module.exports = {
                             url:     path.join('/', hub.config.testDirWeb, test)
                         };
 
-                    if (obj.sel_host) {
+                    if (test.match(/\.js/)) {
+                        // V8 test!
+                        pushed = true;
+                        exec('JUTE_DEUBG=1 ' + path.join(__dirname, '..', '..', 'jute_v8.js') + ' ' + test + ' 2>&1', function(error, stdout, stderr) {
+                            if (error) {
+                                v8Tests += 'V8 ERROR: ' + error;
+                            } else {
+                                v8Tests += stdout;
+                            }
+                        });
+                    } else if (obj.sel_host) {
                         // A Selenium Test! - meaning anyone can run it
                         if (obj.send_output) {
                             test_obj.sendOutput = 1;
@@ -164,7 +177,13 @@ module.exports = {
                             res.end("/jute_docs/run_tests.html");
                         } else {
                             // Command line client
-                            res.end('Added ' + (obj.test || obj.tests) + ' to capture tests');
+                            if (v8Tests) {
+                                res.write(v8Tests);
+                            }
+                            if (capture) {
+                                res.end('Added ' + (obj.test || obj.tests) + ' to capture tests');
+                            }
+
                         }
                     }
                 } else {

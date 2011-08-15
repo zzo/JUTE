@@ -101,6 +101,8 @@ eventHub.on('configureError', function(obj) {
 eventHub.on('configureDone', function() {
     // Note config gets stashed in eventHub (eventHub.config)
     fs.open(eventHub.config.logFile, 'w+', function (err, fd) {
+        console.log('Looking for unit tests in: ' + eventHub.config.testDir);
+        console.log('Ouptut going to: ' + eventHub.config.outputDir);
         daemon.start(fd);
         daemon.lock(pidFile);
 

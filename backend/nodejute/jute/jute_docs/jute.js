@@ -172,15 +172,15 @@ if (window.__done) {
                                 window.location.href = data.testLocation;
                             } else if (!UT.content_set && data.availableTests) {
                                 content_node = Y.one('#content');
-                                content = '<form method="POST" name="multiple_tests" action="/jute/_run_multiple">';
+                                content = '<form method="POST" name="multiple_tests" action="/jute/_run_test">';
                                 content += '<h2 align="center"><span style="float:right;"><input type="submit" value="Run Tests"/></span>Available Tests</h2>';
                                 content += '<table width="100%" border="0" cellpadding="2" cellspacing="1"><tr><th>Test File (located at ' + data.config.testDir + ')</th><th><input type="checkbox" id="run_all_no_cov">&nbsp;Run Without Coverage</th><th><input type="checkbox" id="run_all_cov">&nbsp;Run With Coverage</th></tr>';
                                 for (i = 0; i < data.availableTests.length; i = i + 1) {
                                     test = data.availableTests[i];
                                     content += '<tr>';
                                     content += '<td>/' + test.test_url + '</td>';
-                                    content += '<td align="center"><input name="test" class="no_cov_cbox" type="checkbox" value="/' + test.test_url + ';" />&nbsp;<a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1">Run</a></td>';
-                                    content += '<td align="center"><input name="test" class="cov_cbox" type="checkbox" value="/' + test.test_url + '?do_coverage=1;" /><a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1&do_coverage=1">Run</a></td>';
+                                    content += '<td align="center"><input name="test" class="no_cov_cbox" type="checkbox" value="/' + test.test_url + '" />&nbsp;<a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1">Run</a></td>';
+                                    content += '<td align="center"><input name="test" class="cov_cbox" type="checkbox" value="/' + test.test_url + '?do_coverage=1" /><a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1&do_coverage=1">Run</a></td>';
                                     content += '</tr>';
                                 }
                                 content += '</table>';

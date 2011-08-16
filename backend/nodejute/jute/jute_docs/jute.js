@@ -178,8 +178,8 @@ if (window.__done) {
                                 for (i = 0; i < data.availableTests.length; i = i + 1) {
                                     test = data.availableTests[i];
                                     content += '<tr>';
-                                    content += '<td>/' + test.test_url + '</td>';
-                                    content += '<td align="center"><input name="test" class="no_cov_cbox" type="checkbox" value="' + test.test_url + " />&nbsp;<a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1">Run</a></td>';
+                                    content += '<td>' + test.test_url + '</td>';
+                                    content += '<td align="center"><input name="test" class="no_cov_cbox" type="checkbox" value="' + test.test_url + '" />&nbsp;<a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1">Run</a></td>';
                                     content += '<td align="center"><input name="test" class="cov_cbox" type="checkbox" value="' + test.test_url + '?do_coverage=1" /><a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1&do_coverage=1">Run</a></td>';
                                     content += '</tr>';
                                 }
@@ -280,7 +280,7 @@ if (window.__done) {
                 report_data = Y.Test.Format.JUnitXML(data.results);
             Y.io('/jute/_test_report', 
                 {
-                    method: 'POST',
+                    method: 'PUT',
                     data: 'results=' + escape(report_data) + '&name=' + escape(data.results.name) + "&coverage=" + escape(cover_out),
                     on: {
                         success: function(tid, args) {

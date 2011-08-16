@@ -109,7 +109,8 @@ module.exports = {
                     hub.emit('seleniumTestsFinished');
                 }
 
-                matches.forEach(function(testFile) {
+                // ONLY USE HTML FOR NOW UNTIL THE PAGE IS SMARTER...
+                matches_html.forEach(function(testFile) {
                     testFile = testFile.replace(prefix, '');
                     data.push({ test_url: testFile });
                 });

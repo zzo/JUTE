@@ -58,7 +58,7 @@ module.exports = {
 
             // called when all Selenium tests are complete for this browser
             cb = function() {
-                    browser.chain.testComplete().end(function(err) {
+                    browser.testComplete(function(err) {
                         hub.emit('action:seleniumDone', err);
                     });
                 };
@@ -67,15 +67,16 @@ module.exports = {
             browser.
                 chain.
                 session().
-                setTimeout(maxWaitTime).
-                open('/?selenium=' + obj.uuid).
+                open('/?selenium=' + obj.uuid,  function(err, body, req) { obj.seleniumID = browser.sid }).
                 waitForPageToLoad(60000).
                 end(function(err) {
                     if (err) {
                         var msg = 'Error starting/waiting for Selenium page to load: ' + err;
                         hub.emit(hub.LOG, hub.ERROR, msg);
                         res.end(msg);
-                        hub.removeListener('seleniumTestsFinished', cb);
+                        hub.emit('seleniumTestsFinished', err);
+                    } else {
+                        hub.emit(hub.LOG, hub.INFO, "Selenium a gogo!");
                     }
                 });
         }

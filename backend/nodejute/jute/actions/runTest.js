@@ -117,6 +117,9 @@ module.exports = {
                     if (obj.send_output) {
                         test_obj.sendOutput = 1;
                     }
+                    if (obj.snapshot) {
+                        test_obj.snapshot = 1;
+                    }
 
                     // Only pass these tests out to selenium hosts started by this
                     //  this is how we keep track

@@ -62,24 +62,32 @@ module.exports = {
             }
 
             if (obj.coverage && obj.coverage !== 'null') {
-                var cover_obj = JSON.parse(obj.coverage);
-                for (file in cover_obj) {
-                    var new_file = path.join(hub.config.outputDir, obj.name, 'lcov-report', file);
-                    cover_obj[new_file] = cover_obj[file];
-                    delete cover_obj[file];
+                try {
+                    var cover_obj = JSON.parse(obj.coverage);
+                    for (file in cover_obj) {
+                        var new_file = path.join(hub.config.outputDir, obj.name, 'lcov-report', file);
+                        cover_obj[new_file] = cover_obj[file];
+                        delete cover_obj[file];
+                    }
+                    obj.coverage = JSON.stringify(cover_obj);
+                    names = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
+                    exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + names[1] + " --format lcov " + names[0]);
+                    hub.emit(hub.LONG, hub.INFO, "Coverage Report for " + obj.name);
+                } catch(e) {
+                    hub.emit(hub.LOG, hub.ERROR, "Error generating coverage report: " + e);
                 }
-                obj.coverage = JSON.stringify(cover_obj);
-                names = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
-                exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + names[1] + " --format lcov " + names[0]);
-                hub.emit(hub.LONG, hub.INFO, "Coverage Report for " + obj.name);
             }
 
+            // Take this test out of circulation
             var totalTests = cache.tests_to_run.length;
             for (var i = 0; i < totalTests; i++) {
                 var test = cache.tests_to_run[i];
                 if (test.browser == req.session.uuid) {
+                    if (test.snapshot && test.sel_host) {
+                        common.takeSeleniumSnapshot(test, path.join(names[1], 'snapshot.png'));
+                    }
                     if (test.sendOutput) {
-                        res.write(obj.name + "finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + ' seconds');
+                        res.write(obj.name + "finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + " seconds\n");
                     }
                     cache.tests_to_run.splice(i, 1);
                     break;

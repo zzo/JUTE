@@ -91,6 +91,28 @@ module.exports = {
                     file = fs.readFileSync(filename, 'utf8');
 
                 return file.match(/failures="[1-9]/);
+            },
+            takeSeleniumSnapshot: function(test, filename) {
+                var b = soda = require('soda'),i
+                    soda.createClient({ host: test.sel_host });
+
+                b.sid = test.seleniumID;
+
+                // Look good for out foto!!
+                b.windowMaximize(function(err, body, req) {
+                    if (!err) {
+                        b.windowFocus(function(err, body, req) {
+                            if (!err) {
+                                b.command('captureScreenshotToString', null, function(err, body, res) {
+                                    if (!err) {
+                                        var bb = new Buffer(body, 'base64');
+                                        fs.writeFileSync(filename, bb, 0, bb.length);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
         };
     }

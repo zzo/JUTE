@@ -140,7 +140,7 @@ YUI().add('jute', function(Y) {
         var cfg = {
             method: 'GET',
             data: "d=" + new Date().getTime(),
-            on: { 
+            on: {
                     success: function (transactionid, response) {
                         var data, qs, connect, i, content_node, content, test;
                         try {

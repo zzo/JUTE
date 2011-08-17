@@ -21,4 +21,16 @@ YUI().add('jute', function(Y) {
         }
     );
 
-}, '1.0', { requires: [ 'test', 'io-base' ] });
+   // A helpful function - setup console & run tests
+    Y.namespace('UnitTest').go = function() {
+
+        //initialize the console
+        var yconsole = new Y.Console({
+            newestOnTop: false
+        });
+        yconsole.render('#log');
+        Y.Test.Runner.run();
+    };
+
+}, '1.0', { requires: [ 'test', 'io-base', 'console' ] });
+

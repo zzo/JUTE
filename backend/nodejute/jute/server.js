@@ -71,17 +71,14 @@ Create:  function(hub) {
             }
             next();
         }
+        , connect.bodyParser()
         , connect.router(function(app){
             app.get('/jute_docs/:file', function(req, res, next){
                 // Just one of JUTE's static files
                 sendFullFile(path.join(__dirname, req.url), req, res, next);
             });
-            app.get(/\/jute\/_([^\?]+)/, function(req, res, next){
+            app.all(/\/jute\/_([^\?]+)/, function(req, res, next){
                 // A JUTE action - GET
-                hub.emit('action', req.params[0], req, res);
-            });
-            app.post(/\/jute\/_([^\?]+)/, function(req, res, next){
-                // A JUTE action - POST
                 hub.emit('action', req.params[0], req, res);
             });
             app.get('/', function(req, res, next){
@@ -122,13 +119,15 @@ Create:  function(hub) {
                     res.end(stdout);
                 }
             });
-        } else if (req.query.coverage && req.headers.referer.match('do_coverage=1')) {
+        } else if (req.query.coverage && (!req.headers.referer || req.headers.referer.match('do_coverage=1'))) {
             // Coverage this bad boy!
             var tempFile = p.join('/tmp', p.basename(path));
             hub.emit(hub.LOG, hub.INFO, "Generating coverage file " + tempFile + " for " + path);
             exec(hub.config.java + ' -jar ' + p.join(__dirname, "yuitest-coverage.jar") + " -o " + tempFile + " " + path, function(err) {
                 if (err) {
                     hub.emit(hub.LOG, 'error', "Error coverage'ing " + path + ": " + err);
+                    hub.emit(hub.LOG, 'error', "Sending plain file");
+                    _doSend(path, req, res, next);
                 } else {
                     _doSend(tempFile, req, res, next);
                     // DO NOT delete coverage'd file for debugging

@@ -74,7 +74,7 @@ actions.Create(eventHub, common.Create(eventHub));
 // Some app-wide helpers
 eventHub.addListener(eventHub.LOG, function(sev, str) {
     if (sev === eventHub.ERROR) {
-        console.error(str);
+        console.log('ERROR: ' + str);
     } else {
         console.log(str);
     }

@@ -43,155 +43,146 @@ module.exports = {
         hub.addListener('action:run_test', runTest);
 
         function runTest(req, res, cache) {
-            var report = ''
-                uuid   = require('node-uuid');
+            var uuid   = require('node-uuid'),
+                path    = require('path'),
+                fs      = require('fs'),
+                obj     = req.body,
+                sys     = require('sys'),
+                tests, multipleFromUI = false,
+                capture = false,
+                exec    = require('child_process').exec,
+                errors  = []
+            ;
 
-            req.on('data', function(chunk) {
-                report += chunk;
-            });
+            console.log(sys.inspect(obj));
+            if (obj.test) {
+                // 'run multiple' from UI
+                if (typeof obj.test == 'object') {
+                    multipleFromUI = true;
+                    tests = obj.test
+                } else {
+                    tests = [ obj.test ];
+                }
+            } else if (obj.tests) {
+                // From CLI
+                tests = obj.tests.split(/\s+/);
+            }
 
-            req.on('end', function() {
-                var qs      = require('querystring'),
-                    path    = require('path'),
-                    fs      = require('fs'),
-                    obj     = qs.parse(report),
-                    sys     = require('sys'),
-                    tests, multipleFromUI = false,
-                    capture = false,
-                    exec    = require('child_process').exec,
-                    errors  = []
-                ;
-
-                console.log(sys.inspect(obj));
-                if (obj.test) {
-                    // 'run multiple' from UI
-                    if (typeof obj.test == 'object') {
-                        multipleFromUI = true;
-                        tests = obj.test
-                    } else {
-                        tests = [ obj.test ];
-                    }
-                } else if (obj.tests) {
-                    // From CLI
-                    tests = obj.tests.split(/\s+/);
+            // FIRST make sure all these alleged test files exist
+            for (var i = 0; i < tests.length; i++) {
+                var realFullFile = path.join(hub.config.testDir, tests[i].replace(/\?.*/, ''));
+                if (realFullFile.match(/\.html$/)) {
+                    capture = true;
                 }
 
-                // FIRST make sure all these alleged test files exist
-                for (var i = 0; i < tests.length; i++) {
-                    var realFullFile = path.join(hub.config.testDir, tests[i].replace(/\?.*/, ''));
-                    if (realFullFile.match(/\.html$/)) {
-                        capture = true;
-                    }
-
-                    try {
-                        fs.statSync(realFullFile);
-                    } catch (e) {
-                        errors.push(realFullFile);
-                    }
+                try {
+                    fs.statSync(realFullFile);
+                } catch (e) {
+                    errors.push(realFullFile);
                 }
+            }
 
-                if (errors.length > 0) {
-                    res.writeHead(404);
-                    res.end("Cannot find test files: " + errors.join(', '));
-                    return;
-                }
+            if (errors.length > 0) {
+                res.writeHead(404);
+                res.end("Cannot find test files: " + errors.join(', '));
+                return;
+            }
 
-                if (!Object.keys(cache.browsers).length && !obj.sel_host && capture) {
-                    res.writeHead(412);
-                    res.end("There are no currently captured browsers!");
-                    return;
-                }
+            if (!Object.keys(cache.browsers).length && !obj.sel_host && capture) {
+                res.writeHead(412);
+                res.end("There are no currently captured browsers!");
+                return;
+            }
 
-                var pushed = false, v8Tests = '';
-                for (var i = 0; i < tests.length; i++) {
-                    var test = tests[i],
-                        test_obj = {
-                            running: 0,
-                            url:     path.join('/', hub.config.testDirWeb, test)
-                        };
+            var pushed = false, v8Tests = '';
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i],
+                    test_obj = {
+                        running: 0,
+                        url:     path.join('/', hub.config.testDirWeb, test)
+                    };
 
-                    if (test.match(/\.js/)) {
-                        // V8 test!
-                        pushed = true;
-                        exec('JUTE_DEUBG=1 ' + path.join(__dirname, '..', '..', 'jute_v8.js') + ' ' + test + ' 2>&1', function(error, stdout, stderr) {
-                            if (error) {
-                                v8Tests += 'V8 ERROR: ' + error;
-                            } else {
-                                v8Tests += stdout;
-                            }
-                        });
-                    } else if (obj.sel_host) {
-                        // A Selenium Test! - meaning anyone can run it
-                        if (obj.send_output) {
-                            test_obj.sendOutput = 1;
+                if (test.match(/\.js/)) {
+                    // V8 test!
+                    pushed = true;
+                    exec('JUTE_DEUBG=1 ' + path.join(__dirname, '..', '..', 'jute_v8.js') + ' ' + test + ' 2>&1', function(error, stdout, stderr) {
+                        if (error) {
+                            v8Tests += 'V8 ERROR: ' + error;
+                        } else {
+                            v8Tests += stdout;
                         }
+                    });
+                } else if (obj.sel_host) {
+                    // A Selenium Test! - meaning anyone can run it
+                    if (obj.send_output) {
+                        test_obj.sendOutput = 1;
+                    }
 
-                        // Only pass these tests out to selenium hosts started by this
-                        //  this is how we keep track
-                        obj.uuid = test_obj.browser = uuid();
+                    // Only pass these tests out to selenium hosts started by this
+                    //  this is how we keep track
+                    obj.uuid = test_obj.browser = uuid();
 
+                    cache.tests_to_run.push(test_obj);
+                    pushed = true;
+                } else {
+                    if (multipleFromUI) {
+                        // Only run these tests in THIS browser from the UI
+                        test_obj.browser = req.session.uuid;
                         cache.tests_to_run.push(test_obj);
                         pushed = true;
                     } else {
-                        if (multipleFromUI) {
-                            // Only run these tests in THIS browser from the UI
-                            test_obj.browser = req.session.uuid;
+                        // Send to each test to each captured browser
+                        for (var browser in cache.browsers) {
+                            test_obj.browser = browser;
                             cache.tests_to_run.push(test_obj);
                             pushed = true;
-                        } else {
-                            // Send to each test to each captured browser
-                            for (var browser in cache.browsers) {
-                                test_obj.browser = browser;
-                                cache.tests_to_run.push(test_obj);
-                                pushed = true;
-                            }
                         }
                     }
                 }
+            }
 
-                if (pushed) {
-                    if (obj.sel_host) {
-                        if (obj.send_output) {
-                            res.write("Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
-                        }
-
-                        // Start up Selenium & Listen for results
-                        hub.once('action:seleniumDone', function(err) {
-                            if (err) {
-                                hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests: ' + err);
-                                res.end(err);
-                            } else {
-                                hub.once('action:checkedResults', function(results) {
-                                    res.end('Final Selenium Results: ' + JSON.stringify(results));
-                                });
-                                hub.emit('action:checkResults');
-                            }
-                        });
-
-                        hub.emit('action:seleniumStart', req, res, obj, tests.length);
-                    } else {
-                        // UI wants to run multiple tests - redirect to it!
-                        if (multipleFromUI) {
-                            // Now tell browser to run the tests!
-                            res.writeHead(302, { Location: "/jute_docs/run_tests.html" });
-                            res.end("/jute_docs/run_tests.html");
-                        } else {
-                            // Command line client
-                            if (v8Tests) {
-                                res.write(v8Tests);
-                            }
-                            if (capture) {
-                                res.end('Added ' + (obj.test || obj.tests) + ' to capture tests');
-                            }
-
-                        }
+            if (pushed) {
+                if (obj.sel_host) {
+                    if (obj.send_output) {
+                        res.write("Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
                     }
+
+                    // Start up Selenium & Listen for results
+                    hub.once('action:seleniumDone', function(err) {
+                        if (err) {
+                            hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests: ' + err);
+                            res.end(err);
+                        } else {
+                            hub.once('action:checkedResults', function(results) {
+                                res.end('Final Selenium Results: ' + JSON.stringify(results));
+                            });
+                            hub.emit('action:checkResults');
+                        }
+                    });
+
+                    hub.emit('action:seleniumStart', req, res, obj, tests.length);
                 } else {
-                    hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
-                    response.statusCode = 412; // Ye Olde Failed Precondition
-                    res.end('No browsers listening!!  Test(s) not added!');
+                    // UI wants to run multiple tests - redirect to it!
+                    if (multipleFromUI) {
+                        // Now tell browser to run the tests!
+                        res.writeHead(302, { Location: "/jute_docs/run_tests.html" });
+                        res.end("/jute_docs/run_tests.html");
+                    } else {
+                        // Command line client
+                        if (v8Tests) {
+                            res.write(v8Tests);
+                        }
+                        if (capture) {
+                            res.end('Added ' + (obj.test || obj.tests) + ' to capture tests');
+                        }
+
+                    }
                 }
-            });
+            } else {
+                hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
+                response.statusCode = 412; // Ye Olde Failed Precondition
+                res.end('No browsers listening!!  Test(s) not added!');
+            }
         }
     }
 };

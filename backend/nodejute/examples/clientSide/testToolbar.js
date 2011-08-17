@@ -1,7 +1,6 @@
 YUI({
     logInclude: { TestRunner: true },
-    gallery:    'gallery-2011.06.22-20-13'
-}).use('gallery-jute', 'toolbar', function(Y) {
+}).use('test', 'toolbar', function(Y) {
 
     var suite = new Y.Test.Suite('toolbar');
     suite.add(new Y.Test.Case({
@@ -21,5 +20,5 @@ YUI({
     }));
 
     Y.Test.Runner.add(suite);
-    Y.UnitTest.go();
+    Y.Test.Runner.run();
 });

@@ -36,8 +36,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 module.exports = {
 Create:  function(hub) {
+    var path = require('path'),
+        fs   = require('fs');
+
     // Events I care about
     hub.addListener('startServer', startServer);
+
+    // Get this ready to go
+    var juteClient = fs.readFileSync(path.join(__dirname, 'jute_docs', 'jute_client.js'), 'utf8');
 
     function startServer() {
 
@@ -45,7 +51,6 @@ Create:  function(hub) {
             sessions = require('cookie-sessions'),
             os       = require('os'),
             sys      = require('sys'),
-            path     = require('path'),
             uuid     = require('node-uuid');
 
         hub.emit(hub.LOG, hub.INFO, "Running as " + process.getuid() + '/' + process.getgid());
@@ -143,8 +148,7 @@ Create:  function(hub) {
      */
     function _doSend(path, req, res, next) {
 
-        var fs = require('fs'),
-            mime = require('mime');
+        var mime = require('mime');
 
         fs.stat(path, function(err, stat) {
             var type, charset,
@@ -168,7 +172,29 @@ Create:  function(hub) {
                 res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
             }
 
-            fs.createReadStream(path).pipe(res);
+            // dynamically inject JUTE?
+            if (type.match(/javascript/)) {
+                var file = fs.readFileSync(path, 'utf8'),
+                    regex = /\)\s*\.\s*use\s*\(([^)]+)/;
+
+                var matches = regex.exec(file);
+                if (matches) {
+                    if (matches[1].match('test')) {
+
+                        hub.emit(hub.LOG, hub.INFO, "Dynamically injecting JUTE client into " + path);
+
+                        res.setHeader('Content-Length', stat.size + juteClient.length);
+                        res.write(juteClient);
+                        res.end(file.replace('test', 'jute'));
+                        return;
+                    }
+                }
+
+                // Nope, just some plain old JS file...
+                res.end(file);
+            } else {
+                fs.createReadStream(path).pipe(res);
+            }
         });
     }
 }

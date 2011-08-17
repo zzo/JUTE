@@ -34,19 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 YUI().add('jute', function(Y) {
-if (window.__done) {
-    // V8!!
-    Y.namespace('UnitTest').go = function() { Y.Test.Runner.run(); };
-    Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT,
-        function(data) {
-            var cover_out   = Y.Test.Runner.getCoverage(Y.Coverage.Format.JSON),
-                report_data = Y.Test.Format.JUnitXML(data.results);
-
-            window.__done(data, report_data, cover_out);
-        }
-    );
-} else {
-    // BROWSER!!
     var UT = Y.namespace('UnitTest'), button, load_button, kick_button, clear_button, clear_results;
 
     UT.heartBeat = function() {
@@ -273,50 +260,5 @@ if (window.__done) {
             Y.io('/jute/_clear_results');
         });
     }
-
-    Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT,
-        function(data) {
-            var cover_out = Y.Test.Runner.getCoverage(Y.Coverage.Format.JSON),
-                report_data = Y.Test.Format.JUnitXML(data.results);
-            Y.io('/jute/_test_report', 
-                {
-                    method: 'PUT',
-                    data: 'results=' + escape(report_data) + '&name=' + escape(data.results.name) + "&coverage=" + escape(cover_out),
-                    on: {
-                        success: function(tid, args) {
-                            if (!window.location.toString().match("_one_shot")) {
-                                window.location.href = '/jute_docs/run_tests.html';
-                            }
-                        },
-                        failure: function(tid, args) {
-                            if (!window.location.toString().match("_one_shot")) {
-                                window.location.href = '/jute_docs/run_tests.html';
-                            }
-                        }
-
-                    }
-                }
-            );
-        }
-    );
-
-    // some boilerplate stuff
-    UT.go = function() {
-        //initialize the console
-        var yconsole = new Y.Console({
-            newestOnTop: false
-        });
-        yconsole.render('#log');
-
-        //run the tests
-        try {
-            Y.Test.Runner.run();
-        }
-        catch (e) {
-            // skip this test - pop & move on
-            Y.io('/jute/_pop', { on: { end: function() { window.location.href = '/jute_docs/run_tests.html'; } } });
-        }
-    };
-}
-}, '1.0', { requires: [ 'node', 'test', 'io-base', 'console', 'json' ] });
+}, '1.0', { requires: [ 'node', 'io-base', 'json' ] });
 

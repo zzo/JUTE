@@ -46,16 +46,16 @@ module.exports = {
         // Events I care about
         hub.addListener('action:prune', prune);
 
-        function prune(doing_what, req, cache) {
+        function prune(doing_what, req, res, cache) {
             var redirect;
             if (doing_what != 'status') {
                 prune_browsers(req, cache);
-                redirect = prune_tests(doing_what, req, cache);
+                redirect = prune_tests(doing_what, req, res, cache);
                 hub.emit('pruneDone', redirect);
             }
         }
 
-        function prune_tests(doing_what, req, cache) {
+        function prune_tests(doing_what, req, res, cache) {
             var now = new Date().getTime(),
                 browser = req.session.uuid, test,
                 timeStarted;
@@ -69,7 +69,7 @@ module.exports = {
                         hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
                         cache.tests_to_run.splice(i, 1);
                         if (test.sendOutput) {
-                            hub.emit('sendOutput', test.sendOutput, test.url + ' timed out - javascript error?');
+                            res.write(test.url + ' timed out - javascript error?');
                         }
 
                         common.addTestOutput(test, 'Test running too long/timed out - blowing it out');

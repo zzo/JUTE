@@ -56,6 +56,12 @@ module.exports = {
                 maxWaitTime = TIME_TEST_THRESHOLD * (testsLength + 1)
             ;
 
+            // Give Selenium 1000 minutes to finish - should be good - 16 hours baby!
+            req.socket.setTimeout(60000000, function() {
+                hub.emit(hub.LOG, hub.ERROR, 'Selenium taking too long - giving up');
+                cb();
+            });
+
             // called when all Selenium tests are complete for this browser
             cb = function() {
                     browser.testComplete(function(err) {

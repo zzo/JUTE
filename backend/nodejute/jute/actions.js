@@ -60,7 +60,7 @@ module.exports = {
                 }
 
             });
-            hub.emit('action:prune', action, req, cache);
+            hub.emit('action:prune', action, req, res, cache);
         });
     }
 };

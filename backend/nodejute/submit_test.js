@@ -140,11 +140,13 @@ eventHub.on('tests', function(tests) {
                 juteArgs.send_output = 1;
             }
 
-            options.path = '/jute/_run_test';
-            options.method = 'POST';
+            options.path    = '/jute/_run_test';
+            options.method  = 'POST';
+            options.headers = { 'Content-Type': 'application/json' };
+
             // See what we got
             console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
-            
+
             // POST AWAY!
             var req = http.request(options, function(res) {
                 console.log('Status Response from JUTE: ' + res.statusCode);
@@ -155,16 +157,19 @@ eventHub.on('tests', function(tests) {
                 res.on('end', function() {
                 });
             });
-            
+
+            // 6000 seconds = 100 minutes
+            req.socket.setTimeout(600000, function(e) { console.log('socket timeout!'); );
+
             // Not Good
             req.on('error', function(e) {
                 console.error('Problem contacting JUTE server at: ' + args.host + ':' + args.port);
                 console.error("Is JUTE running there?  Did you specify '--host' and '--port' correctly?");
                 process.exit(1);
             });
-            
-            req.end(qs.stringify(juteArgs));
-            
+
+            req.end(JSON.stringify(juteArgs));
+
             if (!args.sel_host && args.wait) {
                 options.path = '/jute/_status';
                 setInterval(wait, 5000, options);

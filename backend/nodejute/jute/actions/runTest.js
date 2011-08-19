@@ -94,7 +94,9 @@ module.exports = {
                 return;
             }
 
-            var pushed = false, v8Tests = '';
+            var pushed = false, v8Tests = '',
+                seleniumUUID = uuid();
+
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i],
                     test_obj = {
@@ -124,7 +126,7 @@ module.exports = {
 
                     // Only pass these tests out to selenium hosts started by this
                     //  this is how we keep track
-                    obj.uuid = test_obj.browser = uuid();
+                    obj.uuid = test_obj.browser = seleniumUUID;
 
                     common.addTestOutput(test_obj, 'Selenium test');
 

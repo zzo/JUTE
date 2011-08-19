@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub) {
+    Create:  function(hub, cache) {
         return {
             browserName: function(req) {
                 return [req.headers['user-agent'], req.connection.remoteAddress].join('---');
@@ -114,7 +114,7 @@ module.exports = {
                     }
                 });
             },
-            addTestOutput: function(test, msg) {
+            addTestOutput: function(cache, test, msg) {
                 var lines = msg.split(/\n/),
                     now = new Date(),
                     format;

@@ -87,13 +87,13 @@ module.exports = {
             for (var i = 0; i < totalTests; i++) {
                 var test = cache.tests_to_run[i];
                 if (test.browser == req.session.uuid) {
-                    common.addTestOutput(test, output);
+                    common.addTestOutput(cache, test, output);
                     if (test.snapshot && test.sel_host) {
                         common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
-                        common.addTestOutput(test, "Took snapshot: " + path.join(names[1], path.basename(names[0], 'xml')) + 'png');
+                        common.addTestOutput(cache, test, "Took snapshot: " + path.join(names[1], path.basename(names[0], 'xml')) + 'png');
                     }
 
-                    common.addTestOutput(test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
+                    common.addTestOutput(cache, test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
                     common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
                     cache.tests_to_run.splice(i, 1);
                     break;

@@ -69,7 +69,7 @@ module.exports = {
                         var msg = "Test running for too long - killing it";
 
                         hub.emit(hub.LOG, hub.ERROR, msg);
-                        common.addTestOutput(test, msg);
+                        common.addTestOutput(cache, test, msg);
 
                         cache.tests_to_run.splice(i, 1);
 
@@ -87,7 +87,7 @@ module.exports = {
                         var msg = "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")";
 
                         hub.emit(hub.log, hub.ERROR,  msg);
-                        common.addTestOutput(test, msg);
+                        common.addTestOutput(cache, test, msg);
 
                         common.dumpFile(params, 'results', names[0] + '-test.xml', name);
                         common.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);

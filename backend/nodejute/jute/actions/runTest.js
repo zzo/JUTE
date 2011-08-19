@@ -128,7 +128,7 @@ module.exports = {
                     //  this is how we keep track
                     obj.uuid = test_obj.browser = seleniumUUID;
 
-                    common.addTestOutput(test_obj, 'Selenium test');
+                    common.addTestOutput(cache, test_obj, 'Selenium test');
 
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
@@ -137,7 +137,7 @@ module.exports = {
                         // Only run these tests in THIS browser from the UI
                         test_obj.browser = req.session.uuid;
 
-                        common.addTestOutput(test_obj, 'Multiple in this browser test');
+                        common.addTestOutput(cache, test_obj, 'Multiple in this browser test');
 
                         cache.tests_to_run.push(test_obj);
                         pushed = true;
@@ -145,14 +145,14 @@ module.exports = {
                         // Send to each test to each captured browser
                         for (var browser in cache.browsers) {
                             test_obj.browser = browser;
-                            common.addTestOutput(test_obj, 'Capture test');
+                            common.addTestOutput(cache, test_obj, 'Capture test');
                             cache.tests_to_run.push(test_obj);
                             pushed = true;
                         }
                     }
                 }
 
-                common.addTestOutput(test_obj, sys.inspect(test_obj));
+                common.addTestOutput(cache, test_obj, sys.inspect(test_obj));
             }
 
             if (pushed) {

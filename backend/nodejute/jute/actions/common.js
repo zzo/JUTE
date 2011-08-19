@@ -126,6 +126,9 @@ module.exports = {
 
                 if (test.sendOutput) {
                     // do something smart
+                    if (cache[test.browser]) {
+                        cache[test.browser].write(msg);
+                    }
                 }
             }
         };

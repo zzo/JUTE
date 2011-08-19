@@ -156,6 +156,7 @@ module.exports = {
             }
 
             if (pushed) {
+                cache[obj.uuid] = res; // our link back to the requesting client for status messages
                 if (obj.sel_host) {
                     if (obj.send_output) {
                         res.write("Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
@@ -163,6 +164,7 @@ module.exports = {
 
                     // Start up Selenium & Listen for results
                     hub.once('action:seleniumDone', function(err) {
+                        delete cache[obj.uuid]; // done with status updates
                         if (err) {
                             hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests: ' + err);
                             res.end(err);

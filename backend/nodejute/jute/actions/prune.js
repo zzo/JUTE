@@ -84,9 +84,10 @@ module.exports = {
                         err = err.replace('BROWSER', names[1]);
                         err = err.replace('URL', test.url);
                         var params  = { results: err, name: name };
+                        var msg = "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")";
 
-                        hub.emit(hub.log, hub.ERROR,  "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")");
-                        common.addTestOutput(test, "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")");
+                        hub.emit(hub.log, hub.ERROR,  msg);
+                        common.addTestOutput(test, msg);
 
                         common.dumpFile(params, 'results', names[0] + '-test.xml', name);
                         common.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);

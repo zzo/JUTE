@@ -44,7 +44,6 @@ module.exports = {
         // Events I care about
         hub.addListener('action:seleniumStart', startSelenium);
 
-
         function startSelenium(req, res, obj, testsLength) {
             var soda = require('soda'), cb,
                 browser = soda.createClient({

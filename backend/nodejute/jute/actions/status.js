@@ -54,6 +54,7 @@ module.exports = {
         function checkResults() {
             var baseDir = hub.config.outputDir,
                 fs      = require('fs'),
+//                sys     = require('sys'),
                 path    = require('path');
 
             // Find & parse all results

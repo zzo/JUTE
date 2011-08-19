@@ -1,6 +1,6 @@
 YUI({
     logInclude: { TestRunner: true },
-}).use('jute', function(Y) {
+}).use('test', function(Y) {
 
     var suite = new Y.Test.Suite('mySum'),
         mySum = require('./examples/serverSide/mySum', true).mySum;
@@ -12,13 +12,14 @@ YUI({
         },
 
         testArray: function() {
+            Y.log('this is fun');
             Y.Assert.areEqual(mySum([5, 5]), 10);
         }
 
     }));
 
     Y.Test.Runner.add(suite);
-    Y.UnitTest.go();
+    Y.Test.Runner.run();
 
 });
 

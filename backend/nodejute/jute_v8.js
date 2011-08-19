@@ -55,7 +55,10 @@ var  fs         = require('fs')
     ,coverageJar       = PATH.join(__dirname, 'jute', 'yuitest-coverage.jar')
     ,TEST_FILE
     ,DO_COVERAGE
+    ,myYUI
+    ,testOutput = ''
     ;
+
 
 if (!config) {
     process.exit(0);
@@ -86,8 +89,33 @@ if (DO_COVERAGE) {
 
 }
 
-// Inject mini-jute into YUI
-YUI().add('jute', function(Y) {
+// Shim in 'jute' instead of 'test'
+//  for the sandbox's YUI
+var myYUI = function(yuiArgs) {
+    var yui = YUI(yuiArgs),
+        origUse = yui.use,
+        origLog = yui.log;
+
+    yui.use = function() {
+        for (var i = 0; i < arguments.length - 1; i++) {
+            if (arguments[i] === 'test') {
+                arguments[i] = 'jute';
+            }
+        }
+
+        return origUse.apply(yui, arguments);
+    };
+
+    yui.log = function() {
+        testOutput += arguments[1] + ': (' + arguments[2] + '): ' + arguments[0] + "\n";
+        return origLog.apply(yui, arguments);
+    }
+
+    return yui;
+}
+
+// Inject mini-jute into sandbox's YUI
+myYUI().add('jute', function(Y) {
      Y.namespace('UnitTest').go = function() { Y.Test.Runner.run(); };
      Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT,
          function(data) {
@@ -97,8 +125,10 @@ YUI().add('jute', function(Y) {
              testsDone(data, report_data, cover_out);
          }
      );
+
 }, '1.0', { requires: [ 'test' ] });
 
+// Recursively instrument all requested coverage files
 function getOneCoverage(files, index) {
     if (files[index]) {
         var reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g;
@@ -112,6 +142,7 @@ function getOneCoverage(files, index) {
 
 // START PARTY!!!
 if (TEST_FILE.match(/\.js$/)) {
+    // JS
     if (DO_COVERAGE) {
         var tf = fs.readFileSync(TEST_FILE, 'utf8');
             reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g,
@@ -121,14 +152,16 @@ if (TEST_FILE.match(/\.js$/)) {
     } else {
         doit('<script src="' + TEST_FILE + '"></script>');
     }
+} else {
+    // HTML
+    fs.readFile(TEST_FILE, 'utf8', function (err, data) {
+        if (err) {
+            console.error("Cannot read " + TEST_FILE + ": " + err); 
+            process.exit(1); 
+        }
+        doit(data);
+    });
 }
-fs.readFile(TEST_FILE, 'utf8', function (err, data) {
-    if (err) {
-        console.error("Cannot read " + TEST_FILE + ": " + err); 
-        process.exit(1); 
-    }
-    doit(data);
-});
 
 /**
  * This gets called when the unit tests are finished
@@ -136,6 +169,7 @@ fs.readFile(TEST_FILE, 'utf8', function (err, data) {
 function testsDone(data, report_data, cover_out) {
     var dirname = PATH.join(config.outputDir, data.results.name),
         test_output_file = PATH.join(dirname, 'v8-test.xml'), cover_object,
+        test_debug_file = PATH.join(dirname, 'v8-test.txt'),
         cover_out_file = PATH.join(dirname, 'cover.json'), cover,
         total_lines, total_functions, line_coverage = 0, func_coverage = 0;
 
@@ -143,8 +177,11 @@ function testsDone(data, report_data, cover_out) {
         fs.mkdirSync(dirname, 0777);
     } catch(e) { }
 
-    console.log('Test output file: ' + test_output_file);
+    console.log('Test results file: ' + test_output_file);
     fs.writeFileSync(test_output_file, report_data);
+
+    console.log('Test debug file: ' + test_debug_file);
+    fs.writeFileSync(test_debug_file, testOutput);
 
     DONE = true;
 
@@ -244,7 +281,7 @@ function doit(data) {
         sandbox = 
             {
                 window: window
-                ,console: console
+                ,console: console   // dummy this out??
                 ,setInterval: setInterval
                 ,document: document
                 ,ActiveXObject: function(){ return { setRequestHeader: function() {} } }
@@ -256,7 +293,7 @@ function doit(data) {
                 ,location: { href: '' }
                 ,Image: function(){}
                 ,alert: Y.log
-                ,YUI: YUI
+                ,YUI: myYUI
                 ,__NODE: true
                 ,module: module     // SOO sneaky!
                 ,process: process     // SOO sneaky!

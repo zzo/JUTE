@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub) {
+    Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path');
 
@@ -99,7 +99,8 @@ module.exports = {
                 var test = tests[i],
                     test_obj = {
                         running: 0,
-                        url:     path.join('/', hub.config.testDirWeb, test)
+                        url:     path.join('/', hub.config.testDirWeb, test),
+                        output: ''
                     };
 
                 if (test.match(/\.js/)) {
@@ -125,23 +126,31 @@ module.exports = {
                     //  this is how we keep track
                     obj.uuid = test_obj.browser = uuid();
 
+                    common.addTestOutput(test_obj, 'Selenium test');
+
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
                 } else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
                         test_obj.browser = req.session.uuid;
+
+                        common.addTestOutput(test_obj, 'Multiple in this browser test');
+
                         cache.tests_to_run.push(test_obj);
                         pushed = true;
                     } else {
                         // Send to each test to each captured browser
                         for (var browser in cache.browsers) {
                             test_obj.browser = browser;
+                            common.addTestOutput(test_obj, 'Capture test');
                             cache.tests_to_run.push(test_obj);
                             pushed = true;
                         }
                     }
                 }
+
+                common.addTestOutput(test_obj, sys.inspect(test_obj));
             }
 
             if (pushed) {

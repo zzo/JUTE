@@ -61,7 +61,10 @@ module.exports = {
             components.forEach(function(component) {
                 var testFiles, testResults = [];
 
-                component = path.basename(component);
+                component     = path.basename(component);
+                debugFiles    = glob.globSync(path.join(baseDir, component, '*.txt'));
+                snapshotFiles = glob.globSync(path.join(baseDir, component, '*.png'));
+
                 testFiles = glob.globSync(path.join(baseDir, component, '*.xml'));
                 testFiles.forEach(function(testFile) {
                     if (common.failedTests(testFile)) {
@@ -73,8 +76,10 @@ module.exports = {
 
                 var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
                 ret.current_results[component] = {};
-                ret.current_results[component].test_results = testResults;
-                ret.current_results[component].coverage     = coverage;
+                ret.current_results[component].test_results  = testResults;
+                ret.current_results[component].coverage      = coverage;
+                ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
+                ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
             });
 
             hub.emit('action:checkedResults', ret);

@@ -107,6 +107,19 @@ YUI().add('jute', function(Y) {
                                                     }
                                                 }
                                             }
+                                            if (value.snapshotFiles) {
+                                                for (i = 0; i < value.snapshotFiles.length; i = i + 1) {
+                                                    file = value.snapshotFiles[i];
+                                                    result_output += '<li><a target="_blank" title="' + file + '" href="/' + obj.config.outputDirWeb + '/' + key + '/' + file + '">SNAPSHOT ' + file + '</a></li>';
+                                                }
+                                            }
+                                            if (value.debugFiles) {
+                                                for (i = 0; i < value.debugFiles.length; i = i + 1) {
+                                                    file = value.debugFiles[i];
+                                                    result_output += '<li><a target="_blank" title="' + file + '" href="/' + obj.config.outputDirWeb + '/' + key + '/' + file + '">DEBUG ' + file + '</a></li>';
+                                                }
+                                            }
+
                                             if (value.coverage == 1) {
                                                 result_output += '<li><a target="_blank" href="/' + obj.config.outputDirWeb + '/' + key + '/lcov-report/index.html">Coverage Report</a></li>';
                                             }

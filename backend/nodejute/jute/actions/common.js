@@ -113,6 +113,16 @@ module.exports = {
                         });
                     }
                 });
+            },
+            addTestOutput: function(test, msg) {
+                var lines = msg.split(/\n/),
+                    now = new Date(),
+                    format;
+
+                format = now.getFullYear() + '/' + (now.getMonth() + 1) + '/' +  now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+                lines.forEach(function(line) {
+                    test.output += '[' + format + '] ' + line + "\n";
+                });
             }
         };
     }

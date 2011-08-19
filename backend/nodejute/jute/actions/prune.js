@@ -72,6 +72,8 @@ module.exports = {
                             hub.emit('sendOutput', test.sendOutput, test.url + ' timed out - javascript error?');
                         }
 
+                        common.addTestOutput(test, 'Test running too long/timed out - blowing it out');
+
                         // Dump a FAILED XML file
                         // Use test file name as the NAME of this test (vs. component name from test itself)
                         var parts = test.url.split('/');
@@ -84,7 +86,10 @@ module.exports = {
                         var params  = { results: err, name: name };
 
                         hub.emit(hub.log, hub.ERROR,  "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")");
+                        common.addTestOutput(test, "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")");
+
                         common.dumpFile(params, 'results', names[0] + '-test.xml', name);
+                        common.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);
 
                         if (cache.browsers[browser]) {
                             cache.browsers[browser].heart_beat = now;
@@ -121,6 +126,7 @@ module.exports = {
                                 var test = cache.tests_to_run[i];
                                 if (test.browser == browser) {
                                     // blow this test out!
+                                    hub.emit(hub.LOG, hub.ERROR,  "Deleting this test that was part of blow away browser: " + sys.inspect(test));
                                     cache.tests_to_run.splice(i, 1);
                                     i--; // fake a perl 'redo'!!  Otherwise we might skip over something!
                                 }

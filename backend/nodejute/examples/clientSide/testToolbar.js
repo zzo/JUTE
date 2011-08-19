@@ -20,5 +20,5 @@ YUI({
     }));
 
     Y.Test.Runner.add(suite);
-    Y.Test.Runner.run();
+    Y.UnitTest.go();
 });

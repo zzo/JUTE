@@ -46,7 +46,7 @@ module.exports = {
             var obj = req.body, succeeded = true,
                 names = common.makeSaneNames(common.browserName(req)),
                 filename = names[0], pkgname = names[1],
-                now = new Date().getTime(),
+                now = new Date().getTime(), output = '',
                 exec = require('child_process').exec
             ;
 
@@ -59,6 +59,8 @@ module.exports = {
                     succeeded = false;
                 }
                 hub.emit(hub.LONG, hub.INFO, "Test Report for " + obj.name);
+                output += "Test Report for " + obj.name + "\n";
+                output += 'It: ' + (succeeded ? 'succeeded' : 'failed') + "\n";
             }
 
             if (obj.coverage && obj.coverage !== 'null') {
@@ -70,11 +72,13 @@ module.exports = {
                         delete cover_obj[file];
                     }
                     obj.coverage = JSON.stringify(cover_obj);
-                    names = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
-                    exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + names[1] + " --format lcov " + names[0]);
+                    var namez = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
+                    exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + namez[1] + " --format lcov " + namez[0]);
                     hub.emit(hub.LONG, hub.INFO, "Coverage Report for " + obj.name);
+                    output += "Coverage Report for " + obj.name + ' generated';
                 } catch(e) {
                     hub.emit(hub.LOG, hub.ERROR, "Error generating coverage report: " + e);
+                    output += "Error generating coverage report: " + e;
                 }
             }
 
@@ -83,15 +87,24 @@ module.exports = {
             for (var i = 0; i < totalTests; i++) {
                 var test = cache.tests_to_run[i];
                 if (test.browser == req.session.uuid) {
+                    common.addTestOutput(test, output);
                     if (test.snapshot && test.sel_host) {
-                        common.takeSeleniumSnapshot(test, path.join(names[1], 'snapshot.png'));
+                        common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
+                        common.addTestOutput(test, "Took snapshot: " + path.join(names[1], path.basename(names[0], 'xml')) + 'png');
                     }
                     if (test.sendOutput) {
-                        res.write(obj.name + "finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + " seconds\n");
+                        res.write(obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + "ms\n");
                     }
+                    common.addTestOutput(test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
+                    common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
                     cache.tests_to_run.splice(i, 1);
                     break;
                 }
+            }
+            if (!totalTests) {
+                // A single browser test
+                output += obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + "\n";
+                common.dumpFile({ output: output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
             }
 
             res.end('OK');

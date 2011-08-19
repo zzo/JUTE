@@ -66,13 +66,13 @@ module.exports = {
                 if (timeStarted) {
                     if (now - timeStarted > TEST_TIME_THRESHOLD) {
                         // This test has been running for too long!!
-                        hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
-                        cache.tests_to_run.splice(i, 1);
-                        if (test.sendOutput) {
-                            res.write(test.url + ' timed out - javascript error?');
-                        }
+                        var msg = "Test running for too long - killing it";
 
-                        common.addTestOutput(test, 'Test running too long/timed out - blowing it out');
+                        hub.emit(hub.LOG, hub.ERROR, msg);
+                        common.addTestOutput(test, msg);
+
+                        cache.tests_to_run.splice(i, 1);
+
 
                         // Dump a FAILED XML file
                         // Use test file name as the NAME of this test (vs. component name from test itself)

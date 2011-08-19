@@ -92,9 +92,7 @@ module.exports = {
                         common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
                         common.addTestOutput(test, "Took snapshot: " + path.join(names[1], path.basename(names[0], 'xml')) + 'png');
                     }
-                    if (test.sendOutput) {
-                        res.write(obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' it took ' + (now - test.running) + "ms\n");
-                    }
+
                     common.addTestOutput(test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
                     common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
                     cache.tests_to_run.splice(i, 1);

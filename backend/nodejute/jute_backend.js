@@ -42,7 +42,7 @@ var sys       = require('sys'),
     server    = require('./jute/server'),
     actions   = require('./jute/actions'),
     common    = require('./jute/actions/common'),
-    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; this.INFO = 'info' },
+    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; this.INFO = 'info', this.testOutput = 'testOutput'; },
     pidFile   = '/tmp/jute.pid'
     ;
 

@@ -123,6 +123,10 @@ module.exports = {
                 lines.forEach(function(line) {
                     test.output += '[' + format + '] ' + line + "\n";
                 });
+
+                if (test.sendOutput) {
+                    // do something smart
+                }
             }
         };
     }

@@ -63,9 +63,7 @@ module.exports = {
                     //  must be something wrong with it - pop it
                     var error = 'Skipping bad test: ' + test.url + ': we thought it was running!';
                     hub.emit(hub.LOG, hub.ERROR, error);
-                    if (test.sendOutput) {
-                        res.write(error);
-                    }
+                    common.addTestOutput(test, error);
                     cache.tests_to_run.splice(i, 1);
                     i--;
                     continue;

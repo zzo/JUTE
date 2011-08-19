@@ -1,6 +1,6 @@
 YUI({
     logInclude: { TestRunner: true },
-}).use('test', 'toolbar', function(Y) {
+}).use('test', 'toolbar', 'console', function(Y) {
 
     var suite = new Y.Test.Suite('toolbar');
     suite.add(new Y.Test.Case({
@@ -20,5 +20,12 @@ YUI({
     }));
 
     Y.Test.Runner.add(suite);
-    Y.UnitTest.go();
+
+    //initialize the console
+    var yconsole = new Y.Console({
+        newestOnTop: false
+    });
+
+    yconsole.render('#log');
+    Y.Test.Runner.run();
 });

@@ -159,7 +159,7 @@ eventHub.on('tests', function(tests) {
             });
 
             // 6000 seconds = 100 minutes
-            req.socket.setTimeout(600000, function(e) { console.log('socket timeout!'); });
+            req.socket.setTimeout(6000000, function(e) { console.log('socket timeout!'); });
 
             // Not Good
             req.on('error', function(e) {

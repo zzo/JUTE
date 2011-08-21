@@ -38,8 +38,7 @@ module.exports = {
 
     Create: function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var cache = { browsers: {}, tests_to_run: [] };
-            glob = require('glob'),
+        var glob = require('glob'),
             path = require('path'),
             actions = glob.globSync(path.join(__dirname, 'actions/', '*.js'));
 
@@ -56,11 +55,11 @@ module.exports = {
                     res.end(JSON.stringify({ redirect_run_tests: '/jute_docs/run_tests.html' }));
                 } else {
                     // keep party going
-                    hub.emit('action:' + action, req, res, cache);
+                    hub.emit('action:' + action);
                 }
 
             });
-            hub.emit('action:prune', action, req, res, cache);
+            hub.emit('action:prune', action);
         });
     }
 };

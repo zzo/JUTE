@@ -66,6 +66,9 @@ switch(process.argv[2]) {
 sys.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
+// Prime cache
+eventHub.cache = { browsers: {}, tests_to_run: [], connections: {} };
+
 // Start up base modules
 configure.Create(eventHub);
 server.Create(eventHub);
@@ -107,6 +110,7 @@ eventHub.on('configureDone', function() {
         daemon.lock(pidFile);
 
         // Dump the config file for jute_v8 and submit_tests
+        console.log('DMPING: ' + JSON.stringify(eventHub.config));
         fs.writeFile('/tmp/jute.config', JSON.stringify(eventHub.config));
 
         // Fire up server

@@ -37,14 +37,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path');
+        var path = require('path'),
+            cache = hub.cache;
 
         // Events I care about
         hub.addListener('action:test_report', testReport);
 
-        function testReport(req, res, cache) {
-            var obj = req.body, succeeded = true,
-                names = common.makeSaneNames(common.browserName(req)),
+        function testReport() {
+            var req = cache.req, obj = req.body, succeeded = true,
+                names = common.makeSaneNames(common.browserName()),
                 filename = names[0], pkgname = names[1],
                 now = new Date().getTime(), output = '',
                 exec = require('child_process').exec
@@ -86,14 +87,15 @@ module.exports = {
             var totalTests = cache.tests_to_run.length;
             for (var i = 0; i < totalTests; i++) {
                 var test = cache.tests_to_run[i];
+
                 if (test.browser == req.session.uuid) {
-                    common.addTestOutput(cache, test, output);
-                    if (test.snapshot && test.sel_host) {
+                    // This is the test that just finished
+                    common.addTestOutput(test, output);
+                    if (test.snapshot && req.session.selenium) {
                         common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
-                        common.addTestOutput(cache, test, "Took snapshot: " + path.join(names[1], path.basename(names[0], 'xml')) + 'png');
                     }
 
-                    common.addTestOutput(cache, test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
+                    common.addTestOutput(test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
                     common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
                     cache.tests_to_run.splice(i, 1);
                     break;
@@ -105,7 +107,7 @@ module.exports = {
                 common.dumpFile({ output: output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
             }
 
-            res.end('OK');
+            cache.res.end('OK');
         }
     }
 };

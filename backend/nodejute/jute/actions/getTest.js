@@ -37,13 +37,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub, common, glob) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path');
+        var path = require('path'),
+            cache = hub.cache
+        ;
 
         // Events I care about
         hub.addListener('action:get_test', getTest);
 
-        function getTest(req, res, cache) {
-            var browser  = req.session.uuid,
+        function getTest() {
+            var req      = cache.req,
+                res      = cache.res,
+                browser  = req.session.uuid,
                 bName    = common.browserName(req),
                 now      = new Date().getTime(),
                 testURL;
@@ -58,28 +62,22 @@ module.exports = {
 
             for (var i = 0; i < cache.tests_to_run.length; i++) {
                 var test = cache.tests_to_run[i];
-                if ((test.browser == browser) && test.running) {
+                if (test.browser == browser && test.running) {
                     // um you're already running this test!
                     //  must be something wrong with it - pop it
                     var error = 'Skipping bad test: ' + test.url + ': we thought it was running!';
                     hub.emit(hub.LOG, hub.ERROR, error);
-                    common.addTestOutput(cache, test, error);
+                    common.badUnitTest(test);
                     cache.tests_to_run.splice(i, 1);
                     i--;
                     continue;
                 }
 
-                // Check if this is a Selenium test for this Selenium browser
-                //  if so then assign it to this browser
-                if (test.browser == req.session.seleniumUUID) {
-                    // The Selenium host
-                    test.browser = browser;
-                }
-
-                // This test already running in another browser
+                // This test is not for us
                 if (test.browser != browser) continue;
 
                 // Otherwise start running this test in capture mode!!
+                common.addTestOutput(test, "Shipping me off to my browser " + bName);
                 test.running = now;
                 testURL = test.url;
                 break;
@@ -87,7 +85,7 @@ module.exports = {
 
             if (testURL) {
                 res.end(JSON.stringify({ testLocation: testURL }));
-                hub.emit(hub.LOG, hub.INFO, "Sending test url: " + testURL);
+                hub.emit(hub.LOG, hub.INFO, "Sending test url: " + testURL + ' to ' + bName);
             } else {
                 // find all local tests
                 var prefix           = hub.config.testDir,
@@ -102,9 +100,9 @@ module.exports = {
                 ;
 
                 // No tests for me - end if we're a Selenium browser
-                if (req.session.seleniumUUID) {
+                if (req.session.selenium) {
                     // Selenium job all done!!
-                    hub.emit('seleniumTestsFinished');
+                    hub.emit('seleniumTestsFinished', browser);
                 }
 
                 // ONLY USE HTML FOR NOW UNTIL THE PAGE IS SMARTER...

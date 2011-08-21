@@ -38,21 +38,23 @@ module.exports = {
     Create:  function(hub) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path'),
-            sys = require('sys')
+            sys = require('sys'),
+            cache = hub.cache
         ;
 
         // Events I care about
         hub.addListener('action:seleniumStart', startSelenium);
 
-        function startSelenium(req, res, obj, testsLength) {
+        function startSelenium() {
             var soda = require('soda'), cb,
+                req = cache.req,
+                res = cache.res,
+                body = req.body,
                 browser = soda.createClient({
-                    url: 'http://' + req.headers.host,
-                    host: obj.sel_host,
-                    browser: obj.sel_browser
-                }),
-                TIME_TEST_THRESHOLD = 60,   // Wait up to 60 seconds/test
-                maxWaitTime = TIME_TEST_THRESHOLD * (testsLength + 1)
+                    url: 'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host),
+                    host: body.sel_host,
+                    browser: body.sel_browser
+                })
             ;
 
             // Give Selenium 1000 minutes to finish - should be good - 16 hours baby!
@@ -62,26 +64,41 @@ module.exports = {
             });
 
             // called when all Selenium tests are complete for this browser
-            cb = function() {
-                    browser.testComplete(function(err) {
-                        hub.emit('action:seleniumDone', err);
-                    });
-                };
+            //   && keep track of requesting client for debug messages back...
+            cache.connections[body.uuid] = res; // our link back to the requesting client for status messages
+
+            // Callback for when the Selenium session is done
+            cb = function(err) {
+                if (!err) {
+                    browser.chain.testComplete().end(function(err) {
+                            delete cache.connections[body.uuid]; // done with status updates
+                            hub.emit('action:seleniumDone', err);
+                        });
+                } else {
+                    hub.emit('action:seleniumDone', err);
+                }
+            };
             cb = hub.once('seleniumTestsFinished', cb);
 
             browser.
                 chain.
                 session().
-                open('/?selenium=' + obj.uuid,  function(err, body, req) { obj.seleniumID = browser.sid }).
-                waitForPageToLoad(60000).
+                open('/?selenium=' + body.uuid,  function(err, body, req) { body.seleniumID = browser.sid }).
+                waitForPageToLoad(10000).
                 end(function(err) {
                     if (err) {
                         var msg = 'Error starting/waiting for Selenium page to load: ' + err;
-                        hub.emit(hub.LOG, hub.ERROR, msg);
-                        res.end(msg);
                         hub.emit('seleniumTestsFinished', err);
                     } else {
-                        hub.emit(hub.LOG, hub.INFO, "Selenium a gogo!");
+                        hub.emit(hub.LOG, hub.INFO, "Selenium up and running!");
+                        // If this is one of the tests that are going to run in thie
+                        //  Selenium session, tag it with the Selenium token
+                        cache.tests_to_run.forEach(function(test) {
+                            if (test.browser === body.uuid) {
+                                test.seleniumID = body.seleniumID;
+                            }
+                        });
+
                     }
                 });
         }

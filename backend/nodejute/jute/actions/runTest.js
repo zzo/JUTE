@@ -37,24 +37,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path');
+        var path = require('path'),
+            cache = hub.cache;
 
         // Events I care about
         hub.addListener('action:run_test', runTest);
 
-        function runTest(req, res, cache) {
-            var uuid   = require('node-uuid'),
+        function runTest() {
+            var uuid    = require('node-uuid'),
                 path    = require('path'),
                 fs      = require('fs'),
-                obj     = req.body,
+                obj     = cache.req.body,
                 sys     = require('sys'),
                 tests, multipleFromUI = false,
                 capture = false,
                 exec    = require('child_process').exec,
-                errors  = []
+                errors  = [],
+                res     = cache.res
             ;
 
-            console.log(sys.inspect(obj));
+            hub.emit(hub.LOG, hub.INFO, sys.inspect(obj));
             if (obj.test) {
                 // 'run multiple' from UI
                 if (typeof obj.test == 'object') {
@@ -102,7 +104,8 @@ module.exports = {
                     test_obj = {
                         running: 0,
                         url:     path.join('/', hub.config.testDirWeb, test),
-                        output: ''
+                        output: '',
+                        sendOutput: obj.send_output
                     };
 
                 if (test.match(/\.js/)) {
@@ -116,7 +119,11 @@ module.exports = {
                         }
                     });
                 } else if (obj.sel_host) {
-                    // A Selenium Test! - meaning anyone can run it
+                    // A Selenium Test!
+
+                    // keep this around
+                    test_obj.sel_host = obj.sel_host;
+
                     if (obj.send_output) {
                         test_obj.sendOutput = 1;
                     }
@@ -128,16 +135,16 @@ module.exports = {
                     //  this is how we keep track
                     obj.uuid = test_obj.browser = seleniumUUID;
 
-                    common.addTestOutput(cache, test_obj, 'Selenium test');
+                    common.addTestOutput(test_obj, 'Selenium test');
 
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
                 } else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
-                        test_obj.browser = req.session.uuid;
+                        test_obj.browser = cache.req.session.uuid;
 
-                        common.addTestOutput(cache, test_obj, 'Multiple in this browser test');
+                        common.addTestOutput(test_obj, 'Multiple in this browser test');
 
                         cache.tests_to_run.push(test_obj);
                         pushed = true;
@@ -145,29 +152,23 @@ module.exports = {
                         // Send to each test to each captured browser
                         for (var browser in cache.browsers) {
                             test_obj.browser = browser;
-                            common.addTestOutput(cache, test_obj, 'Capture test');
+                            common.addTestOutput(test_obj, 'Capture test');
                             cache.tests_to_run.push(test_obj);
                             pushed = true;
                         }
                     }
                 }
 
-                common.addTestOutput(cache, test_obj, sys.inspect(test_obj));
+                common.addTestOutput(test_obj, sys.inspect(test_obj));
             }
 
             if (pushed) {
-                cache[obj.uuid] = res; // our link back to the requesting client for status messages
                 if (obj.sel_host) {
-                    if (obj.send_output) {
-                        res.write("Opening " + obj.sel_browser + " on Selenium host " + obj.sel_host);
-                    }
-
-                    // Start up Selenium & Listen for results
+                    // Start up for a Selenium browser & Listen for results
                     hub.once('action:seleniumDone', function(err) {
-                        delete cache[obj.uuid]; // done with status updates
                         if (err) {
                             hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests: ' + err);
-                            res.end(err);
+                            res.end("" + err);
                         } else {
                             hub.once('action:checkedResults', function(results) {
                                 res.end('Final Selenium Results: ' + JSON.stringify(results));
@@ -176,7 +177,7 @@ module.exports = {
                         }
                     });
 
-                    hub.emit('action:seleniumStart', req, res, obj, tests.length);
+                    hub.emit('action:seleniumStart');
                 } else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {
@@ -196,7 +197,7 @@ module.exports = {
                 }
             } else {
                 hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
-                response.statusCode = 412; // Ye Olde Failed Precondition
+                res.statusCode = 412; // Ye Olde Failed Precondition
                 res.end('No browsers listening!!  Test(s) not added!');
             }
         }

@@ -35,9 +35,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub, cache) {
+    Create:  function(hub) {
+        var cache = hub.cache;
         return {
-            browserName: function(req) {
+            browserName: function() {
+                var req = cache.req;
                 return [req.headers['user-agent'], req.connection.remoteAddress].join('---');
             },
 
@@ -93,8 +95,10 @@ module.exports = {
                 return file.match(/failures="[1-9]/);
             },
             takeSeleniumSnapshot: function(test, filename) {
-                var b = soda = require('soda'),i
-                    soda.createClient({ host: test.sel_host });
+                var soda = require('soda'), i
+                    b = soda.createClient({ host: test.sel_host });
+
+                if (!test.seleniumID) return;
 
                 b.sid = test.seleniumID;
 
@@ -103,18 +107,25 @@ module.exports = {
                     if (!err) {
                         b.windowFocus(function(err, body, req) {
                             if (!err) {
-                                b.command('captureScreenshotToString', null, function(err, body, res) {
+                                b.command('captureScreenshotToString', [], function(err, body, res) {
                                     if (!err) {
                                         var bb = new Buffer(body, 'base64');
                                         fs.writeFileSync(filename, bb, 0, bb.length);
+                                        this.addTestOutput(test, "Took snapshot: " + filename);
+                                    } else {
+                                        hub.emit(hub.log, hub.ERROR, 'SNAP ERROR: ' + err);
                                     }
                                 });
+                            } else {
+                                hub.emit(hub.log, hub.ERROR, 'FOCUS ERROR: ' + err);
                             }
                         });
+                    } else {
+                        hub.emit(hub.log, hub.ERROR, 'MAX ERROR: ' + err);
                     }
                 });
             },
-            addTestOutput: function(cache, test, msg) {
+            addTestOutput: function(test, msg) {
                 var lines = msg.split(/\n/),
                     now = new Date(),
                     format;
@@ -126,10 +137,30 @@ module.exports = {
 
                 if (test.sendOutput) {
                     // do something smart
-                    if (cache[test.browser]) {
-                        cache[test.browser].write(msg);
+                    if (cache.connections[test.browser]) {
+                        cache.connections[test.browser].write(msg);
                     }
                 }
+            },
+            badUnitTest: function(test) {
+                // Dump a FAILED XML file
+                // Use test file name as the NAME of this test (vs. component name from test itself)
+                var parts = test.url.split('/');
+                var name  = parts.pop();
+                name = name.replace(/\..*$/, '');   // get rid of suffix
+                var names = this.makeSaneNames(this.browserName());
+                var err = '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="BROWSER" tests="0" failures="1" time="0">Test Timed Out: Most likely a Javascript parsing error - try loading URL in your browser</testsuite></testsuites>',
+                err = err.replace('BROWSER', names[1]);
+                err = err.replace('URL', test.url);
+                var params  = { results: err, name: name };
+                var msg = "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")";
+
+                hub.emit(hub.log, hub.ERROR,  msg);
+                this.addTestOutput(test, msg);
+
+                this.dumpFile(params, 'results', names[0] + '-test.xml', name);
+                this.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);
+
             }
         };
     }

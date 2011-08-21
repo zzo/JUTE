@@ -53,7 +53,8 @@ Create:  function(hub) {
                 java:           '',
                 logFile:        '/tmp/jute.log',
                 logFormat:      '',
-                testRegex:      '*.htm*'
+                testRegex:      '*.htm*',
+                host:           ''
             },
             exec = require('child_process').exec,
             fs   = require('fs');

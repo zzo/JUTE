@@ -41,9 +41,9 @@ module.exports = {
         // Events I care about
         hub.addListener('action:clear_tests', clearTests);
 
-        function clearTests(req, res, cache) {
-            cache.tests_to_run = [];
-            res.end('OK');
+        function clearTests() {
+            hub.cache.tests_to_run = [];
+            hub.cache.res.end('OK');
         }
     }
 };

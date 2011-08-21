@@ -37,16 +37,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub, common, glob) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path');
+        var path = require('path'),
+            cache = hub.cache;
 
         // Events I care about
         hub.addListener('action:checkResults', checkResults);
 
-        hub.addListener('action:status', function(req, res, cache) {
+        hub.addListener('action:status', function() {
             hub.once('action:checkedResults', function(results) {
-                results.current_status = cache;
+                results.current_status  = { browsers: cache.browsers, tests_to_run: cache.tests_to_run };
                 results.config = hub.config;
-                res.end(JSON.stringify(results));
+                cache.res.end(JSON.stringify(results));
             });
             hub.emit('action:checkResults');
         });

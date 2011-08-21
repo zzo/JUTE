@@ -35,30 +35,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub, common) {
+    Create:  function(hub, common, glob) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var TEST_TIME_THRESHOLD = 60000,    // 60 seconds to wait before declaring test dead
             BROWSER_TIME_THRESHOLD = 20000, // Delete a captured browser after it has been gone for this long - 20 seconds
-            ERROR = '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="BROWSER" tests="0" failures="1" time="0">Test Timed Out: Most likely a Javascript parsing error - try loading URL in your browser</testsuite></testsuites>',
-            path = require('path')
+            path = require('path'),
+            cache = hub.cache
         ;
 
         // Events I care about
         hub.addListener('action:prune', prune);
 
-        function prune(doing_what, req, res, cache) {
+        function prune(doing_what) {
             var redirect;
+
             if (doing_what != 'status') {
-                prune_browsers(req, cache);
-                redirect = prune_tests(doing_what, req, res, cache);
+                prune_browsers();
+                redirect = prune_tests(doing_what);
                 hub.emit('pruneDone', redirect);
             }
         }
 
-        function prune_tests(doing_what, req, res, cache) {
+        function prune_tests(doing_what) {
             var now = new Date().getTime(),
-                browser = req.session.uuid, test,
-                timeStarted;
+                browser = cache.req.session.uuid, test,
+                timeStarted
+            ;
 
             for (var i = 0; i< cache.tests_to_run.length; i++) {
                 test = cache.tests_to_run[i];
@@ -69,36 +71,22 @@ module.exports = {
                         var msg = "Test running for too long - killing it";
 
                         hub.emit(hub.LOG, hub.ERROR, msg);
-                        common.addTestOutput(cache, test, msg);
+                        common.addTestOutput(test, msg);
 
                         cache.tests_to_run.splice(i, 1);
 
+                        common.badUnitTest(test);
 
-                        // Dump a FAILED XML file
-                        // Use test file name as the NAME of this test (vs. component name from test itself)
-                        var parts = test.url.split('/');
-                        var name  = parts.pop();
-                        name = name.replace(/\..*$/, '');   // get rid of suffix
-                        var names = common.makeSaneNames(common.browserName(req));
-                        var err = ERROR;
-                        err = err.replace('BROWSER', names[1]);
-                        err = err.replace('URL', test.url);
-                        var params  = { results: err, name: name };
-                        var msg = "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")";
-
-                        hub.emit(hub.log, hub.ERROR,  msg);
-                        common.addTestOutput(cache, test, msg);
-
-                        common.dumpFile(params, 'results', names[0] + '-test.xml', name);
-                        common.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);
-
+                        /*
                         if (cache.browsers[browser]) {
                             cache.browsers[browser].heart_beat = now;
                             cache.browsers[browser].get_test   = now;
                             return 1;   //Redirect!
                         }
+                        */
                     }
                 } else {
+                    /*
                     // make sure browser is still requesting tests
                    if (cache.browsers[browser]) {
                         var last_got_test = cache.browsers[browser].get_test;
@@ -107,32 +95,33 @@ module.exports = {
                             return 1;  // Redirect!!
                         }
                    }
+                   */
                 }
             }
         }
 
-        function prune_browsers(req, cache) {
-            var now = new Date().getTime(), me = req.session.uuid;
+        function prune_browsers() {
+            var now = new Date().getTime(), me = cache.req.session.uuid,
+                sys = require('sys');
 
-            if (typeof cache.browsers == 'object') {
-                for (browser in cache.browsers) {
-                    if (browser == me) continue;
+            for (browser in cache.browsers) {
+                if (browser == me) continue;
 
-                    var b_time = cache.browsers[browser].heart_beat;
-                    if (now - b_time > BROWSER_TIME_THRESHOLD) {
-                        hub.emit(hub.LOG, hub.ERROR,  "We lost browser " + cache.browsers[browser].name);
-                        delete cache.browsers[browser];
-                        // take it out of ay tests it's supposed to be running
-                        for (var i = 0; i < cache.tests_to_run.length; i++) {
-                                var test = cache.tests_to_run[i];
-                                if (test.browser == browser) {
-                                    // blow this test out!
-                                    hub.emit(hub.LOG, hub.ERROR,  "Deleting this test that was part of blow away browser: " + sys.inspect(test));
-                                    cache.tests_to_run.splice(i, 1);
-                                    i--; // fake a perl 'redo'!!  Otherwise we might skip over something!
-                                }
+                var b_time = cache.browsers[browser].heart_beat;
+                if (now - b_time > BROWSER_TIME_THRESHOLD) {
+                    hub.emit(hub.LOG, hub.ERROR,  "We lost browser " + cache.browsers[browser].name);
+                    delete cache.browsers[browser];
+                    // take it out of ay tests it's supposed to be running
+                    for (var i = 0; i < cache.tests_to_run.length; i++) {
+                            var test = cache.tests_to_run[i];
+                            if (test.browser == browser) {
+                                // blow this test out!
+                                hub.emit(hub.LOG, hub.ERROR,  "Deleting this test that was part of lost browser: " + sys.inspect(test));
+                                cache.tests_to_run.splice(i, 1);
+                                i--; // fake a perl 'redo'!!  Otherwise we might skip over something!
+                                common.badUnitTest(test);
                             }
-                    }
+                        }
                 }
             }
         }

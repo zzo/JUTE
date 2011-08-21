@@ -54,29 +54,30 @@ Create:  function(hub) {
             uuid     = require('node-uuid');
 
         hub.emit(hub.LOG, hub.INFO, "Running as " + process.getuid() + '/' + process.getgid());
-        hub.emit(hub.LOG, hub.INFO, "Connect at http://" + os.hostname() + ':' + hub.config.port + '/');
+        hub.emit(hub.LOG, hub.INFO, "Connect at http://" + (hub.config.host || os.hostname()) + ':' + hub.config.port + '/');
 
         connect(
           sessions({secret: 'jute rox', timeout: 365 * 1000 * 60 * 60 * 24 })
         , connect.favicon()
         , connect.query()
+        , connect.bodyParser()
         , function(req, res, next) {
             // Make sure we have a session UUID
+            //  maybe even from a selenium host
             var sess = req.session;
             if (!sess) sess = req.session = {};
-            if (!sess.uuid) sess.uuid = uuid();
+            if (!sess.uuid) {
+                sess.uuid = req.query.selenium || uuid();
+                sess.selenium = req.query.selenium ? true: false;
+            }
+
+            // stash of req/res
+            hub.cache.req = req;
+            hub.cache.res = res;
+
             next();
         }
         , connect.logger(hub.config.logFormat)
-        , function(req, res, next) {
-            // This is a Selenium browser - set that fact in its session so it will
-            //  grab the right test(s)
-            if (req.query.selenium) {
-                req.session.seleniumUUID = req.query.selenium;
-            }
-            next();
-        }
-        , connect.bodyParser()
         , connect.router(function(app){
             app.get('/jute_docs/:file', function(req, res, next){
                 // Just one of JUTE's static files
@@ -84,7 +85,7 @@ Create:  function(hub) {
             });
             app.all(/\/jute\/_([^\?]+)/, function(req, res, next){
                 // A JUTE action - GET
-                hub.emit('action', req.params[0], req, res);
+                hub.emit('action', req.params[0]);//, req, res);
             });
             app.get('/', function(req, res, next){
                 // Serve from '/'

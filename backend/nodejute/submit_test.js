@@ -101,6 +101,11 @@ if (args.v8 && args.sel_host) {
 sys.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
+var options = {
+    host: args.host,
+    port: args.port
+};
+
 eventHub.on('tests', function(tests) {
     if (tests) {
         if (args.v8) {
@@ -149,7 +154,13 @@ eventHub.on('tests', function(tests) {
 
             // POST AWAY!
             var req = http.request(options, function(res) {
-                console.log('Status Response from JUTE: ' + res.statusCode);
+
+                if (res.statusCode == 200) {
+                    console.log('JUTE Likey');
+                } else {
+                    console.log('JUTE Displeased');
+                }
+
                 res.setEncoding('utf8');
                 res.on('data', function (chunk) {
                     console.log(chunk);
@@ -235,11 +246,6 @@ if (args.test === true) {
 
     eventHub.emit('tests', args.test);
 }
-
-var options = {
-    host: args.host,
-    port: args.port
-};
 
 if (args.clear_results) {
     console.log('Clearing all previous results...');

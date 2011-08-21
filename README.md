@@ -371,25 +371,19 @@ Note you must use YUI3 version 3.1.1+.
 Code Requirements
 ------------------
 
-To utilize JUTE you need only to make 1 small addition to your test Javascript file.  Look [at the client-side examples](https://github.com/zzo/JUTE/tree/master/backend/nodejute/examples/clientSide) for a more thorough treatment.
+To utilize JUTE you DO NOT ANY CHANGES to your test YUI3-based Javascript test files!  Look [at the client-side examples](https://github.com/zzo/JUTE/tree/master/backend/nodejute/examples/clientSide) to see a standard YUI3 unit test.
 
-### Javascript Requirements
-
-#### Add the 'gallery-jute' module
-
-Your Javascript test file must 'use' the 'gallery-jute' module:
-
-    YUI({
-        logInclude: { TestRunner: true },
-        gallery:    'gallery-2011.06.22-20-13'
-    }).use('gallery-jute', 'toolbar', function(Y) {
-
-
-#### Require the YUI3 seed in your test HTML file
+## Require the YUI3 seed (3.1+) in your test HTML file
 
     &lt;script src="http://yui.yahooapis.com/3.3.0/build/yui/yui-min.js" charset="utf-8">&lt;/script>
 
-#### Write your unit tests!
+## 'Tag' the file(s) you are testing to be code coverage'd
+
+    &lt;script src="toolbar.js?coverage=1" charset="utf-8">&lt;/script>
+
+Here we are testing code in the 'toolbar.js' file - and telling JUTE that IF the test is run with code coverage turned on to generate code coverage infomation for this file.  You can have multiple files being tested that you want code coverage generated for - just tack the '?coverage=1' querystring onto them and JUTE will hook you up.
+
+## Write your unit tests!
 
 V8 Caveats
 -----------
@@ -412,7 +406,7 @@ Here is a Javascript test file for that module using JUTE:
 
     YUI({
         logInclude: { TestRunner: true },
-    }).use('jute', function(Y) {
+    }).use('test', function(Y) {
 
         var suite  = new Y.Test.Suite('spiffy'),
             spiffy = require('./spiffy', true), // 'true' here means do code coverae on it!
@@ -426,7 +420,7 @@ Here is a Javascript test file for that module using JUTE:
         }));
 
         Y.Test.Runner.add(suite);
-        Y.UnitTest.go();
+        Y.Test.Runner.run();
     });
 
 SNAZZY!!!  Run it like this:
@@ -444,8 +438,6 @@ Things to Note
 
 * We told 'jute_submit_test' to load a JAVASCRIPT file, NOT an HTML one
 * YUI3 was automatically imported for us
-* YUI3 'test' module  was automatically loaded and imported for us
-* YUI3 'jute' module  was automatically loaded for us BUT WE HAVE to 'use' it!
 * Look at the the 'require' statement where we imported our 'spiffy' module - note it has an extra parameter!!!!  If this parameter is 'true' then JUTE will generate code coverage for it - exactly similar to adding the '?coverage=1' query string in your client-side HTML file.
 
 Writing unit tests for NodeJS with code coverage has never been easier!!!

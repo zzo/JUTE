@@ -51,7 +51,6 @@ Create:  function(hub) {
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '',
-                logFile:        '/tmp/jute.log',
                 logFormat:      '',
                 testRegex:      '.html$',
                 host:           ''

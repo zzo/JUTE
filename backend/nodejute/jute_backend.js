@@ -34,10 +34,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// npm npm start jute -g 2&>1 > LOGFILE &
 var sys       = require('sys'),
     fs        = require("fs"),
     events    = require("events"),
-    daemon    = require('daemon'),
+    daemon    = require('./third_party/node-daemon/lib/daemon'),
     configure = require('./jute/configure'),
     server    = require('./jute/server'),
     actions   = require('./jute/actions'),
@@ -46,19 +47,7 @@ var sys       = require('sys'),
     pidFile   = '/tmp/jute.pid'
     ;
 
-// Stop
-switch(process.argv[2]) {
-  case "stop":
-
-    try {
-        process.kill(parseInt(fs.readFileSync(pidFile)));
-        fs.unlinkSync(pidFile)
-    } catch(e) { 
-        console.error('Error stopping JUTE - is it already stopped?');
-    }
-
-    process.exit(0);
-}
+    daemon.parse(process.argv[2]);
 
 /**
  * Create our event hub
@@ -104,19 +93,15 @@ eventHub.on('configureDone', function() {
     // Note config gets stashed in eventHub (eventHub.config)
     eventHub.on('actionsLoaded', function() {
 
-        fs.open(eventHub.config.logFile, 'w+', function (err, fd) {
-            console.log('Looking for unit tests in: ' + eventHub.config.testDir);
-            console.log('Ouptut going to: ' + eventHub.config.outputDir);
-            daemon.start(fd);
-            daemon.lock(pidFile);
+        console.log('Looking for unit tests in: ' + eventHub.config.testDir);
+        console.log('Ouptut going to: ' + eventHub.config.outputDir);
 
-            // Dump the config file for jute_v8 and submit_tests
-            console.log('DMPING: ' + JSON.stringify(eventHub.config));
-            fs.writeFile('/tmp/jute.config', JSON.stringify(eventHub.config));
+        // Dump the config file for jute_v8 and submit_tests
+        console.log('DMPING: ' + JSON.stringify(eventHub.config));
+        fs.writeFile('/tmp/jute.config', JSON.stringify(eventHub.config));
 
-            // Fire up server
-            eventHub.emit('startServer');
-        });
+        // Fire up server
+        eventHub.emit('startServer');
     });
     eventHub.emit('loadActions');
 });

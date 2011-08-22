@@ -31,7 +31,6 @@
       , "cookie-sessions" : ""
       , "jsdom": ""
       , "mime" : ""
-      , "daemon" : ""
       , "optimist" : ""
   },
   "config" : {

@@ -85,20 +85,18 @@ Create:  function(hub) {
         config.testDirWeb   = config.testDir;
         config.testDir      = path.join(config.docRoot, config.testDir);
 
-        hub.on('serverStarted', function() {
-            // Set process uid/gid
-            try {
-                process.setgid(config.gid);
-                process.setuid(config.uid);
-            } catch(e) {
-                hub.emit(hub.LOG, hub.ERROR, "** Unable to set uid/gid for JUTE process: " + e + " **");
-                hub.emit(hub.LOG, hub.ERROR, "Change these values (or run with 'sudo') using: ");
-                hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:user <user>");
-                hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:grouop <grouop>");
-                hub.emit('configureError', { name: 'uid/gid', value: [ config.gid, config.uid ], error: e } );
-                process.exit(1);
-            }
-        });
+        // Set process uid/gid
+        try {
+            process.setgid(config.gid);
+            process.setuid(config.uid);
+        } catch(e) {
+            hub.emit(hub.LOG, hub.ERROR, "** Unable to set uid/gid for JUTE process: " + e + " **");
+            hub.emit(hub.LOG, hub.ERROR, "Change these values (or run with 'sudo') using: ");
+            hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:uid <user>");
+            hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:gid <group>");
+            hub.emit('configureError', { name: 'uid/gid', value: [ config.gid, config.uid ], error: e } );
+            process.exit(1);
+        }
 
         // Find Java executable
         if (process.env.JAVA_HOME) {

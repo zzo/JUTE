@@ -44,8 +44,6 @@ Create:  function(hub) {
     function configure() {
 
         var config = {
-                uid:            process.getuid(),
-                gid:            process.getgid(),
                 port:           8080,
                 docRoot:        '/var/www',
                 testDir:        'test/',
@@ -85,19 +83,6 @@ Create:  function(hub) {
         config.testDirWeb   = config.testDir;
         config.testDir      = path.join(config.docRoot, config.testDir);
 
-        // Set process uid/gid
-        try {
-            process.setgid(config.gid);
-            process.setuid(config.uid);
-        } catch(e) {
-            hub.emit(hub.LOG, hub.ERROR, "** Unable to set uid/gid for JUTE process: " + e + " **");
-            hub.emit(hub.LOG, hub.ERROR, "Change these values (or run with 'sudo') using: ");
-            hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:uid <user>");
-            hub.emit(hub.LOG, hub.ERROR, "% npm config set jute:gid <group>");
-            hub.emit('configureError', { name: 'uid/gid', value: [ config.gid, config.uid ], error: e } );
-            process.exit(1);
-        }
-
         // Find Java executable
         if (process.env.JAVA_HOME) {
             config.java = path.join(process.env.JAVA_HOME, 'bin', 'java');
@@ -129,8 +114,7 @@ Create:  function(hub) {
                 hub.emit(hub.LOG, hub.ERROR, "** Output directory '" + config.outputDir + "' not writable or does not exist!! **");
                 hub.emit(hub.LOG, hub.ERROR, "Note outputDir is RELATIVE to docRoot!!");
                 hub.emit(hub.LOG, hub.ERROR, "Change output dir using: % npm conifg set jute:outputDir <dir>");
-                hub.emit(hub.LOG, hub.ERROR, "Or make " + config.outputDir + ' writable by user ' + config.user);
-                hub.emit(hub.LOG, hub.ERROR, "Or change the user JUTE runs as: % npm config set jute:user <user>");
+                hub.emit(hub.LOG, hub.ERROR, "Or make " + config.outputDir + ' writable by user/group running jute');
                 hub.emit('configureError', { name: 'outputDir', value: config.outputDir, error: err } );
                 return;
             }

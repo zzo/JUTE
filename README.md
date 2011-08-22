@@ -44,8 +44,6 @@ Will set the port the JUTE webserver listens on to 80.
 
 Here are some important JUTE configuration variables and their defaults:
 
-                uid:            process.getuid(),
-                gid:            process.getgid(),
                 port:           8080,
                 docRoot:        '/var/www/',
                 testDir:        'test/',
@@ -62,8 +60,6 @@ Like:
 
 What the variables mean:
 
-* uid: UID/Username JUTE process should run as
-* gid: GID/Groupname JUTE process should run as
 * port: Port JUTE should listen on
 * docRoot: Your document root
 * testDir: A directory RELATIVE to docRoot where all your Javascript test files live
@@ -83,6 +79,8 @@ Start JUTE
 That will dump output to STDOUT & JUTE does NOT self-daemonize SO in reality you probably really want something like:
 
     % nohup npm start jute -g 2>&1 > LOGFILE &
+
+The JUTE server is now running as YOU - keep that in mind if you want to listen on priviliedged ports...
 
 Connect to JUTE
 ---------------

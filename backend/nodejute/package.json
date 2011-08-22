@@ -39,7 +39,6 @@
     "testDir":  "test/",
     "outputDir": "output/",
     "java": "/usr/bin/java",
-    "logFile": "/tmp/jute.log",
     "testRegex": "*.htm*"
   }
 }

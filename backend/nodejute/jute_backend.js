@@ -72,16 +72,6 @@ eventHub.addListener(eventHub.LOG, function(sev, str) {
 
 });
 
-try {
-    fs.statSync(pidFile);
-    console.error('JUTE is either already running or died unexpectedly.');
-    console.error('If still running try % npm stop jute');
-    console.error('If JUTE is NOT running delete ' + pidFile);
-    process.exit(0);
-} catch(e) {
-    // this is good!!
-}
-
 // Get Party Started
 eventHub.on('configureError', function(obj) {
     eventHub.emit(eventHub.LOG, eventHub.ERROR, "Configuration error for " + obj.name + ': ' + obj.error);

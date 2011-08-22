@@ -51,7 +51,6 @@ Here are some important JUTE configuration variables and their defaults:
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
-                logFile:        '/tmp/jute.log',
 
 To set any of these do:
 
@@ -70,7 +69,6 @@ What the variables mean:
 * testDir: A directory RELATIVE to docRoot where all your Javascript test files live
 * outputDir: A directory REALTIVE to docRoot where JUTE will dump output (test results and code coverage information)
 * java: Location of 'java' executable
-* logFile: Where to dump logging info
 
 Install JUTE
 -------------
@@ -80,7 +78,11 @@ Install JUTE
 Start JUTE
 ----------
 
-    % npm start jute
+    % npm start jute -g
+
+That will dump output to STDOUT & JUTE does NOT self-daemonize SO in reality you probably really want something like:
+
+    % nohup npm start jute -g 2>&1 > LOGFILE &
 
 Connect to JUTE
 ---------------
@@ -125,9 +127,9 @@ Starting and Stopping JUTE
 
 JUTE is a standalone HTTP server. You control when JUTE is running
 
-    % npm start jute
-    % npm stop jute
-    % npm restart jute
+    % npm start jute -g
+    % npm stop jute -g
+    % npm restart jute -g
 
 JUTE Backends
 ==============

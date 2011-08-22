@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub, common, glob) {
+    Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path'),
             cache = hub.cache
@@ -86,14 +86,9 @@ module.exports = {
                 hub.emit(hub.LOG, hub.INFO, "Sending test url: " + testURL + ' to ' + bName);
             } else {
                 // find all local tests
-                var prefix           = hub.config.testDir,
-                    webPrefix        = hub.config.testDirWeb,
+                var find             = require('npm/lib/utils/find'),
+                    prefix           = hub.config.testDir,
                     local_test_files = hub.config.testRegex,
-                    full_find        = path.join(prefix, '**', local_test_files),
-                    full_find_js     = path.join(prefix, '**', 'test*.js'),
-                    matches_html     = glob.globSync(full_find),
-                    matches_js       = glob.globSync(full_find_js),
-                    matches          = matches_html.concat(matches_js),
                     data             = [];
                 ;
 
@@ -104,12 +99,13 @@ module.exports = {
                 }
 
                 // ONLY USE HTML FOR NOW UNTIL THE PAGE IS SMARTER...
-                matches_html.forEach(function(testFile) {
-                    testFile = testFile.replace(prefix, '');
-                    data.push({ test_url: testFile });
+                find(prefix, /.html?$/, function(err, matches_html) {
+                    matches_html.forEach(function(testFile) {
+                        testFile = testFile.replace(prefix, '');
+                        data.push({ test_url: testFile });
+                    });
+                    res.end(JSON.stringify({ availableTests: data, config: hub.config }));
                 });
-
-                res.end(JSON.stringify({ availableTests: data, config: hub.config }));
             }
         }
     }

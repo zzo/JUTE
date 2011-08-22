@@ -41,12 +41,13 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
         .alias('sh', 'sel_host')
         .alias('sb', 'sel_browser')
+        .alias('l', 'load')
         .alias('s', 'status')
         .alias('sn', 'snapshot')
         .alias('c', 'clear_results')
@@ -57,6 +58,7 @@ var config = (require('./getConfig'))(),
         .default('wait', false)
         .default('v8', false)
         .default('snapshot', false)
+        .default('load', false)
         .default('clear_results', false)
         .default('sel_browser', '*firefox')
         .describe('test', 'Test file to run - relative to docRoot/testDir (npm set jute.testDir) - can specify multiple of these')
@@ -64,6 +66,7 @@ var config = (require('./getConfig'))(),
         .describe('port', 'Port of JUTE server')
         .describe('sel_host', 'Hostname of Selenium RC or Grid Server (if not specified test(s) will run in all CURRENTLY captured browsers)')
         .describe('sel_browser', 'Selenium browser specification')
+        .describe('load', 'Load up tests but do not run them immediately')
         .describe('snapshot', 'Dump a snapshot at end of test (Selenium only!)')
         .describe('send_output', 'For Selenium tests ONLY - send status messages back while running')
         .describe('wait', 'Wait for captured tests to finish')
@@ -130,6 +133,9 @@ eventHub.on('tests', function(tests) {
         } else {
             // POST space separated list of tests
             juteArgs.tests = tests.join(' ');
+            if (args.load) {
+                juteArgs.load = 1;
+            }
 
             // Toss in Selenium stuff
             if (args.sel_host) {

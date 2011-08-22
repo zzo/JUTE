@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub, common, glob) {
+    Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path = require('path'),
             cache = hub.cache;
@@ -60,31 +60,52 @@ module.exports = {
 
             // Find & parse all results
             var components = fs.readdirSync(baseDir), ret = { current_results: {} };
-            components.forEach(function(component) {
-                var testFiles, testResults = [];
 
-                component     = path.basename(component);
-                debugFiles    = glob.globSync(path.join(baseDir, component, '*.txt'));
-                snapshotFiles = glob.globSync(path.join(baseDir, component, '*.png'));
-
-                testFiles = glob.globSync(path.join(baseDir, component, '*.xml'));
-                testFiles.forEach(function(testFile) {
-                    if (common.failedTests(testFile)) {
-                        testResults.push({ name: path.basename(testFile), failed: 1 });
-                    } else {
-                        testResults.push({ name: path.basename(testFile), failed: 0 });
-                    }
+            if (components.length) {
+                components.forEach(function(component) {
+                    doComp(ret, component, function() {
+                        if (Object.keys(ret.current_results).length == components.length) {
+                            hub.emit('action:checkedResults', ret);
+                        }
+                    });
                 });
+            } else {
+                hub.emit('action:checkedResults', ret);
+            }
+        }
 
-                var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
-                ret.current_results[component] = {};
-                ret.current_results[component].test_results  = testResults;
-                ret.current_results[component].coverage      = coverage;
-                ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
-                ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+        function doComp(ret, component, cb) {
+            var testFiles, testResults = [], compDir,
+                find    = require('npm/lib/utils/find'),
+                baseDir = hub.config.outputDir;
+
+            component = path.basename(component);
+            compDir   = path.join(baseDir, component);
+
+            // Find all the various output files
+            find(compDir, /\.txt$/, function(err, debugFiles) {
+                find(compDir, /\.png$/, function(err, snapshotFiles) {
+                    find(compDir, /\.xml$/, function(err, testFiles) {
+
+                        // Determined if failed or not
+                        testFiles.forEach(function(testFile) {
+                            if (common.failedTests(testFile)) {
+                                testResults.push({ name: path.basename(testFile), failed: 1 });
+                            } else {
+                                testResults.push({ name: path.basename(testFile), failed: 0 });
+                            }
+                        });
+
+                        var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
+                        ret.current_results[component] = {};
+                        ret.current_results[component].test_results  = testResults;
+                        ret.current_results[component].coverage      = coverage;
+                        ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
+                        ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+                        cb();
+                    });
+                });
             });
-
-            hub.emit('action:checkedResults', ret);
         }
     }
 };

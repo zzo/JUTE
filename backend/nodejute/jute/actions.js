@@ -38,17 +38,29 @@ module.exports = {
 
     Create: function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var glob = require('glob'),
-            path = require('path'),
-            actions = glob.globSync(path.join(__dirname, 'actions/', '*.js'));
+        var path = require('path'),
+            find = require('npm/lib/utils/find');
 
-        // Suck in all available actions
-        actions.forEach(function(action) {
-            var act = require(action);
-            act.Create && act.Create(hub, common, glob);
-        });
+        hub.on('loadActions', loadActions);
+        hub.on('action', doActions);
 
-        hub.addListener('action', function(action, req, res) {
+        function loadActions() {
+            find(path.join(__dirname, 'actions'), /\.js$/, function(err, actions) {
+                // Suck in all available actions
+                if (!err) {
+                    actions.forEach(function(action) {
+                        var act = require(action);
+                        act.Create && act.Create(hub, common);
+                    });
+                    hub.emit('actionsLoaded');
+                } else {
+                    hub.emit(hub.LOG, hub.ERROR, "Error loading actions: " + err);
+                    process.exit(1);
+                }
+            });
+        }
+
+        function doActions(action, req, res) {
             hub.once('pruneDone', function(redirect) {
                 if (redirect) {
                     // done
@@ -60,7 +72,7 @@ module.exports = {
 
             });
             hub.emit('action:prune', action, req, res);
-        });
+        }
     }
 };
 

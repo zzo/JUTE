@@ -69,10 +69,9 @@ var eventHub = new eventHubF();
 // Prime cache
 eventHub.cache = { browsers: {}, tests_to_run: [], connections: {} };
 
-// Start up base modules
 configure.Create(eventHub);
-server.Create(eventHub);
 actions.Create(eventHub, common.Create(eventHub));
+server.Create(eventHub);
 
 // Some app-wide helpers
 eventHub.addListener(eventHub.LOG, function(sev, str) {
@@ -103,19 +102,23 @@ eventHub.on('configureError', function(obj) {
 
 eventHub.on('configureDone', function() {
     // Note config gets stashed in eventHub (eventHub.config)
-    fs.open(eventHub.config.logFile, 'w+', function (err, fd) {
-        console.log('Looking for unit tests in: ' + eventHub.config.testDir);
-        console.log('Ouptut going to: ' + eventHub.config.outputDir);
-        daemon.start(fd);
-        daemon.lock(pidFile);
+    eventHub.on('actionsLoaded', function() {
 
-        // Dump the config file for jute_v8 and submit_tests
-        console.log('DMPING: ' + JSON.stringify(eventHub.config));
-        fs.writeFile('/tmp/jute.config', JSON.stringify(eventHub.config));
+        fs.open(eventHub.config.logFile, 'w+', function (err, fd) {
+            console.log('Looking for unit tests in: ' + eventHub.config.testDir);
+            console.log('Ouptut going to: ' + eventHub.config.outputDir);
+            daemon.start(fd);
+            daemon.lock(pidFile);
 
-        // Fire up server
-        eventHub.emit('startServer');
+            // Dump the config file for jute_v8 and submit_tests
+            console.log('DMPING: ' + JSON.stringify(eventHub.config));
+            fs.writeFile('/tmp/jute.config', JSON.stringify(eventHub.config));
+
+            // Fire up server
+            eventHub.emit('startServer');
+        });
     });
+    eventHub.emit('loadActions');
 });
 eventHub.emit('configure');
 

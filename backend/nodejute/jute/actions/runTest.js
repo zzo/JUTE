@@ -42,6 +42,7 @@ module.exports = {
 
         // Events I care about
         hub.addListener('action:run_test', runTest);
+        hub.addListener('waitTestsDone', waitTests);
 
         function runTest(req, res) {
             var uuid    = require('node-uuid'),
@@ -89,7 +90,7 @@ module.exports = {
                 return;
             }
 
-            if (!Object.keys(cache.browsers).length && !obj.sel_host && capture) {
+            if (!Object.keys(cache.browsers).length && !obj.sel_host && capture && !obj.load) {
                 res.writeHead(412);
                 res.end("There are no currently captured browsers!");
                 return;
@@ -141,6 +142,7 @@ module.exports = {
                 } else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
+                        
                         test_obj.browser = req.session.uuid;
 
                         common.addTestOutput(test_obj, 'Multiple in this browser test');
@@ -149,11 +151,16 @@ module.exports = {
                         pushed = true;
                     } else {
                         // Send to each test to each captured browser
-                        for (var browser in cache.browsers) {
-                            test_obj.browser = browser;
-                            common.addTestOutput(test_obj, 'Capture test');
+                        pushed = true;
+                        if (!load) {
+                            for (var browser in cache.browsers) {
+                                test_obj.browser = browser;
+                                common.addTestOutput(test_obj, 'Capture test');
+                                cache.tests_to_run.push(test_obj);
+                            }
+                        } else {
+                            common.addTestOutput(test_obj, 'Loading this test for any browser');
                             cache.tests_to_run.push(test_obj);
-                            pushed = true;
                         }
                     }
                 }
@@ -175,8 +182,6 @@ module.exports = {
                             hub.emit('action:checkResults');
                         }
                     });
-
-                    hub.emit('action:seleniumStart', req, res);
                 } else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {
@@ -189,16 +194,34 @@ module.exports = {
                             res.write(v8Tests);
                         }
                         if (capture) {
-                            res.end('Added ' + (obj.test || obj.tests) + ' to capture tests');
+                            res.end('Added ' + (obj.test || obj.tests) + ' to capture/load tests');
                         }
 
                     }
                 }
             } else {
-                hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
-                res.statusCode = 412; // Ye Olde Failed Precondition
-                res.end('No browsers listening!!  Test(s) not added!');
+                if (obj.load) {
+                    if (obj.wait) {
+                        // wait for all tests to be done
+                        res.write('All tests loading and waiting for a browser');
+                        hub.once('testsDone', function(res) {
+                            delete cache.connections[obj.uuid]; // our link back to the requesting client for status messages
+                            res.end('All tests done!');
+                        });
+                        cache.connections[obj.uuid] = res; // our link back to the requesting client for status messages
+                        hub.emit('waitTestsDone', res);
+                    } else {
+                        res.end('All tests loading and waiting for a browser');
+                    }
+                } else {
+                    hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
+                    res.statusCode = 412; // Ye Olde Failed Precondition
+                    res.end('No browsers listening!!  Test(s) not added!');
+                }
             }
+        }
+
+        function waitTests(res) {
         }
     }
 };

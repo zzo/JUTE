@@ -101,7 +101,6 @@ module.exports = {
 
                 b.sid = test.seleniumID;
 
-                //b.chain.windowFocus().getEval("window.moveTo(1,0); window.resizeTo(screen.availWidth, screen.availHeight);").windowMaximize().end(function(err) {
                 b.chain.windowFocus().getEval("window.moveTo(1,0); window.resizeTo(screen.availWidth, screen.availHeight);").end(function(err) {
                     if (!err) {
                         b.command('captureScreenshotToString', [], function(err, body, res) {
@@ -109,6 +108,7 @@ module.exports = {
                                 var bb = new Buffer(body, 'base64');
                                 fs.writeFileSync(filename, bb, 0, bb.length);
                                 common.addTestOutput(test, "Took snapshot: " + filename);
+                                hub.emit(hub.LOG, hub.INFO, 'Took snapshot for: ' + test.url);
                             }
                             hub.emit('action:doneDone', err, test);
                         });
@@ -147,7 +147,7 @@ module.exports = {
                 var params  = { results: err, name: name };
                 var msg = "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")";
 
-                hub.emit(hub.log, hub.ERROR,  msg);
+                hub.emit(hub.LOG, hub.ERROR,  msg);
                 common.addTestOutput(test, msg);
 
                 common.dumpFile(params, 'results', names[0] + '-test.xml', name);

@@ -92,9 +92,9 @@ module.exports = {
                     // This is the test that just finished
                     hub.once('action:doneDone', function(err, test) {
                         if (err) {
-                            hub.emit(hub.log, hub.ERROR, err);
+                            hub.emit(hub.LOG, hub.ERROR, err);
                         } else {
-                            hub.emit(hub.log, hub.INFO, 'Test finished: ' + test.url);
+                            hub.emit(hub.LOG, hub.INFO, 'Test finished: ' + test.url);
                         }
                         common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
                         res.end('OK');
@@ -108,6 +108,7 @@ module.exports = {
                     // Take a snapshot & wait or we're done - always if 'snapshot' is set otherwise
                     //  only if a test fails
                     if ((!succeeded || test.snapshot) && req.session.selenium) {
+                        hub.emit(hub.LOG, hub.INFO, 'Taking a Selenium snapshot of: ' + test.url);
                         common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
                     } else {
                         hub.emit('action:doneDone', null, test);

@@ -43,9 +43,9 @@ module.exports = {
         // Events I care about
         hub.addListener('action:test_report', testReport);
 
-        function testReport() {
-            var req = cache.req, obj = req.body, succeeded = true,
-                names = common.makeSaneNames(common.browserName()),
+        function testReport(req, res) {
+            var obj = req.body, succeeded = true,
+                names = common.makeSaneNames(common.browserName(req)),
                 filename = names[0], pkgname = names[1],
                 now = new Date().getTime(), output = '',
                 exec = require('child_process').exec
@@ -90,24 +90,39 @@ module.exports = {
 
                 if (test.browser == req.session.uuid) {
                     // This is the test that just finished
-                    common.addTestOutput(test, output);
-                    if (test.snapshot && req.session.selenium) {
-                        common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
-                    }
+                    hub.once('action:doneDone', function(err, test) {
+                        if (err) {
+                            hub.emit(hub.log, hub.ERROR, err);
+                        } else {
+                            hub.emit(hub.log, hub.INFO, 'Test finished: ' + test.url);
+                        }
+                        common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
+                        res.end('OK');
+                    });
 
+                    // Clear this test out
+                    common.addTestOutput(test, output);
                     common.addTestOutput(test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
-                    common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
                     cache.tests_to_run.splice(i, 1);
+
+                    // Take a snapshot & wait or we're done - always if 'snapshot' is set otherwise
+                    //  only if a test fails
+                    if ((!succeeded || test.snapshot) && req.session.selenium) {
+                        common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + 'png');
+                    } else {
+                        hub.emit('action:doneDone', null, test);
+                    }
                     break;
                 }
             }
+
             if (!totalTests) {
                 // A single browser test
                 output += obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + "\n";
                 common.dumpFile({ output: output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
+                res.end('OK');
             }
 
-            cache.res.end('OK');
         }
     }
 };

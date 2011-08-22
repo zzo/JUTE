@@ -46,19 +46,19 @@ module.exports = {
         // Events I care about
         hub.addListener('action:prune', prune);
 
-        function prune(doing_what) {
+        function prune(doing_what, req) {
             var redirect;
 
             if (doing_what != 'status') {
-                prune_browsers();
-                redirect = prune_tests(doing_what);
+                prune_browsers(req);
+                redirect = prune_tests(doing_what, req);
                 hub.emit('pruneDone', redirect);
             }
         }
 
-        function prune_tests(doing_what) {
+        function prune_tests(doing_what, req) {
             var now = new Date().getTime(),
-                browser = cache.req.session.uuid, test,
+                browser = req.session.uuid, test,
                 timeStarted
             ;
 
@@ -75,33 +75,15 @@ module.exports = {
 
                         cache.tests_to_run.splice(i, 1);
 
-                        common.badUnitTest(test);
+                        common.badUnitTest(req, test);
 
-                        /*
-                        if (cache.browsers[browser]) {
-                            cache.browsers[browser].heart_beat = now;
-                            cache.browsers[browser].get_test   = now;
-                            return 1;   //Redirect!
-                        }
-                        */
                     }
-                } else {
-                    /*
-                    // make sure browser is still requesting tests
-                   if (cache.browsers[browser]) {
-                        var last_got_test = cache.browsers[browser].get_test;
-                        if (doing_what != 'get_test' && (now - last_got_test > TEST_TIME_THRESHOLD)) {
-                            hub.emit(hub.LOG, hub.ERROR, "Been too long since you've requested a test: " + browser + " - Kicking iframe...");
-                            return 1;  // Redirect!!
-                        }
-                   }
-                   */
                 }
             }
         }
 
-        function prune_browsers() {
-            var now = new Date().getTime(), me = cache.req.session.uuid,
+        function prune_browsers(req) {
+            var now = new Date().getTime(), me = req.session.uuid,
                 sys = require('sys');
 
             for (browser in cache.browsers) {
@@ -119,7 +101,7 @@ module.exports = {
                                 hub.emit(hub.LOG, hub.ERROR,  "Deleting this test that was part of lost browser: " + sys.inspect(test));
                                 cache.tests_to_run.splice(i, 1);
                                 i--; // fake a perl 'redo'!!  Otherwise we might skip over something!
-                                common.badUnitTest(test);
+                                common.badUnitTest(req, test);
                             }
                         }
                 }

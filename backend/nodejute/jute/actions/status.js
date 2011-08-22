@@ -43,11 +43,11 @@ module.exports = {
         // Events I care about
         hub.addListener('action:checkResults', checkResults);
 
-        hub.addListener('action:status', function() {
+        hub.addListener('action:status', function(req, res) {
             hub.once('action:checkedResults', function(results) {
                 results.current_status  = { browsers: cache.browsers, tests_to_run: cache.tests_to_run };
                 results.config = hub.config;
-                cache.res.end(JSON.stringify(results));
+                res.end(JSON.stringify(results));
             });
             hub.emit('action:checkResults');
         });

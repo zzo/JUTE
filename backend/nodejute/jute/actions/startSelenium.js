@@ -45,17 +45,22 @@ module.exports = {
         // Events I care about
         hub.addListener('action:seleniumStart', startSelenium);
 
-        function startSelenium() {
+        function startSelenium(req, res) {
             var soda = require('soda'), cb,
-                req = cache.req,
-                res = cache.res,
                 body = req.body,
+                browser
+            ;
+
+            try {
                 browser = soda.createClient({
                     url: 'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host),
                     host: body.sel_host,
                     browser: body.sel_browser
                 })
-            ;
+            } catch(e) {
+                hub.emit('action:seleniumDone', 'Cannot connect to Selenium server at ' + body.sel_host + ': ' + e);
+                return;
+            }
 
             // Give Selenium 1000 minutes to finish - should be good - 16 hours baby!
             req.socket.setTimeout(60000000, function() {
@@ -80,22 +85,23 @@ module.exports = {
             };
             cb = hub.once('seleniumTestsFinished', cb);
 
+            var oo;
             browser.
                 chain.
                 session().
-                open('/?selenium=' + body.uuid,  function(err, body, req) { body.seleniumID = browser.sid }).
+                open('/?selenium=' + body.uuid).
                 waitForPageToLoad(10000).
                 end(function(err) {
                     if (err) {
                         var msg = 'Error starting/waiting for Selenium page to load: ' + err;
                         hub.emit('seleniumTestsFinished', err);
                     } else {
-                        hub.emit(hub.LOG, hub.INFO, "Selenium up and running!");
+                        hub.emit(hub.LOG, hub.INFO, "Selenium up and running: " + browser.sid);
                         // If this is one of the tests that are going to run in thie
                         //  Selenium session, tag it with the Selenium token
                         cache.tests_to_run.forEach(function(test) {
                             if (test.browser === body.uuid) {
-                                test.seleniumID = body.seleniumID;
+                                test.seleniumID = browser.sid;
                             }
                         });
 

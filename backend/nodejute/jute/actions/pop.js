@@ -43,9 +43,9 @@ module.exports = {
 
         // THIS IS DANGEROUS!!!
         //  Take off top test whatever it is
-        function pop() {
+        function pop(req, res) {
             hub.cache.tests_to_run.shift();
-            hub.emit('action:status');
+            hub.emit('action:status', req, res);
         }
     }
 };

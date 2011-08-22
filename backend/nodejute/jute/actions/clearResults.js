@@ -41,12 +41,12 @@ module.exports = {
         // Events I care about
         hub.addListener('action:clear_results', clearResults);
 
-        function clearResults() {
+        function clearResults(req, res) {
             var exec = require('child_process').exec;
             try {
                 exec("/bin/rm -rf " + hub.config.outputDir + '/*');
             } catch(e) {}
-            hub.cache.res.end('OK');
+            res.end('OK');
         }
     }
 };

@@ -55,11 +55,11 @@ module.exports = {
                     res.end(JSON.stringify({ redirect_run_tests: '/jute_docs/run_tests.html' }));
                 } else {
                     // keep party going
-                    hub.emit('action:' + action);
+                    hub.emit('action:' + action, req, res);
                 }
 
             });
-            hub.emit('action:prune', action);
+            hub.emit('action:prune', action, req, res);
         });
     }
 };

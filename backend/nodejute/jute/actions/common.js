@@ -36,10 +36,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 module.exports = {
     Create:  function(hub) {
-        var cache = hub.cache;
-        return {
-            browserName: function() {
-                var req = cache.req;
+        var cache = hub.cache,
+            common = {
+            browserName: function(req) {
                 return [req.headers['user-agent'], req.connection.remoteAddress].join('---');
             },
 
@@ -64,7 +63,7 @@ module.exports = {
             dumpFile: function(vars, dataKey, filename, component) {
                 var baseOutputDir = hub.config.outputDir,
                     path          = require('path'),
-                    dir           = path.join(baseOutputDir, (this.makeSaneNames(component))[0]);
+                    dir           = path.join(baseOutputDir, (common.makeSaneNames(component))[0]);
                     data          = vars[dataKey],
                     fullFile      = path.join(dir, filename),
                     fs            = require('fs')
@@ -102,26 +101,19 @@ module.exports = {
 
                 b.sid = test.seleniumID;
 
-                // Look good for out foto!!
-                b.windowMaximize(function(err, body, req) {
+                //b.chain.windowFocus().getEval("window.moveTo(1,0); window.resizeTo(screen.availWidth, screen.availHeight);").windowMaximize().end(function(err) {
+                b.chain.windowFocus().getEval("window.moveTo(1,0); window.resizeTo(screen.availWidth, screen.availHeight);").end(function(err) {
                     if (!err) {
-                        b.windowFocus(function(err, body, req) {
+                        b.command('captureScreenshotToString', [], function(err, body, res) {
                             if (!err) {
-                                b.command('captureScreenshotToString', [], function(err, body, res) {
-                                    if (!err) {
-                                        var bb = new Buffer(body, 'base64');
-                                        fs.writeFileSync(filename, bb, 0, bb.length);
-                                        this.addTestOutput(test, "Took snapshot: " + filename);
-                                    } else {
-                                        hub.emit(hub.log, hub.ERROR, 'SNAP ERROR: ' + err);
-                                    }
-                                });
-                            } else {
-                                hub.emit(hub.log, hub.ERROR, 'FOCUS ERROR: ' + err);
+                                var bb = new Buffer(body, 'base64');
+                                fs.writeFileSync(filename, bb, 0, bb.length);
+                                common.addTestOutput(test, "Took snapshot: " + filename);
                             }
+                            hub.emit('action:doneDone', err, test);
                         });
                     } else {
-                        hub.emit(hub.log, hub.ERROR, 'MAX ERROR: ' + err);
+                        hub.emit('action:doneDone', err, test);
                     }
                 });
             },
@@ -142,13 +134,13 @@ module.exports = {
                     }
                 }
             },
-            badUnitTest: function(test) {
+            badUnitTest: function(req, test) {
                 // Dump a FAILED XML file
                 // Use test file name as the NAME of this test (vs. component name from test itself)
                 var parts = test.url.split('/');
                 var name  = parts.pop();
                 name = name.replace(/\..*$/, '');   // get rid of suffix
-                var names = this.makeSaneNames(this.browserName());
+                var names = common.makeSaneNames(common.browserName(req));
                 var err = '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="BROWSER" tests="0" failures="1" time="0">Test Timed Out: Most likely a Javascript parsing error - try loading URL in your browser</testsuite></testsuites>',
                 err = err.replace('BROWSER', names[1]);
                 err = err.replace('URL', test.url);
@@ -156,13 +148,14 @@ module.exports = {
                 var msg = "Dumped error unit test file " + name + " / " + names[0] + " (from " + test.url + ")";
 
                 hub.emit(hub.log, hub.ERROR,  msg);
-                this.addTestOutput(test, msg);
+                common.addTestOutput(test, msg);
 
-                this.dumpFile(params, 'results', names[0] + '-test.xml', name);
-                this.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);
-
+                common.dumpFile(params, 'results', names[0] + '-test.xml', name);
+                common.dumpFile({ output: test.output }, 'output', names[0] + '.txt', name);
             }
         };
+
+        return common;
     }
 };
 

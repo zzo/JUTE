@@ -43,17 +43,16 @@ module.exports = {
         // Events I care about
         hub.addListener('action:run_test', runTest);
 
-        function runTest() {
+        function runTest(req, res) {
             var uuid    = require('node-uuid'),
                 path    = require('path'),
                 fs      = require('fs'),
-                obj     = cache.req.body,
+                obj     = req.body,
                 sys     = require('sys'),
                 tests, multipleFromUI = false,
                 capture = false,
                 exec    = require('child_process').exec,
-                errors  = [],
-                res     = cache.res
+                errors  = []
             ;
 
             hub.emit(hub.LOG, hub.INFO, sys.inspect(obj));
@@ -142,7 +141,7 @@ module.exports = {
                 } else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
-                        test_obj.browser = cache.req.session.uuid;
+                        test_obj.browser = req.session.uuid;
 
                         common.addTestOutput(test_obj, 'Multiple in this browser test');
 
@@ -177,7 +176,7 @@ module.exports = {
                         }
                     });
 
-                    hub.emit('action:seleniumStart');
+                    hub.emit('action:seleniumStart', req, res);
                 } else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {

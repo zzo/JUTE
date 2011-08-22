@@ -42,9 +42,8 @@ module.exports = {
         // Events I care about
         hub.addListener('action:heart_beat', heartBeat);
 
-        function heartBeat() {
-            var req = cache.req, res = cache.res,
-                id = req.session.uuid;
+        function heartBeat(req, res) {
+            var id = req.session.uuid;
 
             // Update heartbeat time
             if (!cache.browsers[id]) {
@@ -52,14 +51,14 @@ module.exports = {
             }
 
             cache.browsers[id].heart_beat = new Date().getTime();
-            cache.browsers[id].name = common.browserName();
+            cache.browsers[id].name = common.browserName(req);
 
             hub.once('action:checkedResults', function(results) {
                 results.current_status  = { browsers: cache.browsers, tests_to_run: cache.tests_to_run };
                 results.config          = hub.config;
                 res.end(JSON.stringify(results));
             });
-            hub.emit('action:checkResults');
+            hub.emit('action:checkResults', req, res);
         }
     }
 };

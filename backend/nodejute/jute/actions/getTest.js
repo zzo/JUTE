@@ -44,10 +44,8 @@ module.exports = {
         // Events I care about
         hub.addListener('action:get_test', getTest);
 
-        function getTest() {
-            var req      = cache.req,
-                res      = cache.res,
-                browser  = req.session.uuid,
+        function getTest(req, res) {
+            var browser  = req.session.uuid,
                 bName    = common.browserName(req),
                 now      = new Date().getTime(),
                 testURL;
@@ -67,7 +65,7 @@ module.exports = {
                     //  must be something wrong with it - pop it
                     var error = 'Skipping bad test: ' + test.url + ': we thought it was running!';
                     hub.emit(hub.LOG, hub.ERROR, error);
-                    common.badUnitTest(test);
+                    common.badUnitTest(req, test);
                     cache.tests_to_run.splice(i, 1);
                     i--;
                     continue;
@@ -102,7 +100,7 @@ module.exports = {
                 // No tests for me - end if we're a Selenium browser
                 if (req.session.selenium) {
                     // Selenium job all done!!
-                    hub.emit('seleniumTestsFinished', browser);
+                    hub.emit('seleniumTestsFinished');
                 }
 
                 // ONLY USE HTML FOR NOW UNTIL THE PAGE IS SMARTER...

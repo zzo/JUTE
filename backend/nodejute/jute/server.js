@@ -71,10 +71,6 @@ Create:  function(hub) {
                 sess.selenium = req.query.selenium ? true: false;
             }
 
-            // stash of req/res
-            hub.cache.req = req;
-            hub.cache.res = res;
-
             next();
         }
         , connect.logger(hub.config.logFormat)
@@ -85,7 +81,7 @@ Create:  function(hub) {
             });
             app.all(/\/jute\/_([^\?]+)/, function(req, res, next){
                 // A JUTE action - GET
-                hub.emit('action', req.params[0]);//, req, res);
+                hub.emit('action', req.params[0], req, res);
             });
             app.get('/', function(req, res, next){
                 // Serve from '/'

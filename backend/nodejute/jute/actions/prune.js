@@ -59,13 +59,13 @@ module.exports = {
         function prune_tests(doing_what, req) {
             var now = new Date().getTime(),
                 browser = req.session.uuid, test,
-                timeStarted, me = req.session.uuid
+                timeStarted
             ;
 
             // Only check my tests
             for (var i = 0; i< cache.tests_to_run.length; i++) {
                 test = cache.tests_to_run[i];
-                if (test.browser != me) continue;
+                if (test.browser != browser) continue;
                 timeStarted = test.running;
                 if (timeStarted) {
                     if (now - timeStarted > TEST_TIME_THRESHOLD) {
@@ -82,8 +82,8 @@ module.exports = {
 
                     }
                 }
-            } 
-            if (now - cache.browsers[me].get_test > TEST_TIME_THRESHOLD) {
+            }
+            if (cache.browsers[browser] && cache.browsers[browser].get_test && (now - cache.browsers[browser].get_test > TEST_TIME_THRESHOLD)) {
                 // A link test taking too long - these are NOT in cache.tests_to_run
                 hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
 

@@ -97,3 +97,6 @@ eventHub.on('configureDone', function() {
 });
 eventHub.emit('configure');
 
+process.on('exit', function () {
+    daemon.stop();
+});

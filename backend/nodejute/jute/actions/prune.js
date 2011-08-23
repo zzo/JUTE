@@ -83,7 +83,7 @@ module.exports = {
                     }
                 }
             } 
-            if (now - cache.browsers[browser].get_test > TEST_TIME_THRESHOLD) {
+            if (now - cache.browsers[me].get_test > TEST_TIME_THRESHOLD) {
                 // A link test taking too long - these are NOT in cache.tests_to_run
                 hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
 

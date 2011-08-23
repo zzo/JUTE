@@ -152,7 +152,7 @@ module.exports = {
                     } else {
                         // Send to each test to each captured browser
                         pushed = true;
-                        if (!load) {
+                        if (!obj.load) {
                             for (var browser in cache.browsers) {
                                 test_obj.browser = browser;
                                 common.addTestOutput(test_obj, 'Capture test');

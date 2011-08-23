@@ -41,7 +41,7 @@
     "java": "/usr/bin/java",
     "logfile": "/tmp/jute.log",
     "pidfile": "/tmp/jute.pid",
-    "inject": "",
+    "inject": "1",
     "testRegex": "*.htm*"
   }
 }

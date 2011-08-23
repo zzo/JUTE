@@ -80,8 +80,8 @@ Create:  function(hub) {
                 sendFullFile(path.join(__dirname, req.url), req, res, next);
             });
             app.all(/\/jute\/_([^\?]+)/, function(req, res, next){
-                // A JUTE action - GET
-                hub.emit('action', req.params[0], req, res);
+                // A JUTE action - start with 'prune' and go from there
+                hub.emit('startAction', req.params[0], req, res);
             });
             app.get('/', function(req, res, next){
                 // Serve from '/'

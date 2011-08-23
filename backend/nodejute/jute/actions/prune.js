@@ -44,15 +44,21 @@ module.exports = {
         ;
 
         // Events I care about
-        hub.addListener('action:prune', prune);
+        hub.addListener('startAction', prune);
 
-        function prune(doing_what, req) {
+        function prune(doing_what, req, res) {
             var redirect;
 
             if (doing_what != 'status') {
                 prune_browsers(req);
                 redirect = prune_tests(doing_what, req);
-                hub.emit('pruneDone', redirect);
+                if (redirect) {
+                    // we're done
+                    res.end(JSON.stringify({ redirect_run_tests: '/jute_docs/run_tests.html' }));
+                } else {
+                    // keep going
+                    hub.emit('action:' + doing_what, req, res);
+                }
             }
         }
 
@@ -63,7 +69,7 @@ module.exports = {
             ;
 
             // Only check my tests
-            for (var i = 0; i< cache.tests_to_run.length; i++) {
+            for (var i = 0; i < cache.tests_to_run.length; i++) {
                 test = cache.tests_to_run[i];
                 if (test.browser != browser) continue;
                 timeStarted = test.running;
@@ -83,7 +89,8 @@ module.exports = {
                     }
                 }
             }
-            if (cache.browsers[browser] && cache.browsers[browser].get_test && (now - cache.browsers[browser].get_test > TEST_TIME_THRESHOLD)) {
+            // So we have to either *2 (arbitrary) on the timeout here OR reset the get_test timestamp above otherwise we get in an inf loop!
+            if (cache.browsers[browser] && cache.browsers[browser].get_test && (now - cache.browsers[browser].get_test > (TEST_TIME_THRESHOLD * 2))) {
                 // A link test taking too long - these are NOT in cache.tests_to_run
                 hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
 

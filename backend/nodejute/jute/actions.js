@@ -42,7 +42,6 @@ module.exports = {
             find = require('npm/lib/utils/find');
 
         hub.on('loadActions', loadActions);
-        hub.on('action', doActions);
 
         function loadActions() {
             find(path.join(__dirname, 'actions'), /\.js$/, function(err, actions) {
@@ -58,20 +57,6 @@ module.exports = {
                     process.exit(1);
                 }
             });
-        }
-
-        function doActions(action, req, res) {
-            hub.once('pruneDone', function(redirect) {
-                if (redirect) {
-                    // done
-                    res.end(JSON.stringify({ redirect_run_tests: '/jute_docs/run_tests.html' }));
-                } else {
-                    // keep party going
-                    hub.emit('action:' + action, req, res);
-                }
-
-            });
-            hub.emit('action:prune', action, req, res);
         }
     }
 };

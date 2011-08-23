@@ -51,6 +51,7 @@ Create:  function(hub) {
                 java:           '',
                 logFormat:      '',
                 testRegex:      '.html$',
+                inject:         '',
                 host:           ''
             },
             exec = require('child_process').exec,

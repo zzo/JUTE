@@ -2,7 +2,7 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.38",
+  "version": "0.0.39",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin" : { 
@@ -41,6 +41,7 @@
     "java": "/usr/bin/java",
     "logfile": "/tmp/jute.log",
     "pidfile": "/tmp/jute.pid",
+    "inject": "",
     "testRegex": "*.htm*"
   }
 }

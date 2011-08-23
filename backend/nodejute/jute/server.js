@@ -173,7 +173,7 @@ Create:  function(hub) {
             }
 
             // dynamically inject JUTE?
-            if (type.match(/javascript/)) {
+            if (hub.config.inject && type.match(/javascript/)) {
                 var file = fs.readFileSync(path, 'utf8'),
                     regex = /\)\s*\.\s*use\s*\(([^)]+)/;
 

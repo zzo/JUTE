@@ -53,7 +53,7 @@ YUI().add('jute', function(Y) {
                                 current_results = obj.current_results;
 
                                 // Make test/browser output pretty
-                                status_output = '<h4 style="background-color="yellow" align="center">Status</h4><ul><li>Browsers</li><font size="-1"><ul>';
+                                status_output = '<h4 style="background-color:"yellow" align="center">Status</h4><ul><li>Browsers</li><font size="-1"><ul>';
                                 Y.each(current_status.browsers, 
                                     function(value, key, object) {
                                         status_output += '<li>' + value.name + '</li>';

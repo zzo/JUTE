@@ -56,6 +56,7 @@ module.exports = {
             hub.once('action:checkedResults', function(results) {
                 results.current_status  = { browsers: cache.browsers, tests_to_run: cache.tests_to_run };
                 results.config          = hub.config;
+                res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(results));
             });
             hub.emit('action:checkResults', req, res);

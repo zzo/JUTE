@@ -59,6 +59,8 @@ module.exports = {
                     // keep going
                     hub.emit('action:' + doing_what, req, res);
                 }
+            } else {
+                hub.emit('action:status', req, res);
             }
         }
 

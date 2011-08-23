@@ -75,13 +75,14 @@ module.exports = {
                 if (test.browser != browser) continue;
 
                 // Otherwise start running this test in capture mode!!
-                common.addTestOutput(test, "Shipping me off to my browser " + bName);
+                common.addTestOutput(test, "To browser " + bName);
                 test.running = now;
                 testURL = test.url;
                 break;
             }
 
             if (testURL) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ testLocation: testURL }));
                 hub.emit(hub.LOG, hub.INFO, "Sending test url: " + testURL + ' to ' + bName);
             } else {
@@ -96,6 +97,8 @@ module.exports = {
                 if (req.session.selenium) {
                     // Selenium job all done!!
                     hub.emit('seleniumTestsFinished');
+                } else {
+                    hub.emit('testsDone');
                 }
 
                 // ONLY USE HTML FOR NOW UNTIL THE PAGE IS SMARTER...
@@ -104,6 +107,7 @@ module.exports = {
                         testFile = testFile.replace(prefix, '');
                         data.push({ test_url: testFile });
                     });
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ availableTests: data, config: hub.config }));
                 });
             }

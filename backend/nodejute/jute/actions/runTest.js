@@ -42,7 +42,6 @@ module.exports = {
 
         // Events I care about
         hub.addListener('action:run_test', runTest);
-        hub.addListener('waitTestsDone', waitTests);
 
         function runTest(req, res) {
             var uuid    = require('node-uuid'),
@@ -97,7 +96,7 @@ module.exports = {
             }
 
             var pushed = false, v8Tests = '',
-                seleniumUUID = uuid();
+                seleniumUUID = uuid(), requestKey = uuid();
 
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i],
@@ -105,6 +104,7 @@ module.exports = {
                         running: 0,
                         url:     path.join('/', hub.config.testDirWeb, test),
                         output: '',
+                        requestKey: requestKey,
                         sendOutput: obj.send_output
                     };
 
@@ -194,7 +194,13 @@ module.exports = {
                         if (v8Tests) {
                             res.write(v8Tests);
                         }
-                        if (capture) {
+                        if (obj.wait) {
+                            cache.connections[requestKey] = res; // our link back to the requesting client for status messages
+                            hub.once('testsDone', function() {
+                                delete cache.connections[requestKey]; // our link back to the requesting client for status messages
+                                res.end('all done!');
+                            });
+                        } else if (capture) {
                             res.end('Added ' + (obj.test || obj.tests) + ' to capture/load tests');
                         }
 
@@ -202,18 +208,14 @@ module.exports = {
                 }
             } else {
                 if (obj.load) {
+                    res.write('All tests loading and waiting for a browser');
                     if (obj.wait) {
-                        // wait for all tests to be done
-                        res.write('All tests loading and waiting for a browser');
-                        hub.once('testsDone', function(res) {
-                            delete cache.connections[obj.uuid]; // our link back to the requesting client for status messages
-                            res.end('All tests done!');
+                        cache.connections[requestKey] = res; // our link back to the requesting client for status messages
+                        hub.once('testsDone', function() {
+                            delete cache.connections[requestKey]; // our link back to the requesting client for status messages
+                            res.end('all done!');
                         });
-                        cache.connections[obj.uuid] = res; // our link back to the requesting client for status messages
-                        hub.emit('waitTestsDone', res);
-                    } else {
-                        res.end('All tests loading and waiting for a browser');
-                    }
+                    } 
                 } else {
                     hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
                     res.statusCode = 412; // Ye Olde Failed Precondition

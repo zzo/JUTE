@@ -119,19 +119,23 @@ module.exports = {
             },
             addTestOutput: function(test, msg) {
                 var lines = msg.split(/\n/),
-                    now = new Date(),
+                    now = new Date(), 
+                    output = '',
                     format;
 
                 format = now.getFullYear() + '/' + (now.getMonth() + 1) + '/' +  now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
                 lines.forEach(function(line) {
-                    test.output += '[' + format + '] ' + line + "\n";
+                    output += '[' + format + '] ' + line + "\n";
                 });
+                test.output += output;
 
-                if (test.sendOutput) {
-                    // do something smart
-                    if (cache.connections[test.browser]) {
-                        cache.connections[test.browser].write(msg);
-                    }
+                if (test.sendOutput && cache.connections[test.browser]) {
+                    // selenium test
+                    cache.connections[test.browser].write(output);
+                }
+                if (test.requestKey && cache.connections[test.requestKey]) {
+                    // command line test
+                    cache.connections[test.requestKey].write(output);
                 }
             },
             badUnitTest: function(req, test) {

@@ -52,8 +52,8 @@ var config = (require('./getConfig'))(),
         .alias('sn', 'snapshot')
         .alias('c', 'clear_results')
         .alias('w', 'wait')
-        .default('host', os.hostname())
-        .default('port', (config && config.port) || 80)
+        .default('host', (config && config.host) || os.hostname())
+        .default('port', (config && config.port) || 8080)
         .default('send_output', false)
         .default('wait', false)
         .default('v8', false)
@@ -136,6 +136,9 @@ eventHub.on('tests', function(tests) {
             if (args.load) {
                 juteArgs.load = 1;
             }
+            if (args.wait) {
+                juteArgs.wait = 1;
+            }
 
             // Toss in Selenium stuff
             if (args.sel_host) {
@@ -161,9 +164,7 @@ eventHub.on('tests', function(tests) {
             // POST AWAY!
             var req = http.request(options, function(res) {
 
-                if (res.statusCode == 200) {
-                    console.log('JUTE Likey');
-                } else {
+                if (res.statusCode != 200) {
                     console.log('JUTE Displeased');
                 }
 
@@ -186,49 +187,24 @@ eventHub.on('tests', function(tests) {
             });
 
             req.end(JSON.stringify(juteArgs));
-
-            if (!args.sel_host && args.wait) {
-                options.path = '/jute/_status';
-                setInterval(wait, 5000, options);
-            }
         }
     }
 });
 
-function wait(options) {
-    http.get(options, function(res) {
+if (args.status) {
+    options.path = '/jute/_status';
+    http.get(options, function(res) { 
         var status = '';
         res.on('data', function (chunk) {
             status += chunk;
         });
 
-        res.on('end', function () {
-            var statusObj = JSON.parse(status);
-                browsers = statusObj.current_status.browsers,
-                tests = statusObj.current_status.tests_to_run;
-
-            if (tests.length) {
-                console.log('Waiting for ' + tests[0].url + '...');
-            } else {
-                console.log('All tests finished - results: ');
-                for (var component in statusObj.current_results) {
-                    var result = statusObj.current_results[component].test_results[0].failed;
-                    console.log(component + ': ' + (result ? 'FAILED' : 'SUCCEEDED'));
-                }
-                //console.log(sys.inspect(statusObj.current_results, false, null));
-                process.exit(0);
-            }
-
-            if (!Object.keys(browsers).length) {
-                console.log('There are no currently captured browsers!');
-            }
+        res.on('end', function() {
+            console.log(status);
+            process.exit(0);
         });
-
-    }).on('error', function(e) {
-        console.error("Got error waiting: " + e.message);
-        process.exit(1);
     });
-}
+} else {
 
 // Read test from STDIN?
 if (args.test === true) {
@@ -259,20 +235,4 @@ if (args.clear_results) {
     http.get(options, function(res) { });
 }
 
-
-if (args.status) {
-    options.path = '/jute/_status';
-    http.get(options, function(res) { 
-        var status = '';
-        res.on('data', function (chunk) {
-            status += chunk;
-        });
-
-        res.on('end', function () {
-            console.log(status);
-        });
-    });
 }
-
-
-

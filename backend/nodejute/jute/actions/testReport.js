@@ -76,7 +76,26 @@ module.exports = {
                     var namez = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
                     exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + namez[1] + " --format lcov " + namez[0]);
                     hub.emit(hub.LONG, hub.INFO, "Coverage Report for " + obj.name);
-                    output += "Coverage Report for " + obj.name + ' generated';
+                    output += "Coverage Report for " + obj.name + ' generated\n';
+
+                    /// deteremine coverage
+                    for (file in cover_obj) {
+                        cover = cover_obj[file];
+                        total_lines = cover.coveredLines;
+                        total_functions = cover.coveredFunctions;
+
+                        if (total_lines) {
+                            line_coverage = Math.round((cover.calledLines / total_lines) * 100);
+                            output += 'Line coverage for ' + path.basename(file) + ': ' + line_coverage + '%\n';
+                        }
+
+                        if (total_functions) {
+                            func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
+                            output += 'Function coverage for ' + path.basename(file) + ': ' + func_coverage + '%\n';
+                        }
+                    }
+                    ///// determine coverage
+
                 } catch(e) {
                     hub.emit(hub.LOG, hub.ERROR, "Error generating coverage report: " + e);
                     output += "Error generating coverage report: " + e;
@@ -97,6 +116,7 @@ module.exports = {
                             hub.emit(hub.LOG, hub.INFO, 'Test finished: ' + test.url);
                         }
                         common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
+                        res.writeHead(200, { 'Content-Type': 'text/plain' });
                         res.end('OK');
                     });
 

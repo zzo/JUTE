@@ -57,6 +57,7 @@ var  fs         = require('fs')
     ,DO_COVERAGE
     ,myYUI
     ,testOutput = ''
+    ,sandbox
     ;
 
 
@@ -128,6 +129,15 @@ myYUI().add('jute', function(Y) {
 
 }, '1.0', { requires: [ 'test' ] });
 
+// Inject mini-jute into sandbox's YUI
+myYUI().add('console', function(Y) {
+    Y.Console = function() {
+        return {
+            render: function() {}
+        }
+    }
+}, '1.0', { requires: [ 'test' ] });
+
 // Recursively instrument all requested coverage files
 function getOneCoverage(files, index) {
     if (files[index]) {
@@ -185,6 +195,11 @@ function testsDone(data, report_data, cover_out) {
 
     DONE = true;
 
+    if (!cover_out) {
+        if (sandbox._yuitest_coverage) {
+            cover_out = JSON.stringify(sandbox._yuitest_coverage);
+        }
+    }
     if (cover_out) {
 
         cover_object = JSON.parse(cover_out);
@@ -241,7 +256,7 @@ function doit(data) {
 
         var document = Y.Browser.document, window = document.parentWindow,
             //Script = process.binding('evals').Script,
-            orig_eval = eval, sandbox,
+            orig_eval = eval,
             createElementOrig = document.createElement,
             createElement = function(str) {
                 var e = createElementOrig.call(this, str), d;
@@ -375,6 +390,12 @@ function doit(data) {
 
             if (src) {
                 if (src.match(/^http:/)) {
+                    if (src.match(/3\.\d\.\d\/build/)) {
+                        // use OUR YUI3
+                        tag.setData('javascript', 1);
+                        cb(tag);
+                        return; 
+                    }
                     host    = url.parse(src);
                     server  = http.createClient(host.port || 80, host.hostname);
                     path    = (host.search) ?  host.pathname + host.search : host.pathname;
@@ -401,7 +422,7 @@ function doit(data) {
                         src = value.substring(7);
                     }
                     ssrc = src.split('?');
-                    DEBUG('loading: ' + ssrc[0]);
+                    DEBUG('loading: ' + ssrc[1]);
                     if (ssrc[1] === 'coverage=1' && DO_COVERAGE) {
                         // Get coveraged version of this file
                         DEBUG('Doing coverage for ' + ssrc[0]);

@@ -88,7 +88,7 @@ Create:  function(hub) {
                 res.writeHead(301, { Location: '/jute_docs/capture.html' });
                 res.end();
             });
-            app.get(/jute\.js$//, function(req, res, next){   // FOR LEGACY JUTE TESTS THAT EXPLICITY INCLUDE JUTE.JS
+            app.get(/jute\.js$/, function(req, res, next){   // FOR LEGACY JUTE TESTS THAT EXPLICITY INCLUDE JUTE.JS
                 res.end(juteClient);
             });
         })

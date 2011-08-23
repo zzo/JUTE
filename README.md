@@ -49,6 +49,8 @@ Here are some important JUTE configuration variables and their defaults:
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '/usr/bin/java',
+                logfile:        '/tmp/jute.log',
+                pidfile:        '/tmp/jute.pid'
 
 To set any of these do:
 
@@ -65,6 +67,12 @@ What the variables mean:
 * testDir: A directory RELATIVE to docRoot where all your Javascript test files live
 * outputDir: A directory REALTIVE to docRoot where JUTE will dump output (test results and code coverage information)
 * java: Location of 'java' executable
+* logfile: Where JUTE dumps debug output
+* pidfile: Where JUTE keeps its PID
+
+You MUST restart JUTE after you change any variable:
+
+    % npm restart jute -g
 
 Install JUTE
 -------------

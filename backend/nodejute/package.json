@@ -2,7 +2,7 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.35",
+  "version": "0.0.36",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin" : { 
@@ -10,9 +10,9 @@
     "jute_submit_test": "./submit_test.js",
     "jute_v8":          "./jute_v8.js"
   },
-  "scripts" : { 
-    "start" : "node ./jute_backend.js start",
-    "stop"  : "node ./jute_backend.js stop"
+  "scripts" : {
+    "start"   : "node ./jute/daemon.js --start",
+    "stop"    : "node ./jute/daemon.js --stop"
   },
   "engines": { "node": ">= 0.4.0" },
   "repository": {
@@ -39,6 +39,8 @@
     "testDir":  "test/",
     "outputDir": "output/",
     "java": "/usr/bin/java",
+    "logfile": "/tmp/jute.log",
+    "pidfile": "/tmp/jute.pid",
     "testRegex": "*.htm*"
   }
 }

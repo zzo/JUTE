@@ -182,6 +182,7 @@ module.exports = {
                             hub.emit('action:checkResults');
                         }
                     });
+                    hub.emit('action:seleniumStart', req, res);
                 } else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {

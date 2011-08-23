@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var sys       = require('sys'),
     fs        = require("fs"),
     events    = require("events"),
-    daemon    = require('./third_party/node-daemon/lib/daemon'),
     configure = require('./jute/configure'),
     server    = require('./jute/server'),
     actions   = require('./jute/actions'),
@@ -46,8 +45,6 @@ var sys       = require('sys'),
     eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; this.INFO = 'info'; },
     pidFile   = '/tmp/jute.pid'
     ;
-
-    daemon.parse(process.argv[2]);
 
 /**
  * Create our event hub
@@ -97,6 +94,3 @@ eventHub.on('configureDone', function() {
 });
 eventHub.emit('configure');
 
-process.on('exit', function () {
-    daemon.stop();
-});

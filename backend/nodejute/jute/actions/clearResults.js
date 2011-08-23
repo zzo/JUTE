@@ -45,7 +45,9 @@ module.exports = {
             var exec = require('child_process').exec;
             try {
                 exec("/bin/rm -rf " + hub.config.outputDir + '/*');
-            } catch(e) {}
+            } catch(e) {
+                hub.emit(hub.LOG, hub.ERROR, 'Error clearing results: ' + e);
+            }
             res.end('OK');
         }
     }

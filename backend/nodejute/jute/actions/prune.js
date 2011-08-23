@@ -59,11 +59,13 @@ module.exports = {
         function prune_tests(doing_what, req) {
             var now = new Date().getTime(),
                 browser = req.session.uuid, test,
-                timeStarted
+                timeStarted, me = req.session.uuid
             ;
 
+            // Only check my tests
             for (var i = 0; i< cache.tests_to_run.length; i++) {
                 test = cache.tests_to_run[i];
+                if (test.browser != me) continue;
                 timeStarted = test.running;
                 if (timeStarted) {
                     if (now - timeStarted > TEST_TIME_THRESHOLD) {
@@ -72,24 +74,35 @@ module.exports = {
 
                         hub.emit(hub.LOG, hub.ERROR, msg);
                         common.addTestOutput(test, msg);
-
                         cache.tests_to_run.splice(i, 1);
-
                         common.badUnitTest(req, test);
+
+                        // redirect me outta here
+                        return 1;
 
                     }
                 }
+            } 
+            if (now - cache.browsers[browser].get_test > TEST_TIME_THRESHOLD) {
+                // A link test taking too long - these are NOT in cache.tests_to_run
+                hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
+
+                // redirect me outta here
+                return 1;
             }
         }
 
         function prune_browsers(req) {
-            var now = new Date().getTime(), me = req.session.uuid,
+            var me = req.session.uuid,
                 sys = require('sys');
 
+            // only check other browsers
             for (browser in cache.browsers) {
+                var now = new Date().getTime(),
+                    b_time = cache.browsers[browser].heart_beat;
+
                 if (browser == me) continue;
 
-                var b_time = cache.browsers[browser].heart_beat;
                 if (now - b_time > BROWSER_TIME_THRESHOLD) {
                     hub.emit(hub.LOG, hub.ERROR,  "We lost browser " + cache.browsers[browser].name);
                     delete cache.browsers[browser];

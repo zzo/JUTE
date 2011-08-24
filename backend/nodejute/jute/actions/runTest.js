@@ -151,8 +151,8 @@ module.exports = {
                         pushed = true;
                     } else {
                         // Send to each test to each captured browser
-                        pushed = true;
                         if (!obj.load) {
+                            pushed = true;
                             for (var browser in cache.browsers) {
                                 test_obj.browser = browser;
                                 common.addTestOutput(test_obj, 'Capture test');
@@ -213,9 +213,11 @@ module.exports = {
                         cache.connections[requestKey] = res; // our link back to the requesting client for status messages
                         hub.once('testsDone', function() {
                             delete cache.connections[requestKey]; // our link back to the requesting client for status messages
-                            res.end('all done!');
+                            res.end('all done from load!');
                         });
-                    } 
+                    } else {
+                        res.end('');
+                    }
                 } else {
                     hub.emit(hub.LOG, hub.ERROR,  "No browsers listening!");
                     res.statusCode = 412; // Ye Olde Failed Precondition

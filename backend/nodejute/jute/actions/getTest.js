@@ -72,7 +72,13 @@ module.exports = {
                 }
 
                 // This test is not for us
-                if (test.browser != browser) continue;
+                if (test.browser && (test.browser != browser)) continue;
+
+                if (!test.browser) {
+                    // A test pre-loaded w/o any browsers listening
+                    //  this browser looks like a winner!
+                    test.browser = browser;
+                }
 
                 // Otherwise start running this test in capture mode!!
                 common.addTestOutput(test, "To browser " + bName);
@@ -84,7 +90,7 @@ module.exports = {
             if (testURL) {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ testLocation: testURL }));
-                hub.emit(hub.LOG, hub.INFO, "Sending test url: " + testURL + ' to ' + bName);
+                hub.emit(hub.LOG, hub.INFO, "Sent test url: " + testURL + ' to ' + bName);
             } else {
                 // find all local tests
                 var find             = require('npm/lib/utils/find'),

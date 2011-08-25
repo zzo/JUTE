@@ -124,7 +124,7 @@ Create:  function(hub) {
                     res.end(stdout);
                 }
             });
-        } else if (req.query.coverage && (!req.headers.referer || req.headers.referer.match('do_coverage=1'))) {
+        } else if (req.query.coverage) { // && (!req.headers.referer || req.headers.referer.match('do_coverage=1'))) {
             // Coverage this bad boy!
             var tempFile = p.join('/tmp', p.basename(path));
             hub.emit(hub.LOG, hub.INFO, "Generating coverage file " + tempFile + " for " + path);

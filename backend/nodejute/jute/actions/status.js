@@ -86,22 +86,25 @@ module.exports = {
             find(compDir, /\.txt$/, function(err, debugFiles) {
                 find(compDir, /\.png$/, function(err, snapshotFiles) {
                     find(compDir, /\.xml$/, function(err, testFiles) {
+                        if (!err) {
+                            // Determined if failed or not
+                            testFiles.forEach(function(testFile) {
+                                if (common.failedTests(testFile)) {
+                                    testResults.push({ name: path.basename(testFile), failed: 1 });
+                                } else {
+                                    testResults.push({ name: path.basename(testFile), failed: 0 });
+                                }
+                            });
 
-                        // Determined if failed or not
-                        testFiles.forEach(function(testFile) {
-                            if (common.failedTests(testFile)) {
-                                testResults.push({ name: path.basename(testFile), failed: 1 });
-                            } else {
-                                testResults.push({ name: path.basename(testFile), failed: 0 });
-                            }
-                        });
-
-                        var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
-                        ret.current_results[component] = {};
-                        ret.current_results[component].test_results  = testResults;
-                        ret.current_results[component].coverage      = coverage;
-                        ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
-                        ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+                            var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
+                            ret.current_results[component] = {};
+                            ret.current_results[component].test_results  = testResults;
+                            ret.current_results[component].coverage      = coverage;
+                            ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
+                            ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+                        } else {
+                            hub.emit(hub.LOG, hub.ERROR, 'Error getting current output files: ' + err);
+                        }
                         cb();
                     });
                 });

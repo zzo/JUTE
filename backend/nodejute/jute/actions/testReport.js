@@ -65,6 +65,16 @@ module.exports = {
                 hub.emit(hub.LOG, hub.INFO, "Test Report for " + obj.name);
                 output += "Test Report for " + obj.name + "\n";
                 output += 'It: ' + (succeeded ? 'succeeded' : 'failed') + "\n";
+
+            }
+
+            if (obj.log) {
+                var log = JSON.parse(obj.log);
+                    output += "------------ CONSOLE OUTPUT ------------\n";
+                log.forEach(function(msg) {
+                    output += msg.msg + "\n";
+                });
+                output += "------------ CONSOLE OUTPUT ------------\n";
             }
 
             if (obj.coverage && obj.coverage !== 'null') {

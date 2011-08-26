@@ -42,12 +42,15 @@ module.exports = {
 
         // Events I care about
         hub.addListener('action:test_report', testReport);
+        hub.addListener('testOutputDone', testOutputDone);
 
         function testReport(req, res) {
-            var obj = req.body, succeeded = true,
+            var obj = req.body,
+                succeeded = true,
                 names = common.makeSaneNames(common.browserName(req)),
-                filename = names[0], pkgname = names[1],
-                now = new Date().getTime(), output = '',
+                filename = names[0],
+                pkgname = names[1],
+                output = '',
                 exec = require('child_process').exec
             ;
 
@@ -59,7 +62,7 @@ module.exports = {
                 if (common.failedTests(names[0])) {
                     succeeded = false;
                 }
-                hub.emit(hub.LONG, hub.INFO, "Test Report for " + obj.name);
+                hub.emit(hub.LOG, hub.INFO, "Test Report for " + obj.name);
                 output += "Test Report for " + obj.name + "\n";
                 output += 'It: ' + (succeeded ? 'succeeded' : 'failed') + "\n";
             }
@@ -74,36 +77,58 @@ module.exports = {
                     }
                     obj.coverage = JSON.stringify(cover_obj);
                     var namez = common.dumpFile(obj, 'coverage', 'cover.json', obj.name);
-                    exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + namez[1] + " --format lcov " + namez[0]);
-                    hub.emit(hub.LONG, hub.INFO, "Coverage Report for " + obj.name);
-                    output += "Coverage Report for " + obj.name + ' generated\n';
+                    exec(hub.config.java + ' -jar ' + path.join(__dirname, "yuitest-coverage-report.jar") + " -o " + namez[1] + " --format lcov " + namez[0],
+                            function(error, stdout, stderr) {
+                                var msg;
+                                if (error) {
+                                    msg = "Error generating cooverage Report for " + obj.name + ': ' + error + "\n";
+                                    output += msg;
+                                    hub.emit(hub.LOG, hub.ERROR, msg);
+                                } else {
+                                    msg = "Generated cooverage Report for " + obj.name + "\n";
+                                    hub.emit(hub.LOG, hub.INFO, msg);
+                                    output += msg;
 
-                    /// deteremine coverage
-                    for (file in cover_obj) {
-                        cover = cover_obj[file];
-                        total_lines = cover.coveredLines;
-                        total_functions = cover.coveredFunctions;
+                                    /// deteremine coverage
+                                    for (file in cover_obj) {
+                                        cover = cover_obj[file];
+                                        total_lines = cover.coveredLines;
+                                        total_functions = cover.coveredFunctions;
 
-                        if (total_lines) {
-                            line_coverage = Math.round((cover.calledLines / total_lines) * 100);
-                            output += 'Line coverage for ' + path.basename(file) + ': ' + line_coverage + '%\n';
-                        }
+                                        if (total_lines) {
+                                            line_coverage = Math.round((cover.calledLines / total_lines) * 100);
+                                            output += 'Line coverage for ' + path.basename(file) + ': ' + line_coverage + '%\n';
+                                        }
 
-                        if (total_functions) {
-                            func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
-                            output += 'Function coverage for ' + path.basename(file) + ': ' + func_coverage + '%\n';
-                        }
-                    }
-                    ///// determine coverage
+                                        if (total_functions) {
+                                            func_coverage = Math.round((cover.calledFunctions / total_functions) * 100);
+                                            output += 'Function coverage for ' + path.basename(file) + ': ' + func_coverage + '%\n';
+                                        }
+                                    }
+                                    ///// determine coverage
+                                }
+
+                                hub.emit('testOutputDone', req, res, succeeded, output);
+                            }
+                    );
 
                 } catch(e) {
                     hub.emit(hub.LOG, hub.ERROR, "Error generating coverage report: " + e);
                     output += "Error generating coverage report: " + e;
+                    hub.emit('testOutputDone', req, res, succeeded, output);
                 }
+            } else {
+                hub.emit('testOutputDone', req, res, succeeded, output);
             }
+        }
 
+        function testOutputDone(req, res, succeeded, output) {
             // Take this test out of circulation
-            var totalTests = cache.tests_to_run.length;
+            var totalTests = cache.tests_to_run.length,
+                names = common.makeSaneNames(common.browserName(req)),
+                now = new Date().getTime(),
+                obj = req.body;
+
             for (var i = 0; i < totalTests; i++) {
                 var test = cache.tests_to_run[i];
 
@@ -115,7 +140,7 @@ module.exports = {
                         } else {
                             hub.emit(hub.LOG, hub.INFO, 'Test finished: ' + test.url);
                         }
-                        common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
+                        common.dumpFile({ output: test.output }, 'output', path.basename(names[0], 'xml') + '.txt', obj.name);
                         res.writeHead(200, { 'Content-Type': 'text/plain' });
                         res.end('OK');
                     });
@@ -140,7 +165,7 @@ module.exports = {
             if (!totalTests) {
                 // A single browser test
                 output += obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + "\n";
-                common.dumpFile({ output: output }, 'output', path.basename(names[0], 'xml') + 'txt', obj.name);
+                common.dumpFile({ output: output }, 'output', path.basename(names[0], 'xml') + '.txt', obj.name);
                 res.end('OK');
             }
 

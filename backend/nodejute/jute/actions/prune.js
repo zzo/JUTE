@@ -37,9 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var TEST_TIME_THRESHOLD = 60000,    // 60 seconds to wait before declaring test dead
+        var TEST_TIME_THRESHOLD    = 60000, // 60 seconds to wait before declaring test dead
             BROWSER_TIME_THRESHOLD = 20000, // Delete a captured browser after it has been gone for this long - 20 seconds
-            path = require('path'),
+            path  = require('path'),
             cache = hub.cache
         ;
 
@@ -70,6 +70,9 @@ module.exports = {
                 timeStarted
             ;
 
+            // We're already getting a test - let it slide...
+            if (doing_what == 'get_test') return;
+
             // Only check my tests
             for (var i = 0; i < cache.tests_to_run.length; i++) {
                 test = cache.tests_to_run[i];
@@ -92,7 +95,7 @@ module.exports = {
                 }
             }
             // So we have to either *2 (arbitrary) on the timeout here OR reset the get_test timestamp above otherwise we get in an inf loop!
-            if (cache.browsers[browser] && cache.browsers[browser].get_test && (now - cache.browsers[browser].get_test > (TEST_TIME_THRESHOLD * 2))) {
+            if (cache.browsers[browser] && cache.browsers[browser].get_test && (now - cache.browsers[browser].get_test > TEST_TIME_THRESHOLD)) {
                 // A link test taking too long - these are NOT in cache.tests_to_run
                 hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");
 

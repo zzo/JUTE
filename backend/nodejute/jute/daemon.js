@@ -43,8 +43,15 @@ function start() {
         return;
     }
 
+    try {
+        jute = spawn('./jute_backend.js', [], { setsid: false, customFds: [-1, fd, fd], cwd: process.cwd() });
+    } catch(e) {
+        console.error("Error spawing JUTE: " + e);
+        process.exit(1);
+    }
 
-    jute = spawn('./jute_backend.js', [], { setsid: true, customFds: [-1, fd, fd], cwd: process.cwd() });
+    jute.on('exit', function() { fs.unlinkSync(pidfile); });
+
     try {
         fs.writeFileSync(pidfile, "" + jute.pid);
     } catch(e) {

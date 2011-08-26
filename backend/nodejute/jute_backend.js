@@ -94,3 +94,4 @@ eventHub.on('configureDone', function() {
 });
 eventHub.emit('configure');
 
+process.on('exit', function() { fs.unlinkSync(process.env['npm_package_config_pidfile']); });

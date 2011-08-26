@@ -92,15 +92,17 @@ module.exports = {
             find(compDir, /\.txt$/, function(err, debugFiles) {
                 find(compDir, /\.png$/, function(err, snapshotFiles) {
                     find(compDir, /\.xml$/, function(err, testFiles) {
+                        // Determined if failed or not
                         if (!err) {
-                            // Determined if failed or not
-                            testFiles.forEach(function(testFile) {
-                                if (common.failedTests(testFile)) {
-                                    testResults.push({ name: path.basename(testFile), failed: 1 });
-                                } else {
-                                    testResults.push({ name: path.basename(testFile), failed: 0 });
-                                }
-                            });
+                            if (testFiles && testFiles.length) {
+                                testFiles.forEach(function(testFile) {
+                                    if (common.failedTests(testFile)) {
+                                        testResults.push({ name: path.basename(testFile), failed: 1 });
+                                    } else {
+                                        testResults.push({ name: path.basename(testFile), failed: 0 });
+                                    }
+                                });
+                            }
 
                             try {
                                 var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));

@@ -131,7 +131,7 @@ Create:  function(hub) {
             exec(hub.config.java + ' -jar ' + p.join(__dirname, "yuitest-coverage.jar") + " -o " + tempFile + " " + path, function(err) {
                 if (err) {
                     hub.emit(hub.LOG, 'error', "Error coverage'ing " + path + ": " + err);
-                    hub.emit(hub.LOG, 'error', "Sending plain file");
+                    hub.emit(hub.LOG, 'error', "Sending plain file instead");
                     _doSend(path, req, res, next);
                 } else {
                     _doSend(tempFile, req, res, next);
@@ -148,7 +148,17 @@ Create:  function(hub) {
      */
     function _doSend(path, req, res, next) {
 
-        var mime = require('mime');
+        var mime = require('mime'),
+            efun = "\
+YUI().use('io-base', function(Y) {\
+        Y.io('/jute/_message',\
+            {\
+                method: 'PUT',\
+                data: 'msg=' + escape(e) + '&why=script.error',\
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\
+            }\
+        );\
+});";
 
         fs.stat(path, function(err, stat) {
             var type, charset,
@@ -172,25 +182,41 @@ Create:  function(hub) {
                 res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
             }
 
-            // dynamically inject JUTE?
-            if (parseInt(hub.config.inject, 10) && type.match(/javascript/)) {
+            console.log(path + ' type: ' + type);
+
+            if (type.match(/javascript/)) {
                 var file = fs.readFileSync(path, 'utf8'),
+                    add = "}catch(e){" + efun + "}";
+
+                file = "try{" + file + add;
+                res.setHeader('Content-Length', stat.size + add.length + 4);
+
+                console.log('put try/catch block around: ' + path);
+
+                // dynamically inject JUTE?
+                if (parseInt(hub.config.inject, 10)) {
                     regex = /\)\s*\.\s*use\s*\(([^)]+)/;
 
-                var matches = regex.exec(file);
-                if (matches) {
-                    if (matches[1].match('test')) {
+                    var matches = regex.exec(file);
+                    if (matches) {
+                        if (matches[1].match('test')) {
+    
+                            hub.emit(hub.LOG, hub.INFO, "Dynamically injecting JUTE client into " + path);
+    
+                            res.setHeader('Content-Length', res.getHeader('Content-Length') + juteClient.length);
+                            res.write(juteClient);
+                            file.replace('test', 'jute'); // Need to smarter some day
+                        } 
+                    } 
+                } 
+                res.end(file);
+            }  else if (type.match(/html/i)) {
+                var file = fs.readFileSync(path, 'utf8'),
+                    err = '<script src="http://yui.yahooapis.com/3.3.0/build/yui/yui.js"></script>' +
+                          '<script>window.onerror=function(e){' + efun + '};</script>';
 
-                        hub.emit(hub.LOG, hub.INFO, "Dynamically injecting JUTE client into " + path);
-
-                        res.setHeader('Content-Length', stat.size + juteClient.length);
-                        res.write(juteClient);
-                        res.end(file.replace('test', 'jute'));
-                        return;
-                    }
-                }
-
-                // Nope, just some plain old JS file...
+                res.setHeader('Content-Length', res.getHeader('Content-Length') + err.length);
+                res.write(err);
                 res.end(file);
             } else {
                 fs.createReadStream(path).pipe(res);

@@ -101,11 +101,12 @@ module.exports = {
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i],
                     test_obj = {
-                        running: 0,
-                        url:     path.join('/', hub.config.testDirWeb, test),
-                        output: '',
+                        running:    0,
+                        url:        path.join('/', hub.config.testDirWeb, test),
+                        output:     '',
                         requestKey: requestKey,
-                        sendOutput: obj.send_output
+                        sendOutput: obj.send_output,
+                        retry:      parseInt(obj.retry, 10) || 0
                     };
 
                 if (test.match(/\.js/)) {

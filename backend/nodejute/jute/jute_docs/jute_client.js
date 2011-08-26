@@ -21,14 +21,44 @@ YUI().add('jute', function(Y) {
             );
         }
     );
+    
+    var pushBack = function(where, what, why) {
+        Y.io('/jute/_' + where,
+            {
+                method: 'PUT',
+                data: 'msg=' + escape(what) + '&why=' + escape(why),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }
+        );
+    };
 
     Y.Global.on('yui:log', function(log) {
         totalLog.push(log);
+        pushBack('message', log.msg, 'Y.Global.log');
     });
 
     Y.on('yui:log', function(log) {
         totalLog.push(log);
+        pushBack('message', log.msg, 'Y.log');
     });
+
+    // Immediately push console message in case we never hear from this dude again
+    if (console) {
+        var oCL = console.log,
+            oCE = console.error;
+
+        console.log = function(msg) {
+            totalLog.push({ msg: 'console.log: ' + msg });
+            oCL.apply(console, arguments);
+            pushBack('message', msg, 'console.log');
+        }
+
+        console.error = function(msg) {
+            totalLog.push({ msg: 'console.error: ' + msg });
+            oCE.apply(console, arguments);
+            pushBack('message', msg, 'console.error');
+        }
+    }
 
    // A helpful function - setup console & run tests
     Y.namespace('UnitTest').go = function() {

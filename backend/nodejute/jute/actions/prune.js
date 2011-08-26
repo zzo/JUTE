@@ -94,7 +94,6 @@ module.exports = {
                     }
                 }
             }
-            // So we have to either *2 (arbitrary) on the timeout here OR reset the get_test timestamp above otherwise we get in an inf loop!
             if (cache.browsers[browser] && cache.browsers[browser].get_test && (now - cache.browsers[browser].get_test > TEST_TIME_THRESHOLD)) {
                 // A link test taking too long - these are NOT in cache.tests_to_run
                 hub.emit(hub.LOG, hub.ERROR, "Test running for too long - killing it");

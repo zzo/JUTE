@@ -70,11 +70,11 @@ module.exports = {
 
             if (obj.log) {
                 var log = JSON.parse(obj.log);
-                    output += "------------ CONSOLE OUTPUT ------------\n";
+                    output += "------------ START CONSOLE OUTPUT ------------\n";
                 log.forEach(function(msg) {
                     output += msg.msg + "\n";
                 });
-                output += "------------ CONSOLE OUTPUT ------------\n";
+                output += "------------ END CONSOLE OUTPUT ------------\n";
             }
 
             if (obj.coverage && obj.coverage !== 'null') {
@@ -157,8 +157,18 @@ module.exports = {
 
                     // Clear this test out
                     common.addTestOutput(test, output);
-                    common.addTestOutput(test, obj.name + " finished - it " + (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + (now - test.running) + "ms\n");
-                    cache.tests_to_run.splice(i, 1);
+                    common.addTestOutput(test, obj.name + " finished - it " + 
+                            (succeeded ? 'SUCCEEDED' : 'FAILED') + ' - it took ' + 
+                            (now - test.running) + "ms\n");
+
+                    if (test.retry && !succeeded) {
+                        common.addTestOutput(test, 'Test failed - trying it ' + test.retry + ' more times');
+                        common.addTestOutput(test, '--------------------------------------------------------------------------------------');
+                        test.retry--;
+                        test.running = 0;
+                    } else {
+                        cache.tests_to_run.splice(i, 1);
+                    }
 
                     // Take a snapshot & wait or we're done - always if 'snapshot' is set otherwise
                     //  only if a test fails

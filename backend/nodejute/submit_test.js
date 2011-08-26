@@ -41,7 +41,7 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
@@ -52,6 +52,7 @@ var config = (require('./getConfig'))(),
         .alias('sn', 'snapshot')
         .alias('c', 'clear_results')
         .alias('w', 'wait')
+        .alias('r', 'retry')
         .default('host', (config && config.host) || os.hostname())
         .default('port', (config && config.port) || 8080)
         .default('send_output', false)
@@ -61,6 +62,7 @@ var config = (require('./getConfig'))(),
         .default('load', false)
         .default('clear_results', false)
         .default('sel_browser', '*firefox')
+        .default('retry', 0)
         .describe('test', 'Test file to run - relative to docRoot/testDir (npm set jute.testDir) - can specify multiple of these')
         .describe('host', 'Hostname of JUTE server')
         .describe('port', 'Port of JUTE server')
@@ -73,6 +75,7 @@ var config = (require('./getConfig'))(),
         .describe('clear_results', 'Clear ALL previous test results before running specified test(s)')
         .describe('v8', 'Run these test(s) using the V8 backend')
         .describe('status', 'Just get status')
+        .describe('retry', 'Number of time to retry a failed test')
         .argv,
     sys  = require('sys'),
     qs   = require('querystring'),
@@ -139,6 +142,7 @@ eventHub.on('tests', function(tests) {
             if (args.wait) {
                 juteArgs.wait = 1;
             }
+            juteArgs.retry = args.retry;
 
             // Toss in Selenium stuff
             if (args.sel_host) {

@@ -84,14 +84,20 @@ module.exports = {
                     fs.closeSync(fd)
                     return [ fullFile, dir ];
                 } catch(e) {
-                    hub.emit(hub.LOG, hub.ERROR, "Error dumping file: " + e);
+                    hub.emit(hub.LOG, hub.ERROR, "Error dumping file " + fullFile + ": " + e);
                 }
             },
             failedTests: function(filename) {
-                var fs = require('fs'),
-                    file = fs.readFileSync(filename, 'utf8');
+                var fs = require('fs'), file;
 
-                return file.match(/failures="[1-9]/);
+                try {
+                    file = fs.readFileSync(filename, 'utf8');
+                    return file.match(/failures="[1-9]/);
+                } catch(e) {
+                    hub.emit(hub.LOG, hub.ERROR, "Error checking for failed unit test: " + e);
+                    return true;
+                }
+
             },
             takeSeleniumSnapshot: function(test, filename) {
                 var soda = require('soda'), i
@@ -105,10 +111,18 @@ module.exports = {
                     if (!err) {
                         b.command('captureScreenshotToString', [], function(err, body, res) {
                             if (!err) {
-                                var bb = new Buffer(body, 'base64');
-                                fs.writeFileSync(filename, bb, 0, bb.length);
-                                common.addTestOutput(test, "Took snapshot: " + filename);
-                                hub.emit(hub.LOG, hub.INFO, 'Took snapshot for: ' + test.url);
+                                var msg;
+                                try {
+                                    var bb = new Buffer(body, 'base64');
+                                    fs.writeFileSync(filename, bb, 0, bb.length);
+                                    var msg = "Dumped snapshot for " + test.url + ' to ' + filename + "\n";
+                                    common.addTestOutput(test, msg);
+                                    hub.emit(hub.LOG, hub.INFO, msg);
+                                } catch(e) {
+                                    msg = "Error dumping snapshot file " + filename + ": " + e + "\n";
+                                    common.addTestOutput(test, msg);
+                                    hub.emit(hub.LOG, hub.ERROR,  msg);
+                                }
                             }
                             hub.emit('action:doneDone', err, test);
                         });

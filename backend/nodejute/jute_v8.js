@@ -154,11 +154,16 @@ function getOneCoverage(files, index) {
 if (TEST_FILE.match(/\.js$/)) {
     // JS
     if (DO_COVERAGE) {
-        var tf = fs.readFileSync(TEST_FILE, 'utf8');
-            reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g,
-            cc = tf.match(reqMatch);
+        try {
+            var tf = fs.readFileSync(TEST_FILE, 'utf8');
+                reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g,
+                cc = tf.match(reqMatch);
 
-        getOneCoverage(cc, 0);
+            getOneCoverage(cc, 0);
+        } catch(e) {
+            console.error("Error reading " + TEST_FILE + ": " + e);
+            process.exit(1);
+        }
     } else {
         doit('<script src="' + TEST_FILE + '"></script>');
     }
@@ -188,10 +193,20 @@ function testsDone(data, report_data, cover_out) {
     } catch(e) { }
 
     console.log('Test results file: ' + test_output_file);
-    fs.writeFileSync(test_output_file, report_data);
+
+    try {
+        fs.writeFileSync(test_output_file, report_data);
+    } catch(e) {
+        console.error("Error writing test output file " + test_output_file + ": " + e);
+    }
 
     console.log('Test debug file: ' + test_debug_file);
-    fs.writeFileSync(test_debug_file, testOutput);
+
+    try {
+        fs.writeFileSync(test_debug_file, testOutput);
+    } catch(e) {
+        console.error("Error writing test debug file " + test_debug_file + ": " + e);
+    }
 
     DONE = true;
 
@@ -203,7 +218,11 @@ function testsDone(data, report_data, cover_out) {
     if (cover_out) {
 
         cover_object = JSON.parse(cover_out);
-        fs.writeFileSync(cover_out_file, cover_out);
+        try {
+            fs.writeFileSync(cover_out_file, cover_out);
+        } catch(e) {
+            console.error("Error writing coverage file " + cover_out_file + ": " + e);
+        }
 
         DEBUG([ config.java, '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ].join(' '));
         exec([ config.java, '-jar', coverageReportJar, '--format', 'lcov', '-o', dirname, cover_out_file ].join(' '), function(err, stdout, stderr) {

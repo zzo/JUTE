@@ -56,20 +56,26 @@ module.exports = {
             var baseDir = hub.config.outputDir,
                 fs      = require('fs'),
                 sys     = require('sys'),
-                path    = require('path');
+                path    = require('path'),
+                ret = { current_results: {} };
 
-            // Find & parse all results
-            var components = fs.readdirSync(baseDir), ret = { current_results: {} };
+            try {
+                // Find & parse all results
+                var components = fs.readdirSync(baseDir);
 
-            if (components.length) {
-                components.forEach(function(component) {
-                    doComp(ret, component, function() {
-                        if (Object.keys(ret.current_results).length == components.length) {
-                            hub.emit('action:checkedResults', ret);
-                        }
+                if (components.length) {
+                    components.forEach(function(component) {
+                        doComp(ret, component, function() {
+                            if (Object.keys(ret.current_results).length == components.length) {
+                                hub.emit('action:checkedResults', ret);
+                            }
+                        });
                     });
-                });
-            } else {
+                } else {
+                    hub.emit('action:checkedResults', ret);
+                }
+            } catch(e) {
+                hub.emit(hub.LOG, hub.ERROR, 'Error getting current results from ' + baseDir + ': ' +  e);
                 hub.emit('action:checkedResults', ret);
             }
         }
@@ -96,12 +102,16 @@ module.exports = {
                                 }
                             });
 
-                            var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
-                            ret.current_results[component] = {};
-                            ret.current_results[component].test_results  = testResults;
-                            ret.current_results[component].coverage      = coverage;
-                            ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
-                            ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+                            try {
+                                var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
+                                ret.current_results[component] = {};
+                                ret.current_results[component].test_results  = testResults;
+                                ret.current_results[component].coverage      = coverage;
+                                ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
+                                ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+                            } catch(e) {
+                                hub.emit(hub.LOG, hub.ERROR, 'Error checking for coverage path: ' + e);
+                            }
                         } else {
                             hub.emit(hub.LOG, hub.ERROR, 'Error getting current output files: ' + err);
                         }

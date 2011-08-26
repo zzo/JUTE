@@ -27,7 +27,9 @@ function start() {
                 process.exit(0);
             } catch(e) {
                 // process does not exist!
-                fs.unlinkSync(pidfile);
+                try {
+                    fs.unlinkSync(pidfile);
+                } catch(err) {}
             }
         }
     } catch(e) {
@@ -43,7 +45,11 @@ function start() {
 
 
     jute = spawn('./jute_backend.js', [], { setsid: true, customFds: [-1, fd, fd], cwd: process.cwd() });
-    fs.writeFileSync(pidfile, "" + jute.pid);
+    try {
+        fs.writeFileSync(pidfile, "" + jute.pid);
+    } catch(e) {
+        console.error("Error writing pidFile: " + pidfile);
+    }
 }
 
 function stop() {

@@ -119,7 +119,10 @@ Create:  function(hub) {
                 hub.emit('configureError', { name: 'outputDir', value: config.outputDir, error: err } );
                 return;
             }
-            fs.rmdirSync(testDir);
+
+            try {
+                fs.rmdirSync(testDir);
+            } catch(e) {}
 
             // All is cool - stash config & move on
             hub.config = config;

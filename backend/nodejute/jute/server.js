@@ -150,15 +150,31 @@ Create:  function(hub) {
 
         var mime = require('mime'),
             efun = "\
-YUI().use('io-base', function(Y) {\
+YUI().use('io-base', 'json-stringify', function(Y) {\
+        var output = a, from='try/catch';\
+        if (typeof(b) != 'undefined') {\
+            if (typeof(b) == 'object') {\
+                output += ' ' + Y.JSON.stringify(b);\
+            } else {\
+                output += ' ' + b;\
+            }\
+            if (typeof(c) == 'object') {\
+                output += ' ' + Y.JSON.stringify(b);\
+            } else {\
+                output += ' ' + c;\
+            }\
+            from = 'onerror';\
+        }\
+        output = from + ': ' + output;\
         Y.io('/jute/_message',\
             {\
                 method: 'PUT',\
-                data: 'msg=' + escape(e) + '&why=script.error',\
+                data: 'msg=' + escape(output) + '&why=script.error',\
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\
             }\
         );\
-});";
+});",
+        yuiConfig = "YUI_config = {loadErrorFn: function(a,b,c) { " + efun + "}, errorFn: function(a, b, c) { " + efun + " } };";
 
         fs.stat(path, function(err, stat) {
             var type, charset,
@@ -186,7 +202,7 @@ YUI().use('io-base', function(Y) {\
 
             if (type.match(/javascript/)) {
                 var file = fs.readFileSync(path, 'utf8'),
-                    add = "}catch(e){" + efun + "}";
+                    add = "}catch(a){" + efun + "}";
 
                 file = "try{" + file + add;
                 res.setHeader('Content-Length', stat.size + add.length + 4);
@@ -205,7 +221,7 @@ YUI().use('io-base', function(Y) {\
     
                             res.setHeader('Content-Length', res.getHeader('Content-Length') + juteClient.length);
                             res.write(juteClient);
-                            file.replace('test', 'jute'); // Need to smarter some day
+                            file = file.replace('test', 'jute'); // Need to smarter some day
                         } 
                     } 
                 } 
@@ -213,7 +229,7 @@ YUI().use('io-base', function(Y) {\
             }  else if (type.match(/html/i)) {
                 var file = fs.readFileSync(path, 'utf8'),
                     err = '<script src="http://yui.yahooapis.com/3.3.0/build/yui/yui.js"></script>' +
-                          '<script>window.onerror=function(e){' + efun + '};</script>';
+                          '<script>window.onerror=function(a,b,c){' + efun + '};</script>';
 
                 res.setHeader('Content-Length', res.getHeader('Content-Length') + err.length);
                 res.write(err);

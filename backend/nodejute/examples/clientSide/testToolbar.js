@@ -29,3 +29,4 @@ YUI({
     yconsole.render('#log');
     Y.Test.Runner.run();
 });
+

@@ -69,6 +69,12 @@ module.exports = {
                 tests = obj.tests.split(/\s+/);
             }
 
+            if (!tests) {
+               res.writeHead(302, { Location: "/jute_docs/run_tests.html" });
+               res.end("/jute_docs/run_tests.html");
+               return;
+            }
+
             // FIRST make sure all these alleged test files exist
             for (var i = 0; i < tests.length; i++) {
                 var realFullFile = path.join(hub.config.testDir, tests[i].replace(/\?.*/, ''));

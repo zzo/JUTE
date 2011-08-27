@@ -43,7 +43,7 @@ YUI().add('jute', function(Y) {
     });
 
     // Immediately push console message in case we never hear from this dude again
-    if (console) {
+    if (typeof(console) == 'object') {
         var oCL = console.log,
             oCE = console.error;
 

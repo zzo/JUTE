@@ -150,6 +150,7 @@ Create:  function(hub) {
 
         var mime = require('mime'),
             efun = "\
+if (typeof(YUI) == 'object') {\
 YUI().use('io-base', 'json-stringify', function(Y) {\
         var output = a, from='try/catch';\
         if (typeof(b) != 'undefined') {\
@@ -173,7 +174,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\
             }\
         );\
-});",
+});}",
         yuiConfig = "YUI_config = {loadErrorFn: function(a,b,c) { " + efun + "}, errorFn: function(a, b, c) { " + efun + " } };";
 
         fs.stat(path, function(err, stat) {
@@ -228,8 +229,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
                 res.end(file);
             }  else if (type.match(/html/i)) {
                 var file = fs.readFileSync(path, 'utf8'),
-                    err = '<script src="http://yui.yahooapis.com/3.3.0/build/yui/yui.js"></script>' +
-                          '<script>window.onerror=function(a,b,c){' + efun + '};</script>';
+                    err = '<script>window.onerror=function(a,b,c){' + efun + '};</script>';
 
                 res.setHeader('Content-Length', res.getHeader('Content-Length') + err.length);
                 res.write(err);
@@ -241,4 +241,5 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
     }
 }
 };
+
 

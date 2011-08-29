@@ -190,7 +190,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
 
             type = mime.lookup(path);
 
-            res.setHeader('Content-Length', stat.size);
+//            res.setHeader('Content-Length', stat.size);
             res.setHeader('Last-Modified', new Date().toUTCString());
 
             // header fields
@@ -206,7 +206,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
                     add = "}catch(a){" + efun + "}";
 
                 file = "try{" + file + add;
-                res.setHeader('Content-Length', stat.size + add.length + 4);
+//                res.setHeader('Content-Length', stat.size + add.length + 4);
 
                 console.log('put try/catch block around: ' + path);
 
@@ -220,7 +220,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
     
                             hub.emit(hub.LOG, hub.INFO, "Dynamically injecting JUTE client into " + path);
     
-                            res.setHeader('Content-Length', res.getHeader('Content-Length') + juteClient.length);
+//                            res.setHeader('Content-Length', res.getHeader('Content-Length') + juteClient.length);
                             res.write(juteClient);
                             file = file.replace('test', 'jute'); // Need to smarter some day
                         } 
@@ -231,7 +231,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
                 var file = fs.readFileSync(path, 'utf8'),
                     err = '<script>window.onerror=function(a,b,c){' + efun + '};</script>';
 
-                res.setHeader('Content-Length', res.getHeader('Content-Length') + err.length);
+//                res.setHeader('Content-Length', res.getHeader('Content-Length') + err.length);
                 res.write(err);
                 res.end(file);
             } else {

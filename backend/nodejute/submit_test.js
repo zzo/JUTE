@@ -41,12 +41,13 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
         .alias('sh', 'sel_host')
         .alias('sb', 'sel_browser')
+        .alias('se', 'seleniums')
         .alias('l', 'load')
         .alias('s', 'status')
         .alias('sn', 'snapshot')
@@ -61,6 +62,7 @@ var config = (require('./getConfig'))(),
         .default('snapshot', false)
         .default('load', false)
         .default('clear_results', false)
+        .default('seleniums', 1)
         .default('sel_browser', '*firefox')
         .default('retry', 0)
         .describe('test', 'Test file to run - relative to docRoot/testDir (npm set jute.testDir) - can specify multiple of these')
@@ -68,6 +70,7 @@ var config = (require('./getConfig'))(),
         .describe('port', 'Port of JUTE server')
         .describe('sel_host', 'Hostname of Selenium RC or Grid Server (if not specified test(s) will run in all CURRENTLY captured browsers)')
         .describe('sel_browser', 'Selenium browser specification')
+        .describe('seleniums', 'Number of Selenium browsers to run tests in parallel')
         .describe('load', 'Load up tests but do not run them immediately')
         .describe('snapshot', 'Dump a snapshot at end of test (Selenium only!)')
         .describe('send_output', 'For Selenium tests ONLY - send status messages back while running')
@@ -148,6 +151,7 @@ eventHub.on('tests', function(tests) {
             if (args.sel_host) {
                 juteArgs.sel_host = args.sel_host;
                 juteArgs.sel_browser = args.sel_browser;
+                juteArgs.seleniums = args.seleniums;
                 if (args.snapshot) {
                     juteArgs.snapshot = 1;
                 }

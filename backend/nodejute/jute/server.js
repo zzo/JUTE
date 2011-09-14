@@ -115,6 +115,9 @@ Create:  function(hub) {
         url = url.replace(/\?.*/,''); // get rid of any query string
         url = url.replace(hub.config.testDirWeb,''); // get rid of any query string
 
+        try { fs.statSync(path); } catch(e) { res.writeHeader(404); res.end('Cannot find: ' + path ); return; }  // 404 this bad boy
+
+        /*
         if (req.query._one_shot && path.match(/\.js$/)) {
             // A V8 test!!
             exec('JUTE_DEBUG=1 ' + p.join(__dirname, '..', 'jute_v8.js') + ' ' + url + '?do_coverage=' + req.query.do_coverage, function(error, stdout, stderr) {
@@ -124,7 +127,8 @@ Create:  function(hub) {
                     res.end(stdout);
                 }
             });
-        } else if (req.query.coverage) { // && (!req.headers.referer || req.headers.referer.match('do_coverage=1'))) {
+        } else */
+        if (req.query.coverage) { // && (!req.headers.referer || req.headers.referer.match('do_coverage=1'))) {
             // Coverage this bad boy!
             var tempFile = p.join('/tmp', p.basename(path));
             hub.emit(hub.LOG, hub.INFO, "Generating coverage file " + tempFile + " for " + path);
@@ -174,8 +178,7 @@ YUI().use('io-base', 'json-stringify', function(Y) {\
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\
             }\
         );\
-});}",
-        yuiConfig = "YUI_config = {loadErrorFn: function(a,b,c) { " + efun + "}, errorFn: function(a, b, c) { " + efun + " } };";
+});}";
 
         fs.stat(path, function(err, stat) {
             var type, charset,

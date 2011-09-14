@@ -99,13 +99,14 @@ module.exports = {
                 }
 
             },
-            takeSeleniumSnapshot: function(test, filename) {
+            takeSeleniumSnapshot: function(test, filename, component) {
                 var soda = require('soda'), i
                     b = soda.createClient({ host: test.sel_host });
 
                 if (!test.seleniumID) return;
 
-                b.sid = test.seleniumID;
+                b.sid    = test.seleniumID;
+                filename = path.join(hub.config.outputDir, (common.makeSaneNames(component))[0], filename);
 
                 b.chain.windowFocus().getEval("window.moveTo(1,0); window.resizeTo(screen.availWidth, screen.availHeight);").end(function(err) {
                     if (!err) {
@@ -113,9 +114,9 @@ module.exports = {
                             if (!err) {
                                 var msg;
                                 try {
-                                    var bb = new Buffer(body, 'base64');
+                                    var bb  = new Buffer(body, 'base64'),
+                                        msg = "Dumped snapshot for " + test.url + ' to ' + filename + "\n";
                                     fs.writeFileSync(filename, bb, 0, bb.length);
-                                    var msg = "Dumped snapshot for " + test.url + ' to ' + filename + "\n";
                                     common.addTestOutput(test, msg);
                                     hub.emit(hub.LOG, hub.INFO, msg);
                                 } catch(e) {
@@ -133,7 +134,7 @@ module.exports = {
             },
             addTestOutput: function(test, msg) {
                 var lines = msg.split(/\n/),
-                    now = new Date(), 
+                    now = new Date(),
                     output = '',
                     format;
 

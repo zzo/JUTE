@@ -45,7 +45,7 @@ module.exports = {
         // Events I care about
         hub.addListener('action:seleniumStart', startSelenium);
 
-        function startSelenium(req, res) {
+        function startSelenium(selID, req, res) {
             var soda = require('soda'), cb,
                 body = req.body,
                 browser
@@ -58,7 +58,7 @@ module.exports = {
                     browser: body.sel_browser
                 })
             } catch(e) {
-                hub.emit('action:seleniumDone', 'Cannot connect to Selenium server at ' + body.sel_host + ': ' + e);
+                hub.emit('action:seleniumDone', 'Cannot connect to Selenium server at ' + body.sel_host + ': ' + e, selID);
                 return;
             }
 
@@ -68,28 +68,27 @@ module.exports = {
                 cb();
             });
 
+            cache.connections[selID] = res; // our link back to the requesting client for status messages
+
             // called when all Selenium tests are complete for this browser
             //   && keep track of requesting client for debug messages back...
-            cache.connections[body.uuid] = res; // our link back to the requesting client for status messages
-
             // Callback for when the Selenium session is done
             cb = function(err) {
                 if (!err) {
                     browser.chain.testComplete().end(function(err) {
-                            delete cache.connections[body.uuid]; // done with status updates
-                            hub.emit('action:seleniumDone', err);
+                            delete cache.connections[selID]; // done with status updates
+                            hub.emit('action:seleniumDone', err, selID);
                         });
                 } else {
-                    hub.emit('action:seleniumDone', err);
+                    hub.emit('action:seleniumDone', err, selID);
                 }
             };
             cb = hub.once('seleniumTestsFinished', cb);
 
-            var oo;
             browser.
                 chain.
                 session().
-                open('/?selenium=' + body.uuid).
+                open('/?selenium=' + selID).
                 waitForPageToLoad(10000).
                 end(function(err) {
                     if (err) {
@@ -97,10 +96,10 @@ module.exports = {
                         hub.emit('seleniumTestsFinished', err);
                     } else {
                         hub.emit(hub.LOG, hub.INFO, "Selenium up and running: " + browser.sid);
-                        // If this is one of the tests that are going to run in thie
+                        // If this is one of the tests that are going to run in the
                         //  Selenium session, tag it with the Selenium token
                         cache.tests_to_run.forEach(function(test) {
-                            if (test.browser === body.uuid) {
+                            if (test.browser === selID) {
                                 test.seleniumID = browser.sid;
                             }
                         });

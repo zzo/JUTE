@@ -174,7 +174,7 @@ module.exports = {
                     //  only if a test fails
                     if ((!succeeded || test.snapshot) && req.session.selenium) {
                         hub.emit(hub.LOG, hub.INFO, 'Taking a Selenium snapshot of: ' + test.url);
-                        common.takeSeleniumSnapshot(test, path.join(names[1], path.basename(names[0], 'xml')) + '.png');
+                        common.takeSeleniumSnapshot(test, path.basename(names[0], 'xml') + '.png', obj.name);
                     } else {
                         hub.emit('action:doneDone', null, test);
                     }

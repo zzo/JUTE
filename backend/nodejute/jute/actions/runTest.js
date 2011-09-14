@@ -102,7 +102,15 @@ module.exports = {
             }
 
             var pushed = false, v8Tests = '',
-                seleniumUUID = uuid(), requestKey = uuid();
+                requestKey = uuid(), seleniumIDs = [];
+
+            // Generate Selenium IDs
+            if (obj.sel_host) {
+                var seleniums = parseInt(obj.seleniums, 10) || 1;
+                for (var i = 0; i < seleniums; i++) {
+                    seleniumIDs.push(uuid());
+                }
+            }
 
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i],
@@ -140,7 +148,9 @@ module.exports = {
 
                     // Only pass these tests out to selenium hosts started by this
                     //  this is how we keep track
-                    obj.uuid = test_obj.browser = seleniumUUID;
+                    //  hand this off to next SeleniumID
+                    console.log('choosing selenium id: ' + (i % seleniumIDs.length));
+                    test_obj.browser = seleniumIDs[i % seleniumIDs.length];
 
                     common.addTestOutput(test_obj, 'Selenium test');
 
@@ -149,7 +159,7 @@ module.exports = {
                 } else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
-                        
+
                         test_obj.browser = req.session.uuid;
 
                         common.addTestOutput(test_obj, 'Multiple in this browser test');
@@ -178,18 +188,31 @@ module.exports = {
             if (pushed) {
                 if (obj.sel_host) {
                     // Start up for a Selenium browser & Listen for results
-                    hub.once('action:seleniumDone', function(err) {
+                    var totalError = '';
+                    hub.on('action:seleniumDone', function(err, selID) {
+                        seleniumIDs.pop();
+                        var done = !seleniumIDs.length;
+                        if (done) hub.removeListener('action:seleniumDone', arguments.callee);
+
                         if (err) {
-                            hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests: ' + err);
-                            res.end("" + err);
+                            hub.emit(hub.LOG, hub.ERROR, 'ERROR running Selenium tests (' + selID + '): ' + err);
+                            totalError += err;
+                            if (done) {
+                                res.end(totalError);
+                            }
                         } else {
-                            hub.once('action:checkedResults', function(results) {
-                                res.end('Final Selenium Results: ' + JSON.stringify(results));
-                            });
-                            hub.emit('action:checkResults');
+                            if (done) {
+                                hub.once('action:checkedResults', function(results) {
+                                    res.end('Final Selenium Results: ' + JSON.stringify(results));
+                                });
+                                hub.emit('action:checkResults');
+                            }
                         }
                     });
-                    hub.emit('action:seleniumStart', req, res);
+
+                    seleniumIDs.forEach(function(selID) {
+                        hub.emit('action:seleniumStart', selID, req, res);
+                    });
                 } else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {
@@ -231,9 +254,6 @@ module.exports = {
                     res.end('No browsers listening!!  Test(s) not added!');
                 }
             }
-        }
-
-        function waitTests(res) {
         }
     }
 };

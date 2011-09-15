@@ -83,7 +83,7 @@ module.exports = {
                     hub.emit('action:seleniumDone', err, selID);
                 }
             };
-            cb = hub.once('seleniumTestsFinished', cb);
+            cb = hub.once(selID + 'finished', cb);
 
             browser.
                 chain.

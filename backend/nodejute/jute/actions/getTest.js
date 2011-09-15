@@ -102,7 +102,7 @@ module.exports = {
                 // No tests for me - end if we're a Selenium browser
                 if (req.session.selenium) {
                     // Selenium job all done!!
-                    hub.emit('seleniumTestsFinished');
+                    hub.emit(req.session.uuid + 'finished');
                 } else {
                     hub.emit('testsDone');
                 }

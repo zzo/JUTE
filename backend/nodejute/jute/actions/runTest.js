@@ -190,7 +190,8 @@ module.exports = {
                     // Start up for a Selenium browser & Listen for results
                     var totalError = '';
                     hub.on('action:seleniumDone', function(err, selID) {
-                        seleniumIDs.pop();
+                        seleniumIDs.pop();  // a selenium browser finished - we don't really care which one
+                                            //  as we're just waiting for all to finish
                         var done = !seleniumIDs.length;
                         if (done) hub.removeListener('action:seleniumDone', arguments.callee);
 

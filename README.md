@@ -290,6 +290,31 @@ Of course --sel_host can either point to an individual Selenium RC host or a Sel
 
 Note the docRoot/testDir prepended to the specified test files.
 
+#### Selenium Snapshots
+
+When running your tests thru Selenium you can get a screen snapshot of your test!  If ANY Selenium test fails JUTE will take a screenshot which will be available along with all the usual test output.
+
+If you specify '--snapshot' JUTE will ALWAYS take a screen snapshot AT THE END of ALL the tests from the *.html file.  So:
+
+    jute_submit_test --sel_host 10.3.4.45 --snapshot --test path/to/test/index.html
+
+Will generate a screenshot of the browser when all tests included by index.html are complete.
+
+#### Paralellized Selenium tests via Selenium Grid
+
+IF you have a Selenium grid set up AND would like to paralellize your unit tests thru it ensure your remote-controls all provide the same environment (like *firefox).
+
+Now using the '--seleniums <#>' command line option you can specify how many remote-controls you want to spawn in parallel to run all of the submitted unit tests - SO:
+
+    jute_submit_test --sel_host 10.3.4.45 --seleniums 5 --test path/to/test/index.html --test path/to/other/test.html ....
+
+Or even better to specify a krap-load of tests at once:
+
+    cd /path/to/tests && find . -name '*.html' -printf '%p?do_coverage=1\n' | jute_submit_test --sel_host 10.3.4.45 --seleniums 5 --test -
+
+This will attempt to spawn off 5 Selenium remote-controls - EACH WILL RUN 20% OF THE TESTS - to run your tests 5x faster.
+
+Note this is DIFFERENT than capture mode testing where ALL tests run through ALL browsers - in this case EACH browser gets 1/5th of the total number of tests.  This is because each remote-control is exactly the same!
 
 #### Running tests through V8
 
@@ -316,6 +341,8 @@ OR
 
 
 !! NOTE docRoot/testDir will be prepended to the specified test files. !!
+
+NOTE by default JUTE now ALWAYS generates code coverage information
 
 JUTE Output
 ============

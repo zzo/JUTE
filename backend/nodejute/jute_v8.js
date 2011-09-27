@@ -50,7 +50,6 @@ var  fs         = require('fs')
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
     ,REQUIRE    = require
     ,DONE       = false
-    ,EXIT       = false
     ,coverageReportJar = PATH.join(__dirname, 'jute', 'actions', 'yuitest-coverage-report.jar')
     ,coverageJar       = PATH.join(__dirname, 'jute', 'yuitest-coverage.jar')
     ,TEST_FILE
@@ -342,7 +341,7 @@ function doit(data) {
                 getScript(tag, executeScript);
             } else {
                 // Give the slacker 10 seconds to exit
-                setTimeout(function() { process.exit(0); }, 10000);
+//                setTimeout(function() { process.exit(0); }, 10000);
             }
         });
 
@@ -441,7 +440,7 @@ function doit(data) {
                         src = value.substring(7);
                     }
                     ssrc = src.split('?');
-                    DEBUG('loading: ' + ssrc[1]);
+                    DEBUG('loading: ' + ssrc);
                     if (ssrc[1] === 'coverage=1' && DO_COVERAGE) {
                         // Get coveraged version of this file
                         DEBUG('Doing coverage for ' + ssrc[0]);
@@ -475,13 +474,12 @@ process.on('uncaughtException', function (err) {
 });
 
 process.on('exit', function () {
-    if (!EXIT) {
-        EXIT = true;
-        if (!DONE) {
-            console.log('Premature exit: FAIL!');
-        }
-        process.exit(DONE ? 0 : 1);
+    if (!DONE) {
+        DONE=true;
+    console.trace();
+        console.log('Premature exit: FAIL!');
     }
+    process.exit(DONE ? 0 : 1);
 });
 
 

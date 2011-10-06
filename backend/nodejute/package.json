@@ -2,7 +2,7 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.53",
+  "version": "0.0.54",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin" : { 
@@ -14,7 +14,7 @@
     "start"   : "node ./jute/daemon.js --start",
     "stop"    : "node ./jute/daemon.js --stop"
   },
-  "engines": { "node": ">= 0.4.0" },
+  "engines": { "node": "~0.4" },
   "repository": {
     "type": "git",
     "url": "git://github.com/zzo/JUTE.git"
@@ -22,16 +22,16 @@
   "homepage": "https://github.com/zzo/JUTE",
   "dependencies" :
     {
-        "soda" : ">= 0.2.4"
-      , "node-uuid": ">= 1.2.0"
-      , "connect" : ">= 1.6.0"
-      , "npm" : ">= 1.0"
-      , "yui3": ">= 0.5.33"
-      , "xmlhttprequest" : ">= 1.2.2"
-      , "cookie-sessions" : ""
-      , "jsdom": ""
-      , "mime" : ""
-      , "optimist" : ""
+        "soda" : "~0.2"
+      , "node-uuid": "~1.2"
+      , "connect" : "~1.7"
+      , "npm" : "~1.0"
+      , "yui3": "~0.7"
+      , "xmlhttprequest" : "~1.2"
+      , "cookie-sessions" : "~0.0"
+      , "jsdom": "~0.2"
+      , "mime" : "~1.2"
+      , "optimist" : "~0.2"
   },
   "config" : {
     "port" : "8080",

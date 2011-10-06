@@ -37,8 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module.exports = {
     Create:  function(hub) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path'),
-            sys = require('sys'),
+        var path  = require('path'),
+            sys   = require('sys'),
+            fs    = require('fs'),
             cache = hub.cache
         ;
 

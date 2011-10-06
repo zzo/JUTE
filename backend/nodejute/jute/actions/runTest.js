@@ -55,11 +55,11 @@ module.exports = {
                 errors  = []
             ;
 
-            hub.emit(hub.LOG, hub.INFO, sys.inspect(obj));
+            hub.emit(hub.LOG, hub.INFO, 'OBJ: ' + sys.inspect(obj));
             if (obj.test) {
+                multipleFromUI = true;
                 // 'run multiple' from UI
                 if (typeof obj.test == 'object') {
-                    multipleFromUI = true;
                     tests = obj.test
                 } else {
                     tests = [ obj.test ];
@@ -160,20 +160,28 @@ module.exports = {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
 
-                        test_obj.browser = req.session.uuid;
-
-                        common.addTestOutput(test_obj, 'Multiple in this browser test');
-
-                        cache.tests_to_run.push(test_obj);
-                        pushed = true;
+                            pushed = true;
+                            for (var browser in cache.browsers) {
+                                (function(b) {
+                                    hub.emit(hub.LOG, hub.INFO, 'Adding this test to zob: ' + b);
+                                    var obj = JSON.parse(JSON.stringify(test_obj));
+                                    obj.browser = b;
+                                    common.addTestOutput(obj, 'Capture test');
+                                    cache.tests_to_run.push(obj);
+                                }(browser));
+                            }
                     } else {
                         // Send to each test to each captured browser
                         if (!obj.load) {
                             pushed = true;
                             for (var browser in cache.browsers) {
-                                test_obj.browser = browser;
-                                common.addTestOutput(test_obj, 'Capture test');
-                                cache.tests_to_run.push(test_obj);
+                                (function(b) {
+                                    hub.emit(hub.LOG, hub.INFO, 'Adding this test to zob: ' + b);
+                                    var obj = JSON.parse(JSON.stringify(test_obj));
+                                    obj.browser = b;
+                                    common.addTestOutput(obj, 'Capture test');
+                                    cache.tests_to_run.push(obj);
+                                }(browser));
                             }
                         } else {
                             common.addTestOutput(test_obj, 'Loading this test for any browser');

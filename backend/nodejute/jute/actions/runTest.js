@@ -95,7 +95,7 @@ module.exports = {
                 return;
             }
 
-            if (!Object.keys(cache.browsers).length && !obj.sel_host && capture && !obj.load) {
+            if (!Object.keys(cache.browsers).length && !obj.sel_host && !obj.phantomjs && capture && !obj.load) {
                 res.writeHead(412);
                 res.end("There are no currently captured browsers!");
                 return;
@@ -105,7 +105,7 @@ module.exports = {
                 requestKey = uuid(), seleniumIDs = [];
 
             // Generate Selenium IDs
-            if (obj.sel_host) {
+            if (obj.sel_host || obj.phantomjs) {
                 var seleniums = parseInt(obj.seleniums, 10) || 1;
                 for (var i = 0; i < seleniums; i++) {
                     seleniumIDs.push(uuid());
@@ -156,7 +156,26 @@ module.exports = {
 
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
-                } else {
+                } else if (obj.phantomjs) {
+                    test_obj.phantomjs = obj.phantomjs;
+                    if (obj.send_output) {
+                        test_obj.sendOutput = 1;
+                    }
+                    if (obj.snapshot) {
+                        test_obj.snapshot = 1;
+                    }
+
+                    // Only pass these tests out to phantomjs instances started by this
+                    //  this is how we keep track
+                    //  hand this off to next SeleniumID
+                    console.log('choosing phantomjs id: ' + (i % seleniumIDs.length));
+                    test_obj.browser = seleniumIDs[i % seleniumIDs.length];
+
+                    common.addTestOutput(test_obj, 'PhantomJS test');
+
+                    cache.tests_to_run.push(test_obj);
+                    pushed = true;
+                }else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
 
@@ -222,7 +241,35 @@ module.exports = {
                     seleniumIDs.forEach(function(selID) {
                         hub.emit('action:seleniumStart', selID, req, res);
                     });
-                } else {
+                } else if (obj.phantomjs) {
+                    // Start up for a Selenium browser & Listen for results
+                    var totalError = '';
+                    hub.on('action:phantomjsDone', function(err, selID) {
+                        seleniumIDs.pop();  // a selenium browser finished - we don't really care which one
+                                            //  as we're just waiting for all to finish
+                        var done = !seleniumIDs.length;
+                        if (done) hub.removeListener('action:phantomjsDone', arguments.callee);
+
+                        if (err) {
+                            hub.emit(hub.LOG, hub.ERROR, 'ERROR running PhantomJS tests (' + selID + '): ' + err);
+                            totalError += err;
+                            if (done) {
+                                res.end(totalError);
+                            }
+                        } else {
+                            if (done) {
+                                hub.once('action:checkedResults', function(results) {
+                                    res.end('Final PhantomJS Results: ' + JSON.stringify(results));
+                                });
+                                hub.emit('action:checkResults');
+                            }
+                        }
+                    });
+
+                    seleniumIDs.forEach(function(selID) {
+                        hub.emit('action:phantomjsStart', selID, obj.phantomjs, obj.screen, req, res);
+                    });
+                }else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {
                         // Now tell browser to run the tests!

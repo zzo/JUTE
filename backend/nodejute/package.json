@@ -29,7 +29,6 @@
       , "yui3": "~0.7"
       , "xmlhttprequest" : "~1.2"
       , "cookie-sessions" : "~0.0"
-      , "jsdom": "~0.2"
       , "mime" : "~1.2"
       , "optimist" : "~0.2"
   },

@@ -85,7 +85,7 @@ eventHub.on('configureDone', function() {
 
         // Dump the config file for jute_v8 and submit_tests
         console.log('DMPING: ' + JSON.stringify(eventHub.config));
-        fs.writeFile('/tmp/jute.config', JSON.stringify(eventHub.config));
+        fs.writeFileSync('/tmp/jute.config', JSON.stringify(eventHub.config));
 
         // Fire up server
         eventHub.emit('startServer');

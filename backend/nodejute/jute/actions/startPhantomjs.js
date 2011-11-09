@@ -47,20 +47,26 @@ module.exports = {
         // Events I care about
         hub.addListener('action:phantomjsStart', startPhantomjs);
 
-        function Phantomjs(selID, phantomjs, screen, req, res) {
+        function startPhantomjs(selID, phantomjs, screen, req, res) {
             var cb, phantom, body = req.body,
                 url = 'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host) + '/?selenium=' + selID
             ;
 
             try {
-                phantom = child.spawn(phantomjs, [url]);
+                hub.emit(hub.LOG, hub.INFO, "DISPLAY=:" + screen + ' ' + phantomjs + ' ' + path.join(__dirname, '..', "phantomJUTE.js") + ' ' + url);
+                process.env.DISPLAY = ':' + screen;
+                phantom = child.spawn(phantomjs, [ path.join(__dirname, '..', "phantomJUTE.js"), url]);
                 phantom.stdout.on('data', function(data) {
-                    hub.emit(hub.LOG, hub.INFO, "PhantomJS up and running: " + data);
+                    hub.emit(hub.LOG, hub.INFO, "PhantomJS sez: " + data);
                 });
                 phantom.stderr.on('data', function(data) {
+                    hub.emit(hub.LOG, hub.INFO, "PhantomJS stderr: " + data);
                 });
                 phantom.on('exit', function() {
-                    hub.emit(hub.LOG, hub.INFO, "PhantomJS up done");
+                    if (!phantom.done) {
+                        hub.emit(hub.LOG, hub.ERROR, "PhantomJS exited unexpectedly");
+                        cb('PhantomJS executable exited unexpectedly');
+                    }
                 });
 
             } catch(e) {
@@ -69,9 +75,9 @@ module.exports = {
             }
 
             // Give Selenium 1000 minutes to finish - should be good - 16 hours baby!
-            req.socket.setTimeout(60000000, function() {
+            req.socket.setTimeout(6000000, function() {
                 hub.emit(hub.LOG, hub.ERROR, 'Phantomjs taking too long - giving up');
-                cb();
+                cb('took too long!');
             });
 
             cache.connections[selID] = res; // our link back to the requesting client for status messages
@@ -80,6 +86,9 @@ module.exports = {
             //   && keep track of requesting client for debug messages back...
             // Callback for when the phantomjs process is done
             cb = function(err) {
+                hub.emit(hub.LOG, hub.INFO, 'Phantomjs done!');
+                phantom.done = true;
+                phantom.kill()
                 delete cache.connections[selID]; // done with status updates
                 hub.emit('action:phantomjsDone', err, selID);
             };

@@ -53,7 +53,7 @@ sys.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
 // Prime cache
-eventHub.cache = { browsers: {}, tests_to_run: [], connections: {} };
+eventHub.cache = { browsers: {}, tests_to_run: [], connections: {}, currentTest: {} };
 
 configure.Create(eventHub);
 actions.Create(eventHub, common.Create(eventHub));

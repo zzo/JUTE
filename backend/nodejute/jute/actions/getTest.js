@@ -83,6 +83,7 @@ module.exports = {
                 // Otherwise start running this test in capture mode!!
                 common.addTestOutput(test, "To browser " + bName);
                 test.running = now;
+                cache.currentTest[browser] = test;
                 testURL = test.url;
                 break;
             }
@@ -92,6 +93,7 @@ module.exports = {
                 res.end(JSON.stringify({ testLocation: testURL }));
                 hub.emit(hub.LOG, hub.INFO, "Sent test url: " + testURL + ' to ' + bName);
             } else {
+                delete cache.currentTest[browser];
                 // find all local tests
                 var find             = require('npm/lib/utils/find'),
                     prefix           = hub.config.testDir,

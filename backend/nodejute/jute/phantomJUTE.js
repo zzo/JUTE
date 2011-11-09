@@ -34,14 +34,24 @@ function waitFor(testFx, onReady, timeOutMillis) {
 };
 
 
-var page = new WebPage();
+var page = new WebPage(), outputDir = phantom.args[1];
 
 page.onAlert = function(msg) { console.log("ALERT: " + msg); };
-page.onConsoleMessage = function (msg) { console.log("CONSOLE: " + msg); };
-#page.onResourceRequested = function (msg) { console.log("Request: " + msg.url); };
-#page.onResourceReceived = function (msg) { console.log("Received: " + msg.url); };
+page.onConsoleMessage = function (msg) {
+    var matches = msg.match(/JUTE TestDone (.+)/);
+    if (matches != null) {
+        setTimeout(function() {
+            page.render(outputDir + '/' + matches[1] + '/phantomjs_snap.png');
+        }, 100);
+    } else {
+        console.log(msg);
+    }
+};
 
-// Open Twitter on 'sencha' profile and, onPageLoad, do...
+//page.onResourceRequested = function (msg) { console.log("Request: " + msg.url); };
+//page.onResourceReceived = function (msg) { console.log("Received: " + msg.url); };
+
+// Open to JUTE & wait - JUTE will kill us when we're done
 page.open(phantom.args[0], function (status) {
     // Check for page load success
     if (status !== "success") {

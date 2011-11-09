@@ -5,6 +5,10 @@ YUI().add('jute', function(Y) {
             var cover_out = Y.Test.Runner.getCoverage(Y.Coverage.Format.JSON),
                 report_data = Y.Test.Format.JUnitXML(data.results);
 
+            Y.Global.fire('testDone', data);
+            if (typeof(console) == 'object') {
+                console.log("JUTE TestDone " + data.results.name);
+            }
             Y.io('/jute/_test_report',
                 {
                     method: 'PUT',

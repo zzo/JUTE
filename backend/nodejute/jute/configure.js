@@ -52,6 +52,8 @@ Create:  function(hub) {
                 logFormat:      '',
                 testRegex:      '.html$',
                 inject:         1,
+                screen:         0,
+                phantomjs:      '/usr/local/bin/phantomjs',
                 host:           ''
             },
             exec = require('child_process').exec,

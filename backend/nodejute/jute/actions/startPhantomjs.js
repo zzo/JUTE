@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub) {
+    Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path  = require('path'),
             sys   = require('sys'),
@@ -55,12 +55,17 @@ module.exports = {
             try {
                 hub.emit(hub.LOG, hub.INFO, "DISPLAY=:" + screen + ' ' + phantomjs + ' ' + path.join(__dirname, '..', "phantomJUTE.js") + ' ' + url);
                 process.env.DISPLAY = ':' + screen;
-                phantom = child.spawn(phantomjs, [ path.join(__dirname, '..', "phantomJUTE.js"), url]);
+                phantom = child.spawn(phantomjs, [ path.join(__dirname, '..', "phantomJUTE.js"), url, hub.config.outputDir]);
                 phantom.stdout.on('data', function(data) {
+                    if (data === 'snapshot') {
+                        hub.emit(hub.LOG, hub.INFO, "SNAPSHOT!");
+                    }
                     hub.emit(hub.LOG, hub.INFO, "PhantomJS sez: " + data);
+                    common.addTestOutput(cache.currentTest[selID], 'PhantomJS console: ' + data);
                 });
                 phantom.stderr.on('data', function(data) {
-                    hub.emit(hub.LOG, hub.INFO, "PhantomJS stderr: " + data);
+                    hub.emit(hub.LOG, hub.ERROR, "PhantomJS stderr: " + data);
+                    common.addTestOutput(cache.currentTest[selID], 'PhantomJS error: ' + data);
                 });
                 phantom.on('exit', function() {
                     if (!phantom.done) {

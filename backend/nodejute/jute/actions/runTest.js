@@ -106,7 +106,7 @@ module.exports = {
 
             // Generate Selenium IDs
             if (obj.sel_host || obj.phantomjs) {
-                var seleniums = parseInt(obj.seleniums, 10) || 1;
+                var seleniums = parseInt(obj.seleniums, 10) || parseInt(obj.parallel, 10) || 1;
                 for (var i = 0; i < seleniums; i++) {
                     seleniumIDs.push(uuid());
                 }
@@ -157,6 +157,12 @@ module.exports = {
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
                 } else if (obj.phantomjs) {
+                    if (obj.phantomjs == 1) {
+                        obj.phantomjs = hub.config.phantomjs;
+                        if (!obj.screen) {
+                            obj.screen = hub.config.screen;
+                        }
+                    }
                     test_obj.phantomjs = obj.phantomjs;
                     if (obj.send_output) {
                         test_obj.sendOutput = 1;
@@ -175,7 +181,7 @@ module.exports = {
 
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
-                }else {
+                } else {
                     if (multipleFromUI) {
                         // Only run these tests in THIS browser from the UI
 

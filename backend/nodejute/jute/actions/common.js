@@ -138,6 +138,8 @@ module.exports = {
                     output = '',
                     format;
 
+                if (!test) return;
+
                 format = now.getFullYear() + '/' + (now.getMonth() + 1) + '/' +  now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
                 lines.forEach(function(line) {
                     output += '[' + format + '] ' + line + "\n";

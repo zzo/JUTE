@@ -82,9 +82,19 @@ Create:  function(hub) {
         // Web paths and full paths...
         config.outputDirWeb = config.outputDir;
         config.outputDir    = path.join(config.docRoot, config.outputDir);
+        try {
+            fs.statSync(config.outputDir);
+        } catch(e) {
+            fs.mkdirSync(config.outputDir, 0777)
+        }
 
         config.testDirWeb   = config.testDir;
         config.testDir      = path.join(config.docRoot, config.testDir);
+        try {
+            fs.statSync(config.testDir);
+        } catch(e) {
+            fs.mkdirSync(config.testDir, 0777)
+        }
 
         // Find Java executable
         if (process.env.JAVA_HOME) {

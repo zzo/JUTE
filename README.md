@@ -7,7 +7,7 @@ Javascript Unit Testing Environment (JUTE)
 Abstract
 =========
 
-JUTE allows unobtrusive [JavaScript](JavaScript.html) YUI3 unit testing with code coverage. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture, and V8.
+JUTE enables unobtrusive, automated [JavaScript](JavaScript.html) YUI3 unit testing with code coverage. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture, PhantomJS/WebKit, and V8.
 
 Requirements
 
@@ -26,7 +26,7 @@ Super Quick Start
 Theory
 -----
 
-JUTE is a standalone HTTP server that serves your test files to a JUTE backend for testing.  Two of the three backends (Selenium and Capture) serve files to a browser, the third backend (V8) will run your tests directly in V8.
+JUTE is a standalone HTTP server that serves your test files to a JUTE backend for testing.  Three of the four backends (Selenium, Capture, and PhantomJS) serve files to a browser, the third backend (V8) will run your tests directly in V8.
 JUTE then collects and stores test output in JUnit XML format and code coverage information in 'lcov' format and generates pretty HTML to view your coverage results.  That is it!
 
 Variable Setup
@@ -40,17 +40,19 @@ For gory details.  But simply:
 
     % npm config set jute:port 80
 
-Will set the port the JUTE webserver listens on to 80.
+Will set the port the JUTE webserver listens on to 80.  You must 'npm restart jute -g' for any setting changesto take effect!
 
 Here are some important JUTE configuration variables and their defaults:
 
-                port:           8080,
-                docRoot:        '/var/www/',
-                testDir:        'test/',
-                outputDir:      'output/',
-                java:           '/usr/bin/java',
-                logfile:        '/tmp/jute.log',
+                port:           8080
+                docRoot:        '/var/www/'
+                testDir:        'test/'
+                outputDir:      'output/'
+                java:           '/usr/bin/java'
+                logfile:        '/tmp/jute.log'
                 pidfile:        '/tmp/jute.pid'
+                phantomjs:      '/usr/local/bin/phantomjs'
+                screen:         0
 
 To set any of these do:
 
@@ -69,6 +71,8 @@ What the variables mean:
 * java: Location of 'java' executable
 * logfile: Where JUTE dumps debug output
 * pidfile: Where JUTE keeps its PID
+* phantomjs: Path to 'phantomjs' executable
+* screen: Screen number of X Server for PhantomJS
 
 You MUST restart JUTE after you change any variable:
 
@@ -171,6 +175,15 @@ This mode can currently only be accessed via the command line tool 'jute_submit_
 
 Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.  Note NOT all client-side javascript unit tests are guaranteed to run in the V8 backend!!  Tests which require browser-y features like event simulation will not run as mouseclicks and keyevents and the like do not exist in nodejs.  HOWEVER DOM manipulation DOES work thanks to [jsdom](https://github.com/tmpvar/jsdom) - which is provided by the nodejs-ized [YUI3](https://github.com/davglass/nodejs-yui3) - which JUTE automatically installs for you.
 
+PhantomJS
+---------
+[PhantomJS](http://phantomjs.org) is standalone (potentially) headless WebKit.  This backend behaves similarly to Selenium but without the need of a head!  Further ANY client-side unit test should run just fine as Webkit has both a Javascript parser and DOM support built in.
+
+If you have PhantomJS installed point JUTE to the location of the 'phantomjs' executable and which screen your X Server is running on via the 'phantomjs' and 'screen' npm variables.  JUTE will run fine regardless of if you're using a 'real' X Server or Xvfb.  And yes there is snapshot support.
+
+This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.  Basically you submit tests from the command line too 'jute_submit_test' along with the '--phantomjs' command line option.
+
+Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.
 
 Using JUTE
 ===========
@@ -324,25 +337,35 @@ Specify '--v8' on the command line and all of the specified tests will be run th
 
 OR any other permutation of test specification as outlined above.
 
+#### Running tests through PhantomJS
+
+Once you have set the 'phantomjs' and 'screen' npm variables you can use the PhantomJS backend.
+
+Specify --phantomjs to run the submitted tests through PhantomJS:
+
+    jute_submit_test --phantomjs --test path/to/test/index.html
+
+Currently the PhantomJS backend will snapshot EVERY test regardless of success or failure.
 
 #### Specifying code coverage
 
-If you'd like your test(s) to run with code coverage enabled add the querystring '?do_coverage=1' to each test you want code coverage enabled for:
+Note code coverage is now enabled BY DEFAULT!
 
-    % jute_submit_test --test path/to/my/test/index.html?do_coverage=1
+If you do NOT want code coverage use the '?do_coverage=0' query string.
 
-OR
-
-    % jute_submit_test --sel_host 10.3.4.45 --test path/to/test/index.html?do_coverage=1
+    % jute_submit_test --test path/to/my/test/index.html?do_coverage=0
 
 OR
 
-    % jute_submit_test --test path/to/my/test/index.html?do_coverage=1 --test path/to/other/test/index.html --test path/to/other/other/test.html
+    % jute_submit_test --sel_host 10.3.4.45 --test path/to/test/index.html?do_coverage=0
 
+OR
+
+    % jute_submit_test --test path/to/my/test/index.html?do_coverage=0 --test path/to/other/test/index.html --test path/to/other/other/test.html
 
 !! NOTE docRoot/testDir will be prepended to the specified test files. !!
 
-NOTE by default JUTE now ALWAYS generates code coverage information
+Again by default JUTE ALWAYS generates code coverage information
 
 JUTE Output
 ============
@@ -519,16 +542,26 @@ You can of course also select all checkboxes in the webui and the result is the 
 
 All output will go to STDOUT.
 
+### PhantomJS
 
-Hudson Build Environment
--------------------------
+    run_phantomjs_unit_tests:
+        cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --phantomjs --test {}?$(DO_COVERAGE) \\;
+
+All output will go to STDOUT.
+
+### Selenium
 
 All of your tests can be run thru Selenium - they all need to submitted at once to run as one job:
 
     submit_selenium_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | jute_submit_test.pl --test - --sel_host $(SEL_HOST) --sel_browser $(SEL_BROWSER) --send_output
 
-This will return once all tests have run.  Ensure Hudson is configured correctly to look in the output directory for test results and code coverage.  If a unit test fails Hudson will label the build 'Unstable'.  Clicking thru the "Test Results" will reveal the failed test(s).
+This will return once all tests have run.
+
+Hudson Build Environment
+-------------------------
+
+Ensure Hudson is configured correctly to look in the output directory for test results and code coverage.  If a unit test fails Hudson will label the build 'Unstable'.  Clicking thru the "Test Results" will reveal the failed test(s).
 
 Build/Hudson integration
 ========================
@@ -567,6 +600,11 @@ Running JUTE/browser tests locally is a simple Makefile rule.
     submit_v8_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --v8 --test {}?$(DO_COVERAGE} \\; 
 
+#### PhantomJS
+
+    submit_phantomjs_tests:
+        cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -exec jute_submit_test --phantomjs --test {}?$(DO_COVERAGE} \\; 
+
 
 Viewing Test Results
 ---------------------
@@ -578,9 +616,9 @@ All results are stored in outputDir - you can look at the *.xml files to view th
 
 ### Browser
 
-    http://<jute host>/
+    http://<jute host>:<jute port>/
 
-& click on links in the 'Results' column - this will show results for captured, Selenium, and V8 tests.
+& click on links in the 'Results' column - this will show results for captured, Selenium, PhantomJS, and V8 tests.
 
 
 #### Hudson Code Coverage
@@ -604,8 +642,15 @@ This can be accomplished by a simple Makefile rule:
 
 Now simply point Hudson to this aggregated 'lcov.info' file - check 'Publish Lcov Coverage Report' and set 'lcov.info file mask' to something similar to '&lt;outputDir>/lcov.info' depending on where your outputDir is relative to your workspace root.
 
+Instead of 'cat'ing all the lcov.info files together - IF there is overlap of the same JS files in multiple lcov.out files you should use 'lcov -a' instead.
+
+Issues
+======
+
+Please file all JUTE issues here on github: [JUTE Issue Tracker](https://github.com/zzo/JUTE/issues)
 
 License
 =======
 
 This software is licensed under the BSD license available at http://developer.yahoo.com/yui/license.html
+

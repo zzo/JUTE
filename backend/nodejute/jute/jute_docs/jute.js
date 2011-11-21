@@ -179,8 +179,8 @@ YUI().add('jute', function(Y) {
                                     test = data.availableTests[i];
                                     content += '<tr>';
                                     content += '<td>' + test.test_url + '</td>';
-                                    content += '<td align="center"><input name="test" class="no_cov_cbox" type="checkbox" value="' + test.test_url + '" />&nbsp;<a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1">Run</a></td>';
-                                    content += '<td align="center"><input name="test" class="cov_cbox" type="checkbox" value="' + test.test_url + '?do_coverage=1" /><a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1&do_coverage=1">Run</a></td>';
+                                    content += '<td align="center"><input name="test" class="no_cov_cbox" type="checkbox" value="' + test.test_url + '?do_coverage=0" />&nbsp;<a href="/' + data.config.testDirWeb + test.test_url + '?do_coverage=0&_one_shot=1">Run</a></td>';
+                                    content += '<td align="center"><input name="test" class="cov_cbox" type="checkbox" value="' + test.test_url + '" /><a href="/' + data.config.testDirWeb + test.test_url + '?_one_shot=1">Run</a></td>';
                                     content += '</tr>';
                                 }
                                 content += '</table>';

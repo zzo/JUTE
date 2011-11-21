@@ -117,18 +117,11 @@ Create:  function(hub) {
 
         try { fs.statSync(path); } catch(e) { res.writeHeader(404); res.end('Cannot find: ' + path ); return; }  // 404 this bad boy
 
-        /*
-        if (req.query._one_shot && path.match(/\.js$/)) {
-            // A V8 test!!
-            exec('JUTE_DEBUG=1 ' + p.join(__dirname, '..', 'jute_v8.js') + ' ' + url + '?do_coverage=' + req.query.do_coverage, function(error, stdout, stderr) {
-                if (error) {
-                    res.end('V8 ERROR: ' + error);
-                } else {
-                    res.end(stdout);
-                }
-            });
-        } else */
-        if (req.query.coverage) { // && (!req.headers.referer || req.headers.referer.match('do_coverage=1'))) {
+        // Do coverage for this file IF:
+        //  1. coverage requested
+        //  2a. referrer header does not exist
+        //  2b. OR referrer header ODES NOT HAVE 'do_coverage=0' in its query string
+        if (req.query.coverage && req.headers.referer && !req.headers.referer.match('do_coverage=0')) {
             // Coverage this bad boy!
             var tempFile = p.join('/tmp', p.basename(path));
             hub.emit(hub.LOG, hub.INFO, "Generating coverage file " + tempFile + " for " + path);

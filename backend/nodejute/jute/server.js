@@ -50,7 +50,6 @@ Create:  function(hub) {
         var connect  = require('connect'),
             sessions = require('cookie-sessions'),
             os       = require('os'),
-            sys      = require('sys'),
             uuid     = require('node-uuid');
 
         hub.emit(hub.LOG, hub.INFO, "Running as " + process.getuid() + '/' + process.getgid());

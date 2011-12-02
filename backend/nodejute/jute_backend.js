@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 // npm npm start jute -g 2&>1 > LOGFILE &
-var sys       = require('sys'),
+var util      = require('util'),
     fs        = require("fs"),
     events    = require("events"),
     configure = require('./jute/configure'),
@@ -49,7 +49,7 @@ var sys       = require('sys'),
 /**
  * Create our event hub
  */
-sys.inherits(eventHubF, events.EventEmitter);
+util.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
 // Prime cache

@@ -2,7 +2,6 @@
 
 var opt     = require( "optimist"),
     fs      = require('fs'),
-    sys     = require('sys'),
     args    = opt
         .usage('Usage: $0 [ --start ] [ --stop ]')
         .alias('s', 'start')

@@ -38,7 +38,6 @@ module.exports = {
     Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path  = require('path'),
-            sys   = require('sys'),
             fs    = require('fs'),
             child = require('child_process'),
             cache = hub.cache
@@ -47,8 +46,9 @@ module.exports = {
         // Events I care about
         hub.addListener('action:phantomjsStart', startPhantomjs);
 
-        function startPhantomjs(selID, phantomjs, screen, req, res) {
+        function startPhantomjs(selID, screen, req, res) {
             var cb, phantom, body = req.body,
+                phantomjs = hub.config.phantomjs,
                 url = 'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host) + '/?selenium=' + selID
             ;
 

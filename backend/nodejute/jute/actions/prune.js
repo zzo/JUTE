@@ -104,8 +104,8 @@ module.exports = {
         }
 
         function prune_browsers(req) {
-            var me = req.session.uuid,
-                sys = require('sys');
+            var me   = req.session.uuid,
+                util = require('util');
 
             // only check other browsers
             for (browser in cache.browsers) {
@@ -122,7 +122,7 @@ module.exports = {
                             var test = cache.tests_to_run[i];
                             if (test.browser == browser) {
                                 // blow this test out!
-                                hub.emit(hub.LOG, hub.ERROR,  "Deleting this test that was part of lost browser: " + sys.inspect(test));
+                                hub.emit(hub.LOG, hub.ERROR,  "Deleting this test that was part of lost browser: " + util.inspect(test));
                                 cache.tests_to_run.splice(i, 1);
                                 i--; // fake a perl 'redo'!!  Otherwise we might skip over something!
                                 common.badUnitTest(req, test);

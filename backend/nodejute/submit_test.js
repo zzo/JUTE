@@ -41,7 +41,7 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs <path> ] [ --screen # ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ] [ --screen # ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
@@ -63,6 +63,7 @@ var config = (require('./getConfig'))(),
         .default('v8', false)
         .default('snapshot', false)
         .default('load', false)
+        .default('phantomjs', false)
         .default('clear_results', false)
         .default('seleniums', 1)
         .default('sel_browser', '*firefox')
@@ -85,9 +86,9 @@ var config = (require('./getConfig'))(),
         .describe('phantomjs', 'Path to phantomjs executable')
         .describe('screen', 'X screen number where an X server is listening')
         .argv,
-    sys  = require('sys'),
-    qs   = require('querystring'),
-    http = require('http'),
+    util  = require('util'),
+    qs    = require('querystring'),
+    http  = require('http'),
     juteArgs = {};
 
 if (!config) {
@@ -112,7 +113,7 @@ if (args.v8 && args.sel_host) {
     process.exit(1);
 }
 
-sys.inherits(eventHubF, events.EventEmitter);
+util.inherits(eventHubF, events.EventEmitter);
 var eventHub = new eventHubF();
 
 var options = {
@@ -154,7 +155,7 @@ eventHub.on('tests', function(tests) {
 
             // Toss in Selenium stuff
             if (args.phantomjs) {
-                juteArgs.phantomjs = args.phantomjs;
+                juteArgs.phantomjs = 1;
                 juteArgs.screen = args.screen;
             }
 
@@ -178,7 +179,7 @@ eventHub.on('tests', function(tests) {
             options.headers = { 'Content-Type': 'application/json' };
 
             // See what we got
-            console.log('Submitting ' + sys.inspect(juteArgs) + ' to ' + args.host);
+            console.log('Submitting ' + util.inspect(juteArgs) + ' to ' + args.host);
 
             // POST AWAY!
             var req = http.request(options, function(res) {

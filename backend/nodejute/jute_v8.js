@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 var  fs         = require('fs')
-    ,sys        = require('sys')
     ,YUI        = require("yui3").YUI
     ,http       = require('http')
     ,PATH       = require('path')

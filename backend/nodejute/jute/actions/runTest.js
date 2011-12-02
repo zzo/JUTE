@@ -48,14 +48,14 @@ module.exports = {
                 path    = require('path'),
                 fs      = require('fs'),
                 obj     = req.body,
-                sys     = require('sys'),
+                util    = require('util'),
                 tests, multipleFromUI = false,
                 capture = false,
                 exec    = require('child_process').exec,
                 errors  = []
             ;
 
-            hub.emit(hub.LOG, hub.INFO, 'OBJ: ' + sys.inspect(obj));
+            hub.emit(hub.LOG, hub.INFO, 'OBJ: ' + util.inspect(obj));
             if (obj.test) {
                 multipleFromUI = true;
                 // 'run multiple' from UI
@@ -157,13 +157,9 @@ module.exports = {
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
                 } else if (obj.phantomjs) {
-                    if (obj.phantomjs == 1) {
-                        obj.phantomjs = hub.config.phantomjs;
-                        if (!obj.screen) {
-                            obj.screen = hub.config.screen;
-                        }
+                    if (!obj.screen) {
+                        obj.screen = hub.config.screen;
                     }
-                    test_obj.phantomjs = obj.phantomjs;
                     if (obj.send_output) {
                         test_obj.sendOutput = 1;
                     }
@@ -215,7 +211,7 @@ module.exports = {
                     }
                 }
 
-                common.addTestOutput(test_obj, sys.inspect(test_obj));
+                common.addTestOutput(test_obj, util.inspect(test_obj));
             }
 
             if (pushed) {
@@ -273,7 +269,7 @@ module.exports = {
                     });
 
                     seleniumIDs.forEach(function(selID) {
-                        hub.emit('action:phantomjsStart', selID, obj.phantomjs, obj.screen, req, res);
+                        hub.emit('action:phantomjsStart', selID, obj.screen, req, res);
                     });
                 }else {
                     // UI wants to run multiple tests - redirect to it!

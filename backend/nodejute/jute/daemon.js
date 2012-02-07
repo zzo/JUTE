@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!env node
 
 var opt     = require( "optimist"),
     fs      = require('fs'),
@@ -9,12 +9,11 @@ var opt     = require( "optimist"),
         .describe('start', 'Start JUTE')
         .describe('stop', 'Stop JUTE')
         .argv,
-    logfile = process.env['npm_package_config_logfile'],
-    pidfile = process.env['npm_package_config_pidfile']
+    pidfile = process.env['npm_package_config_pidfile'] || '/tmp/jute.pid'
     ;
 
 function start() {
-    var spawn = require('child_process').spawn, fd, jute;
+    var spawn = require('child_process').spawn, jute;
 
     try {
         var pid = fs.readFileSync(pidfile);
@@ -36,20 +35,13 @@ function start() {
     }
 
     try {
-        fd = fs.openSync(logfile, 'w');
-    } catch(e) {
-        console.error('Error opening logfile: ' + e);
-        return;
-    }
-
-    try {
-        jute = spawn('./jute_backend.js', [], { setsid: false, customFds: [-1, fd, fd], cwd: process.cwd() });
+        jute = spawn('./jute_backend.js', [], { setsid: false, cwd: process.cwd() });
     } catch(e) {
         console.error("Error spawing JUTE: " + e);
         process.exit(1);
     }
 
-    jute.on('exit', function() { fs.unlinkSync(pidfile); });
+    jute.on('exit', function() {  try { fs.unlinkSync(pidfile); } catch(e) {} });
 
     try {
         fs.writeFileSync(pidfile, "" + jute.pid);
@@ -79,4 +71,4 @@ if (args.start) {
     console.error("You must specify 'start' or 'stop'!");
 }
 
-process.exit(0);
+//process.exit(0);

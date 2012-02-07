@@ -241,7 +241,7 @@ module.exports = {
                     });
 
                     seleniumIDs.forEach(function(selID) {
-                        hub.emit('action:seleniumStart', selID, req, res);
+                        hub.emit('action:selenium2Start', selID, req, res);
                     });
                 } else if (obj.phantomjs) {
                     // Start up for a Selenium browser & Listen for results

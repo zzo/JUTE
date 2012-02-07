@@ -42,8 +42,7 @@ var util      = require('util'),
     server    = require('./jute/server'),
     actions   = require('./jute/actions'),
     common    = require('./jute/actions/common'),
-    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; this.INFO = 'info'; },
-    pidFile   = '/tmp/jute.pid'
+    eventHubF = function() { events.EventEmitter.call(this); this.LOG = 'log'; this.ERROR = 'error'; this.INFO = 'info'; }
     ;
 
 /**
@@ -55,19 +54,26 @@ var eventHub = new eventHubF();
 // Prime cache
 eventHub.cache = { browsers: {}, tests_to_run: [], connections: {}, currentTest: {} };
 
+// Some app-wide helpers
+eventHub.addListener(eventHub.LOG, function(sev, str) {
+    var output;
+    if (sev === eventHub.ERROR) {
+        output = 'ERROR: ' + str + "\n";
+    } else {
+        output = str + "\n";
+    }
+
+    if (eventHub.config.logFD) {
+        fs.writeSync(eventHub.config.logFD, output);
+    } else {
+        console.error(str);
+    }
+});
+
 configure.Create(eventHub);
 actions.Create(eventHub, common.Create(eventHub));
 server.Create(eventHub);
 
-// Some app-wide helpers
-eventHub.addListener(eventHub.LOG, function(sev, str) {
-    if (sev === eventHub.ERROR) {
-        console.log('ERROR: ' + str);
-    } else {
-        console.log(str);
-    }
-
-});
 
 // Get Party Started
 eventHub.on('configureError', function(obj) {

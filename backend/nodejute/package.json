@@ -14,7 +14,6 @@
     "start"   : "node ./jute/daemon.js --start",
     "stop"    : "node ./jute/daemon.js --stop"
   },
-  "engines": { "node": "~0.4" },
   "repository": {
     "type": "git",
     "url": "git://github.com/zzo/JUTE.git"
@@ -27,10 +26,12 @@
       , "connect" : "~1.7"
       , "npm" : "~1.0"
       , "yui3": "~0.7"
+      , "wordwrap": ""
       , "xmlhttprequest" : "~1.2"
       , "cookie-sessions" : "~0.0"
       , "mime" : "~1.2"
       , "optimist" : "~0.2"
+      , "webdriverjs" : ""
   },
   "config" : {
     "port" : "5883",

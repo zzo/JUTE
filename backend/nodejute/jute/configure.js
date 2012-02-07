@@ -44,12 +44,13 @@ Create:  function(hub) {
     function configure() {
 
         var config = {
-                port:           8080,
+                port:           5883,
                 docRoot:        '/var/www',
                 testDir:        'test/',
                 outputDir:      'output/',
                 java:           '',
                 logFormat:      '',
+                logFile:        '/tmp/jute.log',
                 testRegex:      '.html$',
                 inject:         1,
                 screen:         0,
@@ -59,12 +60,22 @@ Create:  function(hub) {
             exec = require('child_process').exec,
             fs   = require('fs');
 
+        hub.config = config;
+
         // Suck in NPM config variables
         for (var key in config) {
             var val = process.env['npm_package_config_' + key];
             if (val) {
                 config[key] = val;
             }
+        }
+
+        try {
+            config.logFD = fs.openSync(config.logFile, "w");
+        } catch(e) {
+            console.error('Cannot open logilfe: ' + e);
+            hub.emit('configureError', { name: 'logFile', value: config.logFile, error: e } );
+            return;
         }
 
         try {
@@ -85,7 +96,13 @@ Create:  function(hub) {
         try {
             fs.statSync(config.outputDir);
         } catch(e) {
-            fs.mkdirSync(config.outputDir, 0777)
+            try {
+                fs.mkdirSync(config.outputDir, 0777)
+            } catch(e2) {
+                hub.emit(hub.LOG, hub.ERROR, "Cannot make output dir: " + e2);
+                hub.emit('configureError', { name: 'outputDir', value: config.outputDir, error: e2 } );
+                return;
+            }
         }
 
         config.testDirWeb   = config.testDir;
@@ -93,31 +110,46 @@ Create:  function(hub) {
         try {
             fs.statSync(config.testDir);
         } catch(e) {
-            fs.mkdirSync(config.testDir, 0777)
+            try {
+                fs.mkdirSync(config.testDir, 0777)
+            } catch(e2) {
+                hub.emit(hub.LOG, hub.ERROR, "Cannot make test dir: " + e2);
+                hub.emit('configureError', { name: 'testDir', value: config.testDir, error: e2 } );
+                return;
+            }
         }
 
         // Find Java executable
-        if (process.env.JAVA_HOME) {
-            config.java = path.join(process.env.JAVA_HOME, 'bin', 'java');
-        } else if (!config.java) {
+        if (!config.java) {
             exec('which java', function (error, stdout, stderr) {
                 if (!error) {
                     config.java = stdout.trim();
                 }
+                try {
+                    var stat = fs.statSync(config.java);
+                    if (!stat.isFile()) {
+                        throw 'foobie';
+                    }
+                } catch(e) {
+                    hub.emit(hub.LOG, hub.ERROR, '** Cannot find "java" executable in PATH **');
+                    hub.emit(hub.LOG, hub.ERROR, 'Set the "java" configuration variable (% npm config set jute:java <path>)');
+                    hub.emit(hub.LOG, hub.ERROR, 'Or add the "java" executable to your PATH');
+                    hub.emit('configureError', { name: 'java', value: config.java, error: e } );
+                    return;
+                }
             });
-        }
-
-        try {
-            var stat = fs.statSync(config.java);
-            if (!stat.isFile()) {
-                throw 'foobie';
+        } else {
+            try {
+                var stat = fs.statSync(config.java);
+                if (!stat.isFile()) {
+                    throw 'foobie';
+                }
+            } catch(e) {
+                hub.emit(hub.LOG, hub.ERROR, '** Cannot find "java" executable **');
+                hub.emit(hub.LOG, hub.ERROR, 'NPM java config variable improperly set: ' + config.java);
+                hub.emit('configureError', { name: 'java', value: config.java, error: e } );
+                return;
             }
-        } catch(e) {
-            hub.emit(hub.LOG, hub.ERROR, '** Cannot find "java" executable **');
-            hub.emit(hub.LOG, hub.ERROR, 'Set $JAVA_HOME OR set the "java" configuration variable (% npm config set jute:java <path>)');
-            hub.emit(hub.LOG, hub.ERROR, 'Or add the "java" executable to your PATH');
-            hub.emit('configureError', { name: 'java', value: config.java, error: e } );
-            return;
         }
 
         // Make sure output directory is writable for grins...

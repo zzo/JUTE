@@ -7,7 +7,7 @@ Javascript Unit Testing Environment (JUTE)
 Abstract
 =========
 
-JUTE enables unobtrusive, automated [JavaScript](JavaScript.html) YUI3 unit testing with code coverage. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium, Capture, PhantomJS/WebKit, and V8.
+JUTE enables unobtrusive, automated [JavaScript](JavaScript.html) YUI3 unit testing with code coverage. Command line and web-based interfaces make JUTE easy to integrate with Hudson, developers, and even (gasp!) managers. There are 3 backends available to test your code: Selenium (1, 2, and grid), Capture, PhantomJS/WebKit, and V8.
 
 Requirements
 
@@ -168,6 +168,8 @@ This mode can currently only be accessed via the command line tool 'jute_submit_
 
 Tests are expected to be in the standard test location and output will go into the standard output location as detailed above.
 
+To use WebDriver (Selenium2) you must use the '--sel2' flag on the command line
+
 V8/NodeJS
 ----------
 
@@ -303,6 +305,10 @@ Of course --sel_host can either point to an individual Selenium RC host or a Sel
 
 Note the docRoot/testDir prepended to the specified test files.
 
+For Selenium2 (WebDriver) use:
+
+    jute_submit_test --sel_host 10.3.4.45 [ --sel_browser firefox ] --test path/to/test/index.html --sel2
+
 #### Selenium Snapshots
 
 When running your tests thru Selenium you can get a screen snapshot of your test!  If ANY Selenium test fails JUTE will take a screenshot which will be available along with all the usual test output.
@@ -313,11 +319,15 @@ If you specify '--snapshot' JUTE will ALWAYS take a screen snapshot AT THE END o
 
 Will generate a screenshot of the browser when all tests included by index.html are complete.
 
+For Selenium2 (WebDriver):
+
+    jute_submit_test --sel_host 10.3.4.45 --snapshot --test path/to/test/index.html --sel2
+
 #### Paralellized Selenium tests via Selenium Grid
 
 IF you have a Selenium grid set up AND would like to paralellize your unit tests thru it ensure your remote-controls all provide the same environment (like *firefox).
 
-Now using the '--seleniums <#>' command line option you can specify how many remote-controls you want to spawn in parallel to run all of the submitted unit tests - SO:
+Now using the '--seleniums <#>' command line option you can specify how many remote-controls for Selenium Grid you want to spawn in parallel to run all of the submitted unit tests - SO:
 
     jute_submit_test --sel_host 10.3.4.45 --seleniums 5 --test path/to/test/index.html --test path/to/other/test.html ....
 
@@ -325,7 +335,7 @@ Or even better to specify a krap-load of tests at once:
 
     cd /path/to/tests && find . -name '*.html' -printf '%p?do_coverage=1\n' | jute_submit_test --sel_host 10.3.4.45 --seleniums 5 --test -
 
-This will attempt to spawn off 5 Selenium remote-controls - EACH WILL RUN 20% OF THE TESTS - to run your tests 5x faster.
+This will attempt to spawn off 5 Selenium Grid remote-controls - EACH WILL RUN 20% OF THE TESTS - to run your tests 5x faster.
 
 Note this is DIFFERENT than capture mode testing where ALL tests run through ALL browsers - in this case EACH browser gets 1/5th of the total number of tests.  This is because each remote-control is exactly the same!
 
@@ -558,6 +568,8 @@ All of your tests can be run thru Selenium - they all need to submitted at once 
 
 This will return once all tests have run.
 
+For Selenium2 append the '--sel2' option
+
 Hudson Build Environment
 -------------------------
 
@@ -594,6 +606,7 @@ Running JUTE/browser tests locally is a simple Makefile rule.
     submit_selenium_tests:
         cd $(LOCAL_TEST_DIR) && find . -not \\( -path "*/.svn/*" \\) -name '*.html' -printf '%p?do_coverage=$(DO_COVERAGE)\\n' | jute_submit_test --test - --sel_host $(SEL_HOST) --sel_browser $(SEL_BROWSER) --send_output 
 
+Append '--sel2' for Selenium2/WebDriver
 
 #### V8
 

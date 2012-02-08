@@ -41,7 +41,7 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ] [ --screen # ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --sel2 ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ] [ --screen # ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
@@ -56,6 +56,7 @@ var config = (require('./getConfig'))(),
         .alias('r', 'retry')
         .alias('ph', 'phantomjs')
         .alias('sc', 'screen')
+        .alias('s2', 'sel2')
         .default('host', (config && config.host) || os.hostname())
         .default('port', (config && config.port) || 8080)
         .default('send_output', false)
@@ -67,6 +68,7 @@ var config = (require('./getConfig'))(),
         .default('clear_results', false)
         .default('seleniums', 1)
         .default('sel_browser', '*firefox')
+        .default('sel2', 0)
         .default('retry', 0)
         .default('screen', 0)
         .describe('test', 'Test file to run - relative to docRoot/testDir (npm set jute.testDir) - can specify multiple of these')
@@ -75,6 +77,7 @@ var config = (require('./getConfig'))(),
         .describe('sel_host', 'Hostname of Selenium RC or Grid Server (if not specified test(s) will run in all CURRENTLY captured browsers)')
         .describe('sel_browser', 'Selenium browser specification')
         .describe('seleniums', 'Number of Selenium browsers to run tests in parallel')
+        .describe('sel2', 'Use Selenium2')
         .describe('load', 'Load up tests but do not run them immediately')
         .describe('snapshot', 'Dump a snapshot at end of test (Selenium only!)')
         .describe('send_output', 'For Selenium tests ONLY - send status messages back while running')
@@ -161,9 +164,12 @@ eventHub.on('tests', function(tests) {
 
             // Toss in Selenium stuff
             if (args.sel_host) {
-                juteArgs.sel_host = args.sel_host;
+                juteArgs.sel_host    = args.sel_host;
                 juteArgs.sel_browser = args.sel_browser;
-                juteArgs.seleniums = args.seleniums;
+                juteArgs.seleniums   = args.seleniums;
+                if (args.sel2) {
+                    juteArgs.sel2 = 1;
+                }
                 if (args.snapshot) {
                     juteArgs.snapshot = 1;
                 }

@@ -99,14 +99,15 @@ module.exports = {
                 }
 
             },
-            takeSeleniumSnapshot: function(test, filename, component) {
+            takeSeleniumSnapshot: function(test, component) {
                 var soda = require('soda'), i
-                    b = soda.createClient({ host: test.sel_host });
+                    , b = soda.createClient({ host: test.sel_host })
+                    , filename = path.join(hub.config.outputDir, (common.makeSaneNames(component))[0], 'snapshot.png')
+                ;
 
                 if (!test.seleniumID) return;
 
-                b.sid    = test.seleniumID;
-                filename = path.join(hub.config.outputDir, (common.makeSaneNames(component))[0], filename);
+                b.sid = test.seleniumID;
 
                 b.chain.windowFocus().getEval("window.moveTo(1,0); window.resizeTo(screen.availWidth, screen.availHeight);").end(function(err) {
                     if (!err) {

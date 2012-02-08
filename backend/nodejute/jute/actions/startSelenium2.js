@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 module.exports = {
-    Create:  function(hub) {
+    Create:  function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
         var path  = require('path'),
             fs    = require('fs'),
@@ -47,17 +47,15 @@ module.exports = {
 
         function startSelenium(selID, req, res) {
             var webdriverjs = require("webdriverjs"), cb,
-                body = req.body,
-                browser
+                body = req.body, browser
+                , url =  'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host)
             ;
 
             try {
-            //var client = webdriverjs.remote({host: "xx.xx.xx.xx"}); // to run it on a remote webdriver/selenium server
-                    //url: 'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host),
-
                 browser = webdriverjs.remote({
                     host: body.sel_host,
-                    desiredCapabilities: { browserName: body.sel_browser }
+                    port: body.sel_port || 4444,
+                    desiredCapabilities: { browserName: body.sel_browser || 'firefox' }
                 });
 
             } catch(e) {
@@ -77,13 +75,8 @@ module.exports = {
             //   && keep track of requesting client for debug messages back...
             // Callback for when the Selenium session is done
             cb = function(err) {
+                hub.removeAllListeners(selID + 'snapshot');
                 if (!err) {
-                /*
-                    browser.chain.testComplete().end(function(err) {
-                            delete cache.connections[selID]; // done with status updates
-                            hub.emit('action:seleniumDone', err, selID);
-                        });
-                */
                     browser.end(function() {
                         delete cache.connections[selID]; // done with status updates
                         hub.emit('action:seleniumDone', err, selID);
@@ -94,42 +87,39 @@ module.exports = {
             };
             cb = hub.once(selID + 'finished', cb);
 
-            browser
-                .init()
-                .url('/?selenium=' + selID);
+            hub.on(selID + 'snapshot', function(test, component) {
+                browser.screenshot(function(screenshot) { 
+                    var path = require('path')
+                        , filename = path.join(hub.config.outputDir, (common.makeSaneNames(component))[0], 'snapshot.png');
 
-                        hub.emit(hub.LOG, hub.INFO, "Selenium up and running: " + browser.sessionId);
-                        // If this is one of the tests that are going to run in the
-                        //  Selenium session, tag it with the Selenium token
-                        cache.tests_to_run.forEach(function(test) {
-                            if (test.browser === selID) {
-                                test.seleniumID = browser.sessionId;
-                            }
-                        });
-
-/*
-            browser.
-                chain.
-                session().
-                open('/?selenium=' + selID).
-                waitForPageToLoad(10000).
-                end(function(err) {
-                    if (err) {
-                        var msg = 'Error starting/waiting for Selenium page to load: ' + err;
-                        hub.emit('seleniumTestsFinished', err);
-                    } else {
-                        hub.emit(hub.LOG, hub.INFO, "Selenium up and running: " + browser.sid);
-                        // If this is one of the tests that are going to run in the
-                        //  Selenium session, tag it with the Selenium token
-                        cache.tests_to_run.forEach(function(test) {
-                            if (test.browser === selID) {
-                                test.seleniumID = browser.sid;
-                            }
-                        });
-
+                    try {
+                        var bb  = new Buffer(screenshot.value, 'base64'),
+                            msg = "Dumped snapshot for " + test.url + ' to ' + filename + "\n";
+                        fs.writeFileSync(filename, bb, 0, bb.length);
+                        common.addTestOutput(test, msg);
+                        hub.emit(hub.LOG, hub.INFO, msg);
+                    } catch(e) {
+                        msg = "Error dumping snapshot file " + filename + ": " + e + "\n";
+                        common.addTestOutput(test, msg);
+                        hub.emit(hub.LOG, hub.ERROR,  msg);
                     }
+
+                    hub.emit('action:doneDone', null, test);
                 });
-*/
+            });
+
+            browser
+                .init(function() {
+                    // If this is one of the tests that are going to run in the
+                    //  Selenium session, tag it with the Selenium token
+                    cache.tests_to_run.forEach(function(test) {
+                        if (test.browser === selID) {
+                            test.seleniumID = browser.sessionId;
+                            test.sel2 = true;
+                        }
+                    });
+                })
+                .url(url + '/?selenium=' + selID);
         }
     }
 

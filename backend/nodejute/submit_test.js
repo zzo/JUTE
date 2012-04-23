@@ -190,6 +190,9 @@ eventHub.on('tests', function(tests) {
             // POST AWAY!
             var req = http.request(options, function(res) {
 
+                // 6000 seconds = 100 minutes
+                req.socket.setTimeout(6000000, function(e) { console.log('socket timeout!'); });
+
                 if (res.statusCode != 200) {
                     console.log('JUTE Displeased');
                 }
@@ -201,9 +204,6 @@ eventHub.on('tests', function(tests) {
                 res.on('end', function() {
                 });
             });
-
-            // 6000 seconds = 100 minutes
-            req.socket.setTimeout(6000000, function(e) { console.log('socket timeout!'); });
 
             // Not Good
             req.on('error', function(e) {

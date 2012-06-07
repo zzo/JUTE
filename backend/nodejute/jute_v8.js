@@ -44,7 +44,7 @@ var  fs         = require('fs')
     ,url        = require('url')
     ,events     = require("events")
     ,config     = (require('./getConfig'))()
-    ,jsdom      = require('jsdom').jsdom
+    ,jsdom      = require('jsdom')
     ,xmlhttp    = require("xmlhttprequest").XMLHttpRequest
     ,DEBUG      = function() { if (process.env.JUTE_DEBUG==1) { console.log(Array.prototype.join.call(arguments, ' ')); } }
     ,REQUIRE    = require
@@ -67,6 +67,18 @@ if (!process.argv[2]) {
     console.log('You must specify a test to run!  This file is relative to testDir');
     process.exit(1);
 }
+
+//Turn off all the jsdom things we don't want.
+jsdom.defaultDocumentFeatures = {
+    //Don't bring in outside resources
+    FetchExternalResources   : false,
+    //Don't process them
+    ProcessExternalResources : false,
+    //Don't expose Mutation events (for performance)
+    MutationEvents           : false,
+    //Do not use their implementation of QSA
+    QuerySelector            : false
+};
 
 TEST_FILE   = PATH.join(config.testDir, process.argv[2]);
 DO_COVERAGE = TEST_FILE.match(/do_coverage=1/);
@@ -162,6 +174,7 @@ if (TEST_FILE.match(/\.js$/)) {
             process.exit(1);
         }
     } else {
+
         doit('<script src="' + TEST_FILE + '"></script>');
     }
 } else {
@@ -186,9 +199,8 @@ function testsDone(data, report_data, cover_out) {
         total_lines, total_functions, line_coverage = 0, func_coverage = 0;
 
     try {
-        console.log('making dir: ' + dirname);
         fs.mkdirSync(dirname, 0777);
-    } catch(e) { console.error('that failed!'); }
+    } catch(e) { }
 
     console.log('Test results file: ' + test_output_file);
 
@@ -196,6 +208,7 @@ function testsDone(data, report_data, cover_out) {
         fs.writeFileSync(test_output_file, report_data);
     } catch(e) {
         console.error("Error writing test output file " + test_output_file + ": " + e);
+        console.error("Maybe mkdir " + dirname + ' failed?');
     }
 
     console.log('Test debug file: ' + test_debug_file);
@@ -253,8 +266,6 @@ function testsDone(data, report_data, cover_out) {
 
 function doit(data) {
 
-    var d = jsdom(''), w = d.createWindow();
-
     YUI({
 //        filter: 'DEBUG',
         logExclude: {
@@ -267,18 +278,15 @@ function doit(data) {
             ,widget:       true
             ,event:        true
         }
-        ,document: d
-        ,window: w
     }).use('node', 'nodejs-dom', function(Y) {
 
         var document = Y.Browser.document, window = document.parentWindow,
-            //Script = process.binding('evals').Script,
             orig_eval = eval,
             createElementOrig = document.createElement,
             createElement = function(str) {
                 var e = createElementOrig.call(this, str), d;
                 if (str === 'iframe') { 
-                    d = jsdom(''); 
+                    d = jsdom.jsdom(''); 
                     e.contentWindow = d.createWindow(); 
                     d.open = d.close = function(){}; 
                     d.write = function(t) { e.innerHTML += t; d.innerHTML += t; }; 
@@ -323,9 +331,7 @@ function doit(data) {
         window.location     = { search: '' };
         document.write      = document.open = document.close = function() {};
 
-        //sandbox = Script.createContext(
-        sandbox = 
-            {
+        sandbox = {
                 window: window
                 ,console: console   // dummy this out??
                 ,setInterval: setInterval
@@ -344,7 +350,7 @@ function doit(data) {
                 ,module: module     // SOO sneaky!
                 ,process: process     // SOO sneaky!
                 ,require: requireCover   // Test nodejs stuff - maybe get coverage'd version
-            };
+        };
 
         process.chdir(PATH.dirname(TEST_FILE));
 
@@ -361,18 +367,21 @@ function doit(data) {
         Y.fire('getNextScript');
 
         function findNextScript() {
-            var csses = Y.all('link'),
-                scripts = Y.all('script'), script, i;
+            // Y.all() should work here but doesn't :(
+            var csses = document.getElementsByTagName('span')
+                , scripts = document.getElementsByTagName('script')
+                , script, i
+            ;
 
-            for (i = 0; i < csses.size(); i++) {
-                script = csses.item(i);
+            for (i = 0; i < csses.length; i++) {
+                script = Y.one(csses.item(i));
                 if (!script.getData('javascript')) {
                     return script;
                 }
             }
 
-            for (i = 0; i < scripts.size(); i++) {
-                script = scripts.item(i);
+            for (i = 0; i < scripts.length; i++) {
+                script = Y.one(scripts.item(i));
                 if (!script.getData('javascript')) {
                     return script;
                 }
@@ -412,7 +421,6 @@ function doit(data) {
                 process.exit(1);
             }
 
-                DEBUG('firing get next script');
             Y.fire('getNextScript');
         }
 

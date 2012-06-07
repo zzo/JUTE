@@ -2,7 +2,7 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.61",
+  "version": "0.0.62",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin" : { 
@@ -26,6 +26,8 @@
       , "connect" : "~1.7"
       , "npm" : "~1.0"
       , "yui3": "~0.7"
+      , "jsdom": "~0.2"
+      , "htmlparser": "~1.7"
       , "wordwrap": ""
       , "xmlhttprequest" : "~1.2"
       , "cookie-sessions" : "~0.0"

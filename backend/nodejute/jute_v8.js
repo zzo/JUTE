@@ -156,7 +156,6 @@ if (TEST_FILE.match(/\.js$/)) {
             var tf = fs.readFileSync(TEST_FILE, 'utf8');
                 reqMatch = /require\s*\(\s*['"]([^'"]+)['"]\s*,\s*true\s*\)/g,
                 cc = tf.match(reqMatch);
-
             getOneCoverage(cc, 0);
         } catch(e) {
             console.error("Error reading " + TEST_FILE + ": " + e);
@@ -187,8 +186,9 @@ function testsDone(data, report_data, cover_out) {
         total_lines, total_functions, line_coverage = 0, func_coverage = 0;
 
     try {
+        console.log('making dir: ' + dirname);
         fs.mkdirSync(dirname, 0777);
-    } catch(e) { }
+    } catch(e) { console.error('that failed!'); }
 
     console.log('Test results file: ' + test_output_file);
 
@@ -267,8 +267,8 @@ function doit(data) {
             ,widget:       true
             ,event:        true
         }
-        ,doc: d
-        ,win: w
+        ,document: d
+        ,window: w
     }).use('node', 'nodejs-dom', function(Y) {
 
         var document = Y.Browser.document, window = document.parentWindow,
@@ -291,12 +291,26 @@ function doit(data) {
                 return e;
             },
             requireCover = function(file, coverage) {
-                if (DO_COVERAGE && coverage && (file !== require.resolve(file))) {
+                var native = true;
+                if (file.match(/^\./)) {
+                    native = false;
+                    file = PATH.join(config.testDir, file);
+                }
+                if (DO_COVERAGE && coverage && !native) {
                     var tempFile = PATH.join('/tmp', PATH.basename(file));
-
-                    return REQUIRE(tempFile);
+                    try {
+                        return REQUIRE(tempFile);
+                    } catch(e) {
+                        console.error("Require of coverage'd file failed: " + e);
+                        process.exit(1);
+                    }
                 } else {
-                    return REQUIRE(file);
+                    try {
+                        return REQUIRE(file);
+                    } catch(e) {
+                        console.error(e);
+                        process.exit(1);
+                    }
                 }
             };
 
@@ -340,7 +354,7 @@ function doit(data) {
                 getScript(tag, executeScript);
             } else {
                 // Give the slacker 10 seconds to exit
-//                setTimeout(function() { process.exit(0); }, 10000);
+                //setTimeout(function() { process.exit(0); }, 10000);
             }
         });
 
@@ -398,6 +412,7 @@ function doit(data) {
                 process.exit(1);
             }
 
+                DEBUG('firing get next script');
             Y.fire('getNextScript');
         }
 
@@ -475,7 +490,6 @@ process.on('uncaughtException', function (err) {
 process.on('exit', function () {
     if (!DONE) {
         DONE=true;
-    console.trace();
         console.log('Premature exit: FAIL!');
     }
     process.exit(DONE ? 0 : 1);
@@ -483,12 +497,22 @@ process.on('exit', function () {
 
 
 function generateCoverage(file, cb, files, index) {
-    var tempFile = PATH.join('/tmp', PATH.basename(file)),
-        realFile = require.resolve(file);
+    var tempFile = PATH.join('/tmp', PATH.basename(file))
+        , realFile, real = true;
 
-    if (realFile == file) {
+    try {
+        realFile = require.resolve(file);
+    } catch(e) {
+        if (file.match(/^\./)) {
+            file = PATH.join(config.testDir, file);
+        }
+        realFile = require.resolve(file);
+        real = false;
+    }
+
+    if (realFile == file && real) {
         // A native module!!  Who know where the heck these are - skip it
-        console.log('Cannot get coverage for a native module: ' + file);
+        DEBUG('Cannot get coverage for a native module: ' + file);
         cb(files, index);
     } else {
         exec(config.java + ' -jar ' + coverageJar + " -o " + tempFile + " " + realFile, function(err) {

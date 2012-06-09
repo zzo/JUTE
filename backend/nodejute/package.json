@@ -2,7 +2,7 @@
   "name": "jute",
   "description": "Javascript Unit Test Environment",
   "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.63",
+  "version": "0.0.64",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin" : { 
@@ -12,7 +12,8 @@
   },
   "scripts" : {
     "start"   : "node ./jute/daemon.js --start",
-    "stop"    : "node ./jute/daemon.js --stop"
+    "stop"    : "node ./jute/daemon.js --stop",
+    "restart"    : "node ./jute/daemon.js --restart"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
       , "mime" : "~1.2"
       , "optimist" : "~0.2"
       , "webdriverjs" : ""
+      , "daemonize" : "~0.3"
   },
   "config" : {
     "port" : "5883",

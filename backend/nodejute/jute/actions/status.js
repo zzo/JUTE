@@ -104,7 +104,7 @@ module.exports = {
                             }
 
                             try {
-                                var coverage = path.existsSync(path.join(baseDir, component, 'lcov-report'));
+                                var coverage = fs.existsSync(path.join(baseDir, component, 'lcov-report'));
                                 ret.current_results[component] = {};
                                 ret.current_results[component].test_results  = testResults;
                                 ret.current_results[component].coverage      = coverage;

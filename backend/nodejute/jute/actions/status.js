@@ -65,7 +65,7 @@ module.exports = {
                 if (components.length) {
                     components.forEach(function(component) {
                         doComp(ret, component, function() {
-                            if (Object.keys(ret.current_results).length == components.length) {
+                           if (Object.keys(ret.current_results).length == components.length) {
                                 hub.emit('action:checkedResults', ret);
                             }
                         });
@@ -82,6 +82,7 @@ module.exports = {
         function doComp(ret, component, cb) {
             var testFiles, testResults = [], compDir,
                 find    = require('npm/lib/utils/find'),
+                fs      = require('fs'),
                 baseDir = hub.config.outputDir;
 
             component = path.basename(component);

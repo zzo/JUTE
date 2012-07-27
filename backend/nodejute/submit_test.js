@@ -41,7 +41,7 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --sel2 ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ] [ --screen # ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --sel2 ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --jasmine] [ --coverage ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ] [ --screen # ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
@@ -62,6 +62,8 @@ var config = (require('./getConfig'))(),
         .default('send_output', false)
         .default('wait', false)
         .default('v8', false)
+        .default('jasmine', false)
+        .default('coverage', false)
         .default('snapshot', false)
         .default('load', false)
         .default('phantomjs', false)
@@ -84,6 +86,8 @@ var config = (require('./getConfig'))(),
         .describe('wait', 'Wait for captured tests to finish')
         .describe('clear_results', 'Clear ALL previous test results before running specified test(s)')
         .describe('v8', 'Run these test(s) using the V8 backend')
+        .describe('jasmine', 'Run these test(s) using Jasmine')
+        .describe('coverage', 'Run ALL test(s) with code coverage for V8 or Jasmine')
         .describe('status', 'Just get status')
         .describe('retry', 'Number of time to retry a failed test')
         .describe('phantomjs', 'Path to phantomjs executable')
@@ -95,6 +99,7 @@ var config = (require('./getConfig'))(),
     juteArgs = {};
 
 if (!config) {
+    console.error('You must % npm start jute!');
     process.exit(0);
 }
 
@@ -107,12 +112,22 @@ if (args.wait && args.sel_host) {
     console.log("You don't need '--wait' for Selenium tests!");
 }
 
-if (args.wait && args.v8) {
-    console.log("You don't need '--wait' for V8 tests!");
+if (args.wait && (args.v8 || args.jasmine)) {
+    console.log("You don't need '--wait' for V8 or Jasmine tests!");
 }
 
 if (args.v8 && args.sel_host) {
     console.error("Erg V8 or Selenium - pick one!");
+    process.exit(1);
+}
+
+if (args.jasmine && args.sel_host) {
+    console.error("Erg Jasmine or Selenium - pick one!");
+    process.exit(1);
+}
+
+if (args.jasmine && args.v8) {
+    console.error("Erg Jasmine or V8 - pick one!");
     process.exit(1);
 }
 
@@ -132,9 +147,38 @@ eventHub.on('tests', function(tests) {
 
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
+
+                if (args.coverage) {
+                    test += "?do_coverage=1";
+                }
+
                 exec(path.join(__dirname, 'jute_v8.js') + ' ' + test, function(error, stdout, stderr) {
                     if (error) {
                         console.error("Error running jute_v8: " + error);
+                    } else {
+                        console.error(stderr);
+                        console.log(stdout);
+                    }
+
+                    if (i == args.length) {
+                        process.exit(0);
+                    }
+                });
+            }
+        } else if (args.jasmine) {
+            var exec = require('child_process').exec,
+                path = require('path');
+
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+
+                if (args.coverage) {
+                    test += "?do_coverage=1";
+                }
+
+                exec(path.join(__dirname, 'jute_jasmine.js') + ' ' + test, function(error, stdout, stderr) {
+                    if (error) {
+                        console.error("Error running jute_jasmine: " + error);
                     } else {
                         console.error(stderr);
                         console.log(stdout);

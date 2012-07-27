@@ -53,7 +53,7 @@ module.exports = {
             cache.browsers[id].heart_beat = new Date().getTime();
             cache.browsers[id].name = common.browserName(req);
 
-            hub.once('action:checkedResults', function(results) {
+            hub.on('action:checkedResults', function(results) {
                 results.current_status  = { browsers: cache.browsers, tests_to_run: cache.tests_to_run };
                 results.config          = hub.config;
                 res.writeHead(200, { 'Content-Type': 'application/json' });

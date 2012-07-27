@@ -275,7 +275,7 @@ module.exports = {
                     seleniumIDs.forEach(function(selID) {
                         hub.emit('action:phantomjsStart', selID, obj.screen, req, res);
                     });
-                }else {
+                } else {
                     // UI wants to run multiple tests - redirect to it!
                     if (multipleFromUI) {
                         // Now tell browser to run the tests!

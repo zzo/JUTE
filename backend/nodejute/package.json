@@ -1,8 +1,8 @@
 {
   "name": "jute",
   "description": "Javascript Unit Test Environment",
-  "keywords": ["selenium", "test", "testing", "unit", "tests"],
-  "version": "0.0.65",
+  "keywords": ["selenium", "test", "testing", "unit", "tests", "jasmine", "phantomjs"],
+  "version": "0.0.66",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin" : { 

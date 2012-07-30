@@ -52,7 +52,6 @@ Here are some important JUTE configuration variables and their defaults:
                 logfile:        '/tmp/jute.log'
                 pidfile:        '/tmp/jute.pid'
                 phantomjs:      '/usr/local/bin/phantomjs'
-                screen:         0
 
 To set any of these do:
 
@@ -72,7 +71,6 @@ What the variables mean:
 * logfile: Where JUTE dumps debug output
 * pidfile: Where JUTE keeps its PID
 * phantomjs: Path to 'phantomjs' executable
-* screen: Screen number of X Server for PhantomJS
 
 You MUST restart JUTE after you change any variable:
 
@@ -181,7 +179,7 @@ PhantomJS
 ---------
 [PhantomJS](http://phantomjs.org) is standalone (potentially) headless WebKit.  This backend behaves similarly to Selenium but without the need of a head!  Further ANY client-side unit test should run just fine as Webkit has both a Javascript parser and DOM support built in.
 
-If you have PhantomJS installed point JUTE to the location of the 'phantomjs' executable and which screen your X Server is running on via the 'phantomjs' and 'screen' npm variables.  JUTE will run fine regardless of if you're using a 'real' X Server or Xvfb.  And yes there is snapshot support.
+If you have PhantomJS installed point JUTE to the location of the 'phantomjs' executable the 'phantomjs'.  JUTE will run fine regardless of if you're using a 'real' X Server or Xvfb.  And yes there is snapshot support.
 
 This mode can currently only be accessed via the command line tool 'jute_submit_test'.  See below for documentation.  Basically you submit tests from the command line too 'jute_submit_test' along with the '--phantomjs' command line option.
 
@@ -349,7 +347,7 @@ OR any other permutation of test specification as outlined above.
 
 #### Running tests through PhantomJS
 
-Once you have set the 'phantomjs' and 'screen' npm variables you can use the PhantomJS backend.
+Once you have set the 'phantomjs' npm variable you can use the PhantomJS backend.
 
 Specify --phantomjs to run the submitted tests through PhantomJS:
 

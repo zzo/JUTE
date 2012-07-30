@@ -157,9 +157,6 @@ module.exports = {
                     cache.tests_to_run.push(test_obj);
                     pushed = true;
                 } else if (obj.phantomjs) {
-                    if (!obj.screen) {
-                        obj.screen = hub.config.screen;
-                    }
                     if (obj.send_output) {
                         test_obj.sendOutput = 1;
                     }
@@ -273,7 +270,7 @@ module.exports = {
                     });
 
                     seleniumIDs.forEach(function(selID) {
-                        hub.emit('action:phantomjsStart', selID, obj.screen, req, res);
+                        hub.emit('action:phantomjsStart', selID, req, res);
                     });
                 } else {
                     // UI wants to run multiple tests - redirect to it!

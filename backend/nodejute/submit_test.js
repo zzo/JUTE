@@ -41,7 +41,7 @@ var config = (require('./getConfig'))(),
     events    = require("events"),
     eventHubF = function() { events.EventEmitter.call(this); },
     args = opt
-        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --sel2 ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --jasmine] [ --coverage ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ] [ --screen # ]')
+        .usage('Usage: $0 --test [testfile] [ --test [another testfile] ] [ --host [JUTE host] ] [ --port [JUTE host port] ] [ --sel_host [Selenium host] ] [ --sel_browser [Selenium browser spec] ] [ --seleniums # ] [ --sel2 ] [ --load ] ] [ --send_output ] [ --wait ] [ --clear_results ] [ -v8 ] [ --jasmine] [ --coverage ] [ --status ] [ --snapshot ] [ --retry ] [ --phantomjs ]')
         .alias('t', 'test')
         .alias('h', 'host')
         .alias('p', 'port')
@@ -55,7 +55,6 @@ var config = (require('./getConfig'))(),
         .alias('w', 'wait')
         .alias('r', 'retry')
         .alias('ph', 'phantomjs')
-        .alias('sc', 'screen')
         .alias('s2', 'sel2')
         .default('host', (config && config.host) || os.hostname())
         .default('port', (config && config.port) || 8080)
@@ -72,7 +71,6 @@ var config = (require('./getConfig'))(),
         .default('sel_browser', '*firefox')
         .default('sel2', 0)
         .default('retry', 0)
-        .default('screen', 0)
         .describe('test', 'Test file to run - relative to docRoot/testDir (npm set jute.testDir) - can specify multiple of these')
         .describe('host', 'Hostname of JUTE server')
         .describe('port', 'Port of JUTE server')
@@ -91,7 +89,6 @@ var config = (require('./getConfig'))(),
         .describe('status', 'Just get status')
         .describe('retry', 'Number of time to retry a failed test')
         .describe('phantomjs', 'Path to phantomjs executable')
-        .describe('screen', 'X screen number where an X server is listening')
         .argv,
     util  = require('util'),
     qs    = require('querystring'),
@@ -203,7 +200,6 @@ eventHub.on('tests', function(tests) {
             // Toss in Selenium stuff
             if (args.phantomjs) {
                 juteArgs.phantomjs = 1;
-                juteArgs.screen = args.screen;
             }
 
             // Toss in Selenium stuff

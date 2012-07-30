@@ -46,15 +46,14 @@ module.exports = {
         // Events I care about
         hub.addListener('action:phantomjsStart', startPhantomjs);
 
-        function startPhantomjs(selID, screen, req, res) {
+        function startPhantomjs(selID, req, res) {
             var cb, phantom, body = req.body,
                 phantomjs = hub.config.phantomjs,
                 url = 'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host) + '/?selenium=' + selID
             ;
 
             try {
-                hub.emit(hub.LOG, hub.INFO, "DISPLAY=:" + screen + ' ' + phantomjs + ' ' + path.join(__dirname, '..', "phantomJUTE.js") + ' ' + url);
-                process.env.DISPLAY = ':' + screen;
+                hub.emit(hub.LOG, hub.INFO, "phantomjs + ' ' + path.join(__dirname, '..', "phantomJUTE.js") + ' ' + url);
                 phantom = child.spawn(phantomjs, [ path.join(__dirname, '..', "phantomJUTE.js"), url, hub.config.outputDir]);
                 phantom.stdout.on('data', function(data) {
                     if (data === 'snapshot') {

@@ -53,7 +53,6 @@ Create:  function(hub) {
                 logFile:        '/tmp/jute.log',
                 testRegex:      '.html$',
                 inject:         1,
-                screen:         0,
                 phantomjs:      '/usr/local/bin/phantomjs',
                 host:           ''
             },

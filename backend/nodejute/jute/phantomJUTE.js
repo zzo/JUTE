@@ -57,7 +57,7 @@ page.open(phantom.args[0], function (status) {
     if (status !== "success") {
         console.log("Unable to access network");
     } else {
-        waitFor(function(){}, function(){});
+        setInterval(function() {}, 200000);
     }
 });
 

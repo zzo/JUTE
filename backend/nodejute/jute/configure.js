@@ -77,6 +77,7 @@ Create:  function(hub) {
             return;
         }
 
+
         try {
             var stat = fs.statSync(config.docRoot);
                 if (!stat.isDirectory()) {
@@ -106,6 +107,7 @@ Create:  function(hub) {
 
         config.testDirWeb   = config.testDir;
         config.testDir      = path.join(config.docRoot, config.testDir);
+
         try {
             fs.statSync(config.testDir);
         } catch(e) {
@@ -153,24 +155,24 @@ Create:  function(hub) {
 
         // Make sure output directory is writable for grins...
         var testDir = path.join(config.outputDir, 'foo');
-        fs.mkdir(testDir, 0777, function(err) {
-            if (err) {
-                hub.emit(hub.LOG, hub.ERROR, "** Output directory '" + config.outputDir + "' not writable or does not exist!! **");
-                hub.emit(hub.LOG, hub.ERROR, "Note outputDir is RELATIVE to docRoot!!");
-                hub.emit(hub.LOG, hub.ERROR, "Change output dir using: % npm conifg set jute:outputDir <dir>");
-                hub.emit(hub.LOG, hub.ERROR, "Or make " + config.outputDir + ' writable by user/group running jute');
-                hub.emit('configureError', { name: 'outputDir', value: config.outputDir, error: err } );
-                return;
-            }
+        try {
+            fs.mkdirSync(testDir, 0777);
+        } catch(e) {
+            hub.emit(hub.LOG, hub.ERROR, "** Output directory '" + config.outputDir + "' not writable or does not exist!! **");
+            hub.emit(hub.LOG, hub.ERROR, "Note outputDir is RELATIVE to docRoot!!");
+            hub.emit(hub.LOG, hub.ERROR, "Change output dir using: % npm conifg set jute:outputDir <dir>");
+            hub.emit(hub.LOG, hub.ERROR, "Or make " + config.outputDir + ' writable by user/group running jute');
+            hub.emit('configureError', { name: 'outputDir', value: config.outputDir, error: e } );
+            return;
+        }
 
-            try {
-                fs.rmdirSync(testDir);
-            } catch(e) {}
+        try {
+            fs.rmdirSync(testDir);
+        } catch(e) {}
 
-            // All is cool - stash config & move on
-            hub.config = config;
-            hub.emit('configureDone', config);
-        });
+        // All is cool - stash config & move on
+        hub.config = config;
+        hub.emit('configureDone', config);
     }
 }
 };

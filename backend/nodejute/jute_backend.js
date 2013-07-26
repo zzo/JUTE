@@ -74,7 +74,6 @@ configure.Create(eventHub);
 actions.Create(eventHub, common.Create(eventHub));
 server.Create(eventHub);
 
-
 // Get Party Started
 eventHub.on('configureError', function(obj) {
     eventHub.emit(eventHub.LOG, eventHub.ERROR, "Configuration error for " + obj.name + ': ' + obj.error);

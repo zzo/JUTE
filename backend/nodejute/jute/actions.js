@@ -38,13 +38,12 @@ module.exports = {
 
     Create: function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var path = require('path'),
-            find = require('npm/lib/utils/find');
+        var glob = require("glob");
 
         hub.on('loadActions', loadActions);
 
         function loadActions() {
-            find(path.join(__dirname, 'actions'), /\.js$/, function(err, actions) {
+            glob('actions/*.js', function (err, actions) {
                 // Suck in all available actions
                 if (!err) {
                     actions.forEach(function(action) {

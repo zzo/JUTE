@@ -1,48 +1,55 @@
 {
   "name": "jute",
   "description": "Javascript Unit Test Environment",
-  "keywords": ["selenium", "test", "testing", "unit", "tests", "jasmine", "phantomjs"],
-  "version": "0.0.66",
+  "keywords": [
+    "selenium",
+    "test",
+    "testing",
+    "unit",
+    "tests",
+    "jasmine",
+    "phantomjs"
+  ],
+  "version": "0.0.67",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
-  "bin" : { 
-    "jute" :            "./jute_backend.js",
+  "bin": {
+    "jute": "./jute_backend.js",
     "jute_submit_test": "./submit_test.js",
-    "jute_v8":          "./jute_v8.js",
-    "jute_jasmine":     "./jute_jasmine.js"
+    "jute_v8": "./jute_v8.js",
+    "jute_jasmine": "./jute_jasmine.js"
   },
-  "scripts" : {
-    "start"   : "node ./jute/daemon.js --start",
-    "stop"    : "node ./jute/daemon.js --stop",
-    "restart"    : "node ./jute/daemon.js --restart"
+  "scripts": {
+    "start": "node ./jute/daemon.js --start",
+    "stop": "node ./jute/daemon.js --stop",
+    "restart": "node ./jute/daemon.js --restart"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/zzo/JUTE.git"
   },
   "homepage": "https://github.com/zzo/JUTE",
-  "dependencies" :
-    {
-        "soda" : "~0.2"
-      , "node-uuid": "~1.2"
-      , "connect" : "~1.7"
-      , "npm" : "~1.0"
-      , "yui3": "~0.7"
-      , "jsdom": "~0.2"
-      , "htmlparser": "~1.7"
-      , "wordwrap": ""
-      , "xmlhttprequest" : "~1.2"
-      , "cookie-sessions" : "~0.0"
-      , "mime" : "~1.2"
-      , "optimist" : "~0.2"
-      , "webdriverjs" : ""
-      , "daemonize" : "~0.3"
-      , "jasmine-node" : "~1.0"
+  "dependencies": {
+    "soda": "~0.2",
+    "node-uuid": "~1.2",
+    "connect": "~1.7",
+    "yui3": "~0.7",
+    "jsdom": "~0.2",
+    "htmlparser": "~1.7",
+    "wordwrap": "",
+    "xmlhttprequest": "~1.2",
+    "cookie-sessions": "~0.0",
+    "mime": "~1.2",
+    "optimist": "~0.2",
+    "webdriverjs": "",
+    "daemonize": "~0.3",
+    "jasmine-node": "~1.0",
+    "glob": "~3.2.6"
   },
-  "config" : {
-    "port" : "5883",
-    "docRoot":  "/var/www/",
-    "testDir":  "test/",
+  "config": {
+    "port": "5883",
+    "docRoot": "/var/www/",
+    "testDir": "test/",
     "outputDir": "output/",
     "java": "/usr/bin/java",
     "logfile": "/tmp/jute.log",
@@ -51,4 +58,3 @@
     "testRegex": "*.htm*"
   }
 }
-

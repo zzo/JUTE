@@ -95,7 +95,7 @@ module.exports = {
             } else {
                 delete cache.currentTest[browser];
                 // find all local tests
-                var find             = require('npm/lib/utils/find'),
+                var glob             = require('glob'),
                     prefix           = hub.config.testDir,
                     local_test_files = hub.config.testRegex,
                     data             = [];
@@ -110,9 +110,8 @@ module.exports = {
                 }
 
                 // ONLY USE HTML FOR NOW UNTIL THE PAGE IS SMARTER...
-                find(prefix, /.html?$/, function(err, matches_html) {
+                glob('**/*.html', { cwd: prefix }, function(err, matches_html) {
                     matches_html.forEach(function(testFile) {
-                        testFile = testFile.replace(prefix, '');
                         data.push({ test_url: testFile });
                     });
                     res.writeHead(200, { 'Content-Type': 'application/json' });

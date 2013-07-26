@@ -292,7 +292,6 @@ module.exports = {
                         } else if (capture) {
                             res.end('Added ' + (obj.test || obj.tests) + ' to capture/load tests');
                         }
-
                     }
                 }
             } else {

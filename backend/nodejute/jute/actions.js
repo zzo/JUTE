@@ -33,21 +33,23 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 module.exports = {
 
     Create: function(hub, common) {
         // Javascript is single threaded!  We don't have to worry about concurrency!
-        var glob = require("glob");
+        var glob = require("glob")
+            , path = require('path')
+        ;
 
         hub.on('loadActions', loadActions);
 
         function loadActions() {
-            glob('actions/*.js', function (err, actions) {
+            var base = path.join(__dirname, 'actions');
+            glob('*.js', { cwd: base }, function (err, actions) {
                 // Suck in all available actions
                 if (!err) {
                     actions.forEach(function(action) {
-                        var act = require(action);
+                        var act = require(path.join(base, action));
                         act.Create && act.Create(hub, common);
                     });
                     hub.emit('actionsLoaded');

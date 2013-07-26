@@ -81,7 +81,7 @@ module.exports = {
 
         function doComp(ret, component, cb) {
             var testFiles, testResults = [], compDir,
-                find    = require('npm/lib/utils/find'),
+                glob    = require('glob'),
                 fs      = require('fs'),
                 baseDir = hub.config.outputDir;
 
@@ -89,17 +89,17 @@ module.exports = {
             compDir   = path.join(baseDir, component);
 
             // Find all the various output files
-            find(compDir, /\.txt$/, function(err, debugFiles) {
-                find(compDir, /\.png$/, function(err, snapshotFiles) {
-                    find(compDir, /\.xml$/, function(err, testFiles) {
+            glob('**/*.txt', { cwd: compDir }, function(err, debugFiles) {
+                glob('**/*.png', { cwd: compDir }, function(err, snapshotFiles) {
+                    glob('**/*.xml', { cwd: compDir }, function(err, testFiles) {
                         // Determined if failed or not
                         if (!err) {
                             if (testFiles && testFiles.length) {
                                 testFiles.forEach(function(testFile) {
-                                    if (common.failedTests(testFile)) {
-                                        testResults.push({ name: path.basename(testFile), failed: 1 });
+                                    if (common.failedTests(path.join(compDir, testFile))) {
+                                        testResults.push({ name: testFile, failed: 1 });
                                     } else {
-                                        testResults.push({ name: path.basename(testFile), failed: 0 });
+                                        testResults.push({ name: testFile, failed: 0 });
                                     }
                                 });
                             }
@@ -109,8 +109,8 @@ module.exports = {
                                 ret.current_results[component] = {};
                                 ret.current_results[component].test_results  = testResults;
                                 ret.current_results[component].coverage      = coverage;
-                                ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return path.basename(f); });
-                                ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return path.basename(f); });
+                                ret.current_results[component].debugFiles    = debugFiles.map(function(f) { return f; });
+                                ret.current_results[component].snapshotFiles = snapshotFiles.map(function(f) { return f; });
                             } catch(e) {
                                 hub.emit(hub.LOG, hub.ERROR, 'Error checking for coverage path: ' + e);
                             }

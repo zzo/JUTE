@@ -43,6 +43,7 @@ module.exports = {
             cache = hub.cache
         ;
 
+
         // Events I care about
         hub.addListener('action:phantomjsStart', startPhantomjs);
 
@@ -53,7 +54,7 @@ module.exports = {
             ;
 
             try {
-                hub.emit(hub.LOG, hub.INFO, "phantomjs + ' ' + path.join(__dirname, '..', "phantomJUTE.js") + ' ' + url);
+                hub.emit(hub.LOG, hub.INFO, phantomjs + ' ' + path.join(__dirname, '..', "phantomJUTE.js") + ' ' + url);
                 phantom = child.spawn(phantomjs, [ path.join(__dirname, '..', "phantomJUTE.js"), url, hub.config.outputDir]);
                 phantom.stdout.on('data', function(data) {
                     if (data === 'snapshot') {
@@ -92,13 +93,12 @@ module.exports = {
             cb = function(err) {
                 hub.emit(hub.LOG, hub.INFO, 'Phantomjs done!');
                 phantom.done = true;
-                phantom.kill()
+                phantom.kill();
                 delete cache.connections[selID]; // done with status updates
                 hub.emit('action:phantomjsDone', err, selID);
             };
             hub.once(selID + 'finished', cb);
         }
     }
-
 };
 

@@ -77,7 +77,6 @@ Create:  function(hub) {
             return;
         }
 
-
         try {
             var stat = fs.statSync(config.docRoot);
                 if (!stat.isDirectory()) {
@@ -106,7 +105,11 @@ Create:  function(hub) {
         }
 
         config.testDirWeb   = config.testDir;
-        config.testDir      = path.join(config.docRoot, config.testDir);
+        if (!config.testDirWeb.match(/\/$/)) {
+            config.testDirWeb += '/';
+        }
+
+        config.testDir = path.join(config.docRoot, config.testDir);
 
         try {
             fs.statSync(config.testDir);

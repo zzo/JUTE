@@ -56,5 +56,8 @@
     "pidfile": "/tmp/jute.pid",
     "inject": "1",
     "testRegex": "*.htm*"
+  },
+  "devDependencies": {
+    "jshint": "~2.1.4"
   }
 }

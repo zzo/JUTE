@@ -15,7 +15,7 @@ var opt     = require( "optimist"),
     user    = process.env['npm_package_config_asuser'] || ''
     ;
 
-var daemon = require("daemonize").setup({
+var daemon = require("daemonize2").setup({
     main:      "../jute_backend.js"
     , name:    "jute"
     , pidfile: pidfile

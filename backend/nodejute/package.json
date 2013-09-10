@@ -10,7 +10,7 @@
     "jasmine",
     "phantomjs"
   ],
-  "version": "0.0.67",
+  "version": "0.0.68",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin": {
@@ -42,7 +42,7 @@
     "mime": "~1.2",
     "optimist": "~0.2",
     "webdriverjs": "",
-    "daemonize": "~0.3",
+    "daemonize2": "~0.4",
     "jasmine-node": "~1.0",
     "glob": "~3.2.6"
   },

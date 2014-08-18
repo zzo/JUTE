@@ -41,7 +41,7 @@
     "cookie-sessions": "~0.0",
     "mime": "~1.2",
     "optimist": "~0.2",
-    "webdriverjs": "",
+    "webdriverio": "^2.1.0",
     "daemonize2": "~0.4",
     "jasmine-node": "~1.0",
     "glob": "~3.2.6"

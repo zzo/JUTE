@@ -2,8 +2,8 @@
 Copyright (c) 2011, Yahoo! Inc.
 All rights reserved.
 
-Redistribution and use of this software in source and binary forms, 
-with or without modification, are permitted provided that the following 
+Redistribution and use of this software in source and binary forms,
+with or without modification, are permitted provided that the following
 conditions are met:
 
 * Redistributions of source code must retain the above
@@ -20,16 +20,16 @@ conditions are met:
   derived from this software without specific prior
   written permission of Yahoo! Inc.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
@@ -46,13 +46,13 @@ module.exports = {
         hub.addListener('action:selenium2Start', startSelenium);
 
         function startSelenium(selID, req, res) {
-            var webdriverjs = require("webdriverjs"), cb,
+            var webdriverio = require("webdriverio"), cb,
                 body = req.body, browser
                 , url =  'http://' + (hub.config.host ? hub.config.host + ':' + hub.config.port : req.headers.host)
             ;
 
             try {
-                browser = webdriverjs.remote({
+                browser = webdriverio.remote({
                     host: body.sel_host,
                     port: body.sel_port || 4444,
                     desiredCapabilities: { browserName: body.sel_browser || 'firefox' }
@@ -88,7 +88,7 @@ module.exports = {
             cb = hub.once(selID + 'finished', cb);
 
             hub.on(selID + 'snapshot', function(test, component) {
-                browser.screenshot(function(screenshot) { 
+                browser.screenshot(function(screenshot) {
                     var path = require('path')
                         , filename = path.join(hub.config.outputDir, (common.makeSaneNames(component))[0], 'snapshot.png');
 

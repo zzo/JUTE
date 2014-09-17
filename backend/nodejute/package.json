@@ -10,7 +10,7 @@
     "jasmine",
     "phantomjs"
   ],
-  "version": "0.0.68",
+  "version": "0.0.69",
   "author": "Mark Ethan Trostler <mark@zzo.com>",
   "preferGlobal": true,
   "bin": {
